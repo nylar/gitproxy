@@ -1,0 +1,20 @@
+[package]
+name = "gitproxy"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum = { version = "0.8.9", features = ["tokio", "http1"] }
+buffa = { version = "0.8", features = ["json"] }
+buffa-types = { version = "0.8", features = ["json"] }
+chrono = "0.4.45"
+connectrpc = { version = "0.8", features = ["axum"] }
+envy = "0.4.2"
+git2 = { version = "0.21.0", features = ["vendored-libgit2"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2.0.19"
+tokio = { version = "1.53.1", features = ["full"] }
+tower-http = { version = "0.7.0", features = ["trace"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }

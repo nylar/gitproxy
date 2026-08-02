@@ -1,0 +1,136 @@
+syntax = "proto3";
+
+package gitproxy.v1;
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/nylar/gitproxy/go/gen/gitproxy/v1;gitproxy";
+
+service GitProxyService {
+    rpc ListRepositories(ListRepositoriesRequest) returns (ListRepositoriesResponse) {}
+    rpc CreateRepository(CreateRepositoryRequest) returns (CreateRepositoryResponse) {}
+    rpc DeleteRepository(DeleteRepositoryRequest) returns (DeleteRepositoryResponse) {}
+    rpc ListBranches(ListBranchesRequest) returns (ListBranchesResponse) {}
+    rpc CreateBranch(CreateBranchRequest) returns (CreateBranchResponse) {}
+    rpc DeleteBranch(DeleteBranchRequest) returns (DeleteBranchResponse) {}
+    rpc ListTags(ListTagsRequest) returns (ListTagsResponse) {}
+    rpc CreateTag(CreateTagRequest) returns (CreateTagResponse) {}
+    rpc DeleteTag(DeleteTagRequest) returns (DeleteTagResponse) {}
+    rpc CommitFiles(CommitFilesRequest) returns (CommitFilesResponse) {}
+    rpc Merge(MergeRequest) returns (MergeResponse) {}
+    rpc Log(LogRequest) returns (LogResponse) {}
+}
+
+message ListRepositoriesRequest {
+}
+
+message ListRepositoriesResponse {
+    repeated Repository repositories = 1;
+}
+
+message CreateRepositoryRequest {
+    string namespace = 1;
+}
+
+message CreateRepositoryResponse {}
+
+message DeleteRepositoryRequest {
+    string namespace = 1;
+}
+
+message DeleteRepositoryResponse {}
+
+message ListBranchesRequest {
+    string namespace = 1;
+}
+
+message ListBranchesResponse {
+    repeated string branches = 1;
+}
+
+message CreateBranchRequest {
+    string namespace = 1;
+    string branch = 2;
+}
+
+message CreateBranchResponse {}
+
+message DeleteBranchRequest {
+    string namespace = 1;
+    string branch = 2;
+}
+
+message DeleteBranchResponse {}
+
+message ListTagsRequest {
+    string namespace = 1;
+}
+
+message ListTagsResponse {
+    repeated string tags = 1;
+}
+
+message CreateTagRequest {
+    string namespace = 1;
+    string name = 2;
+    optional string commit = 3;
+    string message = 4;
+    bool overwrite = 5;
+    CommitAuthor author = 6;
+}
+
+message CreateTagResponse {}
+
+message DeleteTagRequest {
+    string namespace = 1;
+    string name = 2;
+}
+
+message DeleteTagResponse {}
+
+message CommitFilesRequest {
+    string namespace = 1;
+    string branch = 2;
+    string message = 3;
+    CommitAuthor author = 4;
+    repeated CommitFile files = 5;
+}
+
+message CommitFilesResponse {}
+
+message MergeRequest {
+    string namespace = 1;
+    string branch = 2;
+}
+
+message MergeResponse {}
+
+message LogRequest {
+    string namespace = 1;
+    optional string branch = 2;
+}
+
+message LogResponse {
+    repeated Log logs = 1;
+}
+
+message CommitFile {
+    string path = 1;
+    bytes contents = 2;
+}
+
+message CommitAuthor {
+    string name = 1;
+    string email = 2;
+}
+
+message Log {
+    string message = 1;
+    CommitAuthor author = 2;
+    string commit = 3;
+    google.protobuf.Timestamp time = 4;
+}
+
+message Repository {
+    string namespace = 1;
+    string head_commit = 2;
+}

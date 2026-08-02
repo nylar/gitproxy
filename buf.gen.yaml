@@ -1,0 +1,24 @@
+version: v2
+plugins:
+  # Rust
+  - remote: buf.build/anthropics/buffa:v0.8.1
+    out: src/gen/buffa
+    opt: [views=true, json=true]
+  - local: protoc-gen-buffa-packaging
+    out: src/gen/buffa
+    strategy: all
+  - remote: buf.build/connectrpc/rust:v0.8.0
+    out: src/gen/connect
+    opt: [buffa_module=crate::proto]
+  - local: protoc-gen-buffa-packaging
+    out: src/gen/connect
+    strategy: all
+    opt: [filter=services]
+  # Go
+  - remote: buf.build/protocolbuffers/go:v1.36.11
+    out: go/gen
+    opt: paths=source_relative
+  - remote: buf.build/connectrpc/go:v1.18.1
+    out: go/gen
+    opt:
+      - paths=source_relative
