@@ -5,17 +5,7 @@ use connectrpc::Router as ConnectRouter;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::{config::Config, error::Result, interceptor::Logging, server::Server};
-
-mod config;
-#[path = "gen/connect/mod.rs"]
-mod connect;
-mod error;
-mod interceptor;
-#[path = "gen/buffa/mod.rs"]
-mod proto;
-mod repository;
-mod server;
+use gitproxy::{config::Config, error::Result, interceptor::Logging, server::Server};
 
 #[tokio::main]
 async fn main() -> Result<()> {

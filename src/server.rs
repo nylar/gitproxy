@@ -14,8 +14,9 @@ use crate::{
         DeleteRepositoryResponse, DeleteTagRequest, DeleteTagResponse, ListBranchesRequest,
         ListBranchesResponse, ListRepositoriesRequest, ListRepositoriesResponse, ListTagsRequest,
         ListTagsResponse, Log, LogRequest, LogResponse, MergeRequest, MergeResponse,
+        RevertMergeRequest, RevertMergeResponse,
     },
-    repository::{Author, Repository},
+    repository::{Author, MergePreference, Repository},
 };
 
 pub struct Server {
@@ -249,7 +250,7 @@ impl GitProxyService for Server {
             Self::write_file(&branch_dir.join(file.path), file.contents).map_err(internal)?;
         }
 
-        branch
+        let commit = branch
             .commit_all(
                 request.message,
                 &Author {
@@ -260,6 +261,7 @@ impl GitProxyService for Server {
             .map_err(internal)?;
 
         Response::ok(CommitFilesResponse {
+            commit: commit.to_string(),
             ..Default::default()
         })
     }
@@ -277,11 +279,14 @@ impl GitProxyService for Server {
         let branch = repo.worktree(request.branch).map_err(internal)?;
 
         let head = branch.head().map_err(internal)?;
-        main.merge(&head).map_err(internal)?;
+        let commit = main
+            .merge(&head, MergePreference::Normal)
+            .map_err(internal)?;
         branch.remove().map_err(internal)?;
         main.delete_branch(request.branch).map_err(internal)?;
 
         Response::ok(MergeResponse {
+            commit: commit.to_string(),
             ..Default::default()
         })
     }
@@ -303,7 +308,6 @@ impl GitProxyService for Server {
         let entries = branch
             .log()
             .map_err(internal)?
-            .into_iter()
             .map(|entry| Log {
                 message: entry.message,
                 author: MessageField::some(CommitAuthor {
@@ -319,6 +323,26 @@ impl GitProxyService for Server {
 
         Response::ok(LogResponse {
             logs: entries,
+            ..Default::default()
+        })
+    }
+
+    async fn revert_merge(
+        &self,
+        _ctx: RequestContext,
+        request: ServiceRequest<'_, RevertMergeRequest>,
+    ) -> ServiceResult<RevertMergeResponse> {
+        let repo_dir = self.repo_dir(request.namespace);
+
+        let repo = Repository::open(&repo_dir).map_err(internal)?;
+
+        let main = repo.primary_worktree().map_err(internal)?;
+        let oid = main
+            .revert(request.commit, MergePreference::Normal)
+            .map_err(internal)?;
+
+        Response::ok(RevertMergeResponse {
+            commit: oid.to_string(),
             ..Default::default()
         })
     }

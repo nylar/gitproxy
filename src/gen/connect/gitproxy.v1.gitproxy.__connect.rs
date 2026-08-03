@@ -94,6 +94,14 @@ pub type OwnedLogRequestView = ::buffa::view::OwnedView<
 pub type OwnedLogResponseView = ::buffa::view::OwnedView<
     crate::proto::gitproxy::v1::__buffa::view::LogResponseView<'static>,
 >;
+///Shorthand for `OwnedView<RevertMergeRequestView<'static>>`.
+pub type OwnedRevertMergeRequestView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::RevertMergeRequestView<'static>,
+>;
+///Shorthand for `OwnedView<RevertMergeResponseView<'static>>`.
+pub type OwnedRevertMergeResponseView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::RevertMergeResponseView<'static>,
+>;
 impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::ListRepositoriesResponse>
 for crate::proto::gitproxy::v1::__buffa::view::ListRepositoriesResponseView<'_> {
     fn encode(
@@ -334,6 +342,26 @@ for ::buffa::view::OwnedView<
         ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
     }
 }
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::RevertMergeResponse>
+for crate::proto::gitproxy::v1::__buffa::view::RevertMergeResponseView<'_> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self, codec)
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::RevertMergeResponse>
+for ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::RevertMergeResponseView<'static>,
+> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
+    }
+}
 /// Full service name for this service.
 pub const GIT_PROXY_SERVICE_SERVICE_NAME: &str = "gitproxy.v1.GitProxyService";
 /// Static [`Spec`](::connectrpc::Spec) for the server-side `ListRepositories` RPC.
@@ -441,6 +469,15 @@ pub const GIT_PROXY_SERVICE_MERGE_SPEC: ::connectrpc::Spec = ::connectrpc::Spec:
 /// [`RequestContext::spec`](::connectrpc::RequestContext::spec).
 pub const GIT_PROXY_SERVICE_LOG_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
         "/gitproxy.v1.GitProxyService/Log",
+        ::connectrpc::StreamType::Unary,
+    )
+    .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
+/// Static [`Spec`](::connectrpc::Spec) for the server-side `RevertMerge` RPC.
+///
+/// The dispatcher surfaces this on
+/// [`RequestContext::spec`](::connectrpc::RequestContext::spec).
+pub const GIT_PROXY_SERVICE_REVERT_MERGE_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
+        "/gitproxy.v1.GitProxyService/RevertMerge",
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
@@ -765,6 +802,29 @@ pub trait GitProxyService: Send + Sync + 'static {
         Output = ::connectrpc::ServiceResult<
             impl ::connectrpc::Encodable<
                 crate::proto::gitproxy::v1::LogResponse,
+            > + Send + use<'a, Self>,
+        >,
+    > + Send;
+    /// Handle the RevertMerge RPC.
+    ///
+    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
+    ///
+    /// `request` is borrowed from the request body and is valid for the
+    /// duration of the call; message fields are read directly on it
+    /// (zero-copy). The response cannot borrow from `request` — use
+    /// `.to_owned_message()` (or copy the specific fields) for anything
+    /// returned, stored, or moved into `tokio::spawn`.
+    fn revert_merge<'a>(
+        &'a self,
+        ctx: ::connectrpc::RequestContext,
+        request: ::connectrpc::ServiceRequest<
+            '_,
+            crate::proto::gitproxy::v1::RevertMergeRequest,
+        >,
+    ) -> impl ::std::future::Future<
+        Output = ::connectrpc::ServiceResult<
+            impl ::connectrpc::Encodable<
+                crate::proto::gitproxy::v1::RevertMergeResponse,
             > + Send + use<'a, Self>,
         >,
     > + Send;
@@ -1144,6 +1204,35 @@ impl<S: GitProxyService> GitProxyServiceExt for S {
                 },
             )
             .with_spec(GIT_PROXY_SERVICE_LOG_SPEC)
+            .route_view(
+                GIT_PROXY_SERVICE_SERVICE_NAME,
+                "RevertMerge",
+                {
+                    let svc = ::std::sync::Arc::clone(&self);
+                    ::connectrpc::view_handler_fn(move |
+                        ctx,
+                        req: ::buffa::view::OwnedView<
+                            crate::proto::gitproxy::v1::__buffa::view::RevertMergeRequestView<
+                                'static,
+                            >,
+                        >,
+                        format|
+                    {
+                        let svc = ::std::sync::Arc::clone(&svc);
+                        async move {
+                            let sreq = ::connectrpc::ServiceRequest::<
+                                crate::proto::gitproxy::v1::RevertMergeRequest,
+                            >::from_parts(req.reborrow(), req.bytes());
+                            svc.revert_merge(ctx, sreq)
+                                .await?
+                                .encode::<
+                                    crate::proto::gitproxy::v1::RevertMergeResponse,
+                                >(format)
+                        }
+                    })
+                },
+            )
+            .with_spec(GIT_PROXY_SERVICE_REVERT_MERGE_SPEC)
     }
 }
 /// Type-inference marker used by [`Router::add_service`](::connectrpc::Router::add_service).
@@ -1268,6 +1357,12 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                 Some(
                     ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
                         .with_spec(GIT_PROXY_SERVICE_LOG_SPEC),
+                )
+            }
+            "RevertMerge" => {
+                Some(
+                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
+                        .with_spec(GIT_PROXY_SERVICE_REVERT_MERGE_SPEC),
                 )
             }
             _ => None,
@@ -1525,6 +1620,27 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                     svc.log(ctx, req)
                         .await?
                         .encode::<crate::proto::gitproxy::v1::LogResponse>(format)
+                })
+            }
+            "RevertMerge" => {
+                let svc = ::std::sync::Arc::clone(&self.inner);
+                Box::pin(async move {
+                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
+                        crate::proto::gitproxy::v1::RevertMergeRequest,
+                    >(request.encoded()?, format)?;
+                    let req: crate::proto::gitproxy::v1::__buffa::view::RevertMergeRequestView<
+                        '_,
+                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
+                        &body,
+                    )?;
+                    let req = ::connectrpc::ServiceRequest::<
+                        crate::proto::gitproxy::v1::RevertMergeRequest,
+                    >::from_parts(&req, &body);
+                    svc.revert_merge(ctx, req)
+                        .await?
+                        .encode::<
+                            crate::proto::gitproxy::v1::RevertMergeResponse,
+                        >(format)
                 })
             }
             _ => ::connectrpc::dispatcher::codegen::unimplemented_unary(path),
@@ -2164,6 +2280,51 @@ where
                 &self.config,
                 GIT_PROXY_SERVICE_SERVICE_NAME,
                 "Log",
+                request,
+                options,
+            )
+            .await
+    }
+    /// Call the RevertMerge RPC. Sends a request to /gitproxy.v1.GitProxyService/RevertMerge.
+    pub async fn revert_merge(
+        &self,
+        request: crate::proto::gitproxy::v1::RevertMergeRequest,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::gitproxy::v1::__buffa::view::RevertMergeResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        self.revert_merge_with_options(
+                request,
+                ::connectrpc::client::CallOptions::default(),
+            )
+            .await
+    }
+    /// Call the RevertMerge RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
+    pub async fn revert_merge_with_options(
+        &self,
+        request: crate::proto::gitproxy::v1::RevertMergeRequest,
+        options: ::connectrpc::client::CallOptions,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::gitproxy::v1::__buffa::view::RevertMergeResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        ::connectrpc::client::call_unary(
+                &self.transport,
+                &self.config,
+                GIT_PROXY_SERVICE_SERVICE_NAME,
+                "RevertMerge",
                 request,
                 options,
             )

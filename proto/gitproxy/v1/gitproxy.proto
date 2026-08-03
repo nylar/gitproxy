@@ -18,6 +18,7 @@ service GitProxyService {
     rpc CommitFiles(CommitFilesRequest) returns (CommitFilesResponse) {}
     rpc Merge(MergeRequest) returns (MergeResponse) {}
     rpc Log(LogRequest) returns (LogResponse) {}
+    rpc RevertMerge(RevertMergeRequest) returns (RevertMergeResponse) {}
 }
 
 message ListRepositoriesRequest {
@@ -95,14 +96,27 @@ message CommitFilesRequest {
     repeated CommitFile files = 5;
 }
 
-message CommitFilesResponse {}
+message CommitFilesResponse {
+    string commit = 1;
+}
 
 message MergeRequest {
     string namespace = 1;
     string branch = 2;
 }
 
-message MergeResponse {}
+message MergeResponse {
+    string commit = 1;
+}
+
+message RevertMergeRequest {
+    string namespace = 1;
+    string commit = 2;
+}
+
+message RevertMergeResponse {
+    string commit = 1;
+}
 
 message LogRequest {
     string namespace = 1;

@@ -67,6 +67,9 @@ const (
 	GitProxyServiceMergeProcedure = "/gitproxy.v1.GitProxyService/Merge"
 	// GitProxyServiceLogProcedure is the fully-qualified name of the GitProxyService's Log RPC.
 	GitProxyServiceLogProcedure = "/gitproxy.v1.GitProxyService/Log"
+	// GitProxyServiceRevertMergeProcedure is the fully-qualified name of the GitProxyService's
+	// RevertMerge RPC.
+	GitProxyServiceRevertMergeProcedure = "/gitproxy.v1.GitProxyService/RevertMerge"
 )
 
 // GitProxyServiceClient is a client for the gitproxy.v1.GitProxyService service.
@@ -83,6 +86,7 @@ type GitProxyServiceClient interface {
 	CommitFiles(context.Context, *connect.Request[v1.CommitFilesRequest]) (*connect.Response[v1.CommitFilesResponse], error)
 	Merge(context.Context, *connect.Request[v1.MergeRequest]) (*connect.Response[v1.MergeResponse], error)
 	Log(context.Context, *connect.Request[v1.LogRequest]) (*connect.Response[v1.LogResponse], error)
+	RevertMerge(context.Context, *connect.Request[v1.RevertMergeRequest]) (*connect.Response[v1.RevertMergeResponse], error)
 }
 
 // NewGitProxyServiceClient constructs a client for the gitproxy.v1.GitProxyService service. By
@@ -168,6 +172,12 @@ func NewGitProxyServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(gitProxyServiceMethods.ByName("Log")),
 			connect.WithClientOptions(opts...),
 		),
+		revertMerge: connect.NewClient[v1.RevertMergeRequest, v1.RevertMergeResponse](
+			httpClient,
+			baseURL+GitProxyServiceRevertMergeProcedure,
+			connect.WithSchema(gitProxyServiceMethods.ByName("RevertMerge")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -185,6 +195,7 @@ type gitProxyServiceClient struct {
 	commitFiles      *connect.Client[v1.CommitFilesRequest, v1.CommitFilesResponse]
 	merge            *connect.Client[v1.MergeRequest, v1.MergeResponse]
 	log              *connect.Client[v1.LogRequest, v1.LogResponse]
+	revertMerge      *connect.Client[v1.RevertMergeRequest, v1.RevertMergeResponse]
 }
 
 // ListRepositories calls gitproxy.v1.GitProxyService.ListRepositories.
@@ -247,6 +258,11 @@ func (c *gitProxyServiceClient) Log(ctx context.Context, req *connect.Request[v1
 	return c.log.CallUnary(ctx, req)
 }
 
+// RevertMerge calls gitproxy.v1.GitProxyService.RevertMerge.
+func (c *gitProxyServiceClient) RevertMerge(ctx context.Context, req *connect.Request[v1.RevertMergeRequest]) (*connect.Response[v1.RevertMergeResponse], error) {
+	return c.revertMerge.CallUnary(ctx, req)
+}
+
 // GitProxyServiceHandler is an implementation of the gitproxy.v1.GitProxyService service.
 type GitProxyServiceHandler interface {
 	ListRepositories(context.Context, *connect.Request[v1.ListRepositoriesRequest]) (*connect.Response[v1.ListRepositoriesResponse], error)
@@ -261,6 +277,7 @@ type GitProxyServiceHandler interface {
 	CommitFiles(context.Context, *connect.Request[v1.CommitFilesRequest]) (*connect.Response[v1.CommitFilesResponse], error)
 	Merge(context.Context, *connect.Request[v1.MergeRequest]) (*connect.Response[v1.MergeResponse], error)
 	Log(context.Context, *connect.Request[v1.LogRequest]) (*connect.Response[v1.LogResponse], error)
+	RevertMerge(context.Context, *connect.Request[v1.RevertMergeRequest]) (*connect.Response[v1.RevertMergeResponse], error)
 }
 
 // NewGitProxyServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -342,6 +359,12 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 		connect.WithSchema(gitProxyServiceMethods.ByName("Log")),
 		connect.WithHandlerOptions(opts...),
 	)
+	gitProxyServiceRevertMergeHandler := connect.NewUnaryHandler(
+		GitProxyServiceRevertMergeProcedure,
+		svc.RevertMerge,
+		connect.WithSchema(gitProxyServiceMethods.ByName("RevertMerge")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/gitproxy.v1.GitProxyService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case GitProxyServiceListRepositoriesProcedure:
@@ -368,6 +391,8 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 			gitProxyServiceMergeHandler.ServeHTTP(w, r)
 		case GitProxyServiceLogProcedure:
 			gitProxyServiceLogHandler.ServeHTTP(w, r)
+		case GitProxyServiceRevertMergeProcedure:
+			gitProxyServiceRevertMergeHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -423,4 +448,8 @@ func (UnimplementedGitProxyServiceHandler) Merge(context.Context, *connect.Reque
 
 func (UnimplementedGitProxyServiceHandler) Log(context.Context, *connect.Request[v1.LogRequest]) (*connect.Response[v1.LogResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.Log is not implemented"))
+}
+
+func (UnimplementedGitProxyServiceHandler) RevertMerge(context.Context, *connect.Request[v1.RevertMergeRequest]) (*connect.Response[v1.RevertMergeResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.RevertMerge is not implemented"))
 }

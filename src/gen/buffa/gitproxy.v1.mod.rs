@@ -44,6 +44,8 @@ pub mod __buffa {
         reg.register_json_any(super::__COMMIT_FILES_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__MERGE_REQUEST_JSON_ANY);
         reg.register_json_any(super::__MERGE_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__REVERT_MERGE_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__REVERT_MERGE_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__LOG_REQUEST_JSON_ANY);
         reg.register_json_any(super::__LOG_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__COMMIT_FILE_JSON_ANY);
@@ -140,6 +142,14 @@ pub use self::__buffa::view::MergeRequestOwnedView;
 pub use self::__buffa::view::MergeResponseView;
 #[doc(inline)]
 pub use self::__buffa::view::MergeResponseOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::RevertMergeRequestView;
+#[doc(inline)]
+pub use self::__buffa::view::RevertMergeRequestOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::RevertMergeResponseView;
+#[doc(inline)]
+pub use self::__buffa::view::RevertMergeResponseOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::LogRequestView;
 #[doc(inline)]

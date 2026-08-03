@@ -1,14 +1,21 @@
-use std::{
-    fmt::Display,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
 use chrono::{DateTime, Utc};
-use git2::{Repository as GitRepository, Signature, WorktreeAddOptions, WorktreePruneOptions};
+use git2::{
+    Oid, Repository as GitRepository, Signature, WorktreeAddOptions, WorktreePruneOptions,
+    build::CheckoutBuilder,
+};
 
 use crate::error::Result;
 
 const DEFAULT_PRIMARY_BRANCH: &str = "main";
+
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum MergePreference {
+    #[default]
+    Normal,
+    FastForward,
+}
 
 #[derive(Debug)]
 pub struct Author {
@@ -23,16 +30,16 @@ pub struct Repository {
 
 impl Repository {
     pub fn open(repo_dir: &Path) -> Result<Self> {
-        std::fs::create_dir_all(&repo_dir)?;
+        std::fs::create_dir_all(repo_dir)?;
 
         let git_dir = repo_dir.join(".git");
 
         let repo = if std::fs::exists(&git_dir)? {
-            GitRepository::open_bare(&git_dir)?
+            GitRepository::open_bare(git_dir)?
         } else {
             std::fs::create_dir_all(&git_dir)?;
             let repo = GitRepository::init_bare(&git_dir)?;
-            Self::init_repo(&repo, &repo_dir)?;
+            Self::init_repo(&repo, repo_dir)?;
             repo
         };
 
@@ -52,8 +59,8 @@ impl Repository {
         repo.commit(Some("HEAD"), &sig, &sig, "Initial commit", &tree, &[])?;
 
         repo.worktree(
-            &DEFAULT_PRIMARY_BRANCH,
-            &repo_dir.join(&DEFAULT_PRIMARY_BRANCH),
+            DEFAULT_PRIMARY_BRANCH,
+            &repo_dir.join(DEFAULT_PRIMARY_BRANCH),
             Some(
                 WorktreeAddOptions::new()
                     .checkout_existing(true)
@@ -70,7 +77,7 @@ impl Repository {
     }
 
     pub fn primary_worktree(&self) -> Result<Worktree> {
-        self.worktree(&DEFAULT_PRIMARY_BRANCH)
+        self.worktree(DEFAULT_PRIMARY_BRANCH)
     }
 
     pub fn worktree(&self, name: &str) -> Result<Worktree> {
@@ -120,7 +127,7 @@ impl Worktree {
     }
 
     pub fn remove(&self) -> Result<()> {
-        std::fs::remove_dir_all(&self.path())?;
+        std::fs::remove_dir_all(self.path())?;
 
         let worktree = self.repo.find_worktree(&self.name)?;
 
@@ -139,25 +146,58 @@ impl Worktree {
         Ok(head)
     }
 
-    pub fn merge(&self, reference: &git2::Reference<'_>) -> Result<()> {
+    pub fn revert(&self, reference: &str, preference: MergePreference) -> Result<Oid> {
+        match preference {
+            MergePreference::FastForward => todo!("Handle fast-forward revert"),
+            MergePreference::Normal => {
+                let oid = Oid::from_str(reference)?;
+                let commit = self.repo.find_commit(oid)?;
+
+                let mut checkout = CheckoutBuilder::new();
+                checkout.allow_conflicts(true).conflict_style_merge(true);
+
+                let mut opts = git2::RevertOptions::new();
+                opts.mainline(1);
+                opts.checkout_builder(checkout);
+                self.repo.revert(&commit, Some(&mut opts))?;
+
+                let sig = self.repo.signature()?;
+                let oid = self.commit(
+                    &format!("Reverted {}", reference),
+                    &Author {
+                        name: sig.name()?.to_owned(),
+                        email: sig.email()?.to_owned(),
+                    },
+                )?;
+
+                Ok(oid)
+            }
+        }
+    }
+
+    pub fn merge(
+        &self,
+        reference: &git2::Reference<'_>,
+        preference: MergePreference,
+    ) -> Result<Oid> {
         let commit = self
             .repo
             .find_annotated_commit(reference.peel_to_commit()?.id())?;
 
-        self.do_merge(&commit)?;
-        Ok(())
+        let oid = self.do_merge(&commit, preference)?;
+        Ok(oid)
     }
 
-    pub fn commit_all(&self, message: &str, author: &Author) -> Result<()> {
+    pub fn commit_all(&self, message: &str, author: &Author) -> Result<Oid> {
         let signature = Signature::now(&author.name, &author.email)?;
 
         let mut index = self.repo.index()?;
-        index.add_all(&["*"], git2::IndexAddOption::DEFAULT, None)?;
+        index.add_all(["*"], git2::IndexAddOption::DEFAULT, None)?;
         index.write()?;
         let tree_id = index.write_tree()?;
         let parent_commit = self.repo.head()?.peel_to_commit()?;
         let tree = self.repo.find_tree(tree_id)?;
-        self.repo.commit(
+        let oid = self.repo.commit(
             Some("HEAD"),
             &signature,
             &signature,
@@ -166,7 +206,7 @@ impl Worktree {
             &[&parent_commit],
         )?;
 
-        Ok(())
+        Ok(oid)
     }
 
     pub fn log(&self) -> Result<impl Iterator<Item = LogEntry>> {
@@ -174,7 +214,6 @@ impl Worktree {
         revwalk.push_head()?;
 
         Ok(revwalk
-            .into_iter()
             .flatten()
             .flat_map(|id| self.repo.find_commit(id))
             .map(|commit| {
@@ -248,7 +287,30 @@ impl Worktree {
         Ok(())
     }
 
-    fn fast_forward(&self, lb: &mut git2::Reference, rc: &git2::AnnotatedCommit) -> Result<()> {
+    fn commit(&self, message: &str, author: &Author) -> Result<Oid> {
+        let signature = Signature::now(&author.name, &author.email)?;
+
+        let mut index = self.repo.index()?;
+        index.add_all(["*"], git2::IndexAddOption::DEFAULT, None)?;
+        index.write()?;
+        let tree_id = index.write_tree()?;
+        let parent_commit = self.repo.head()?.peel_to_commit()?;
+        let tree = self.repo.find_tree(tree_id)?;
+        let oid = self.repo.commit(
+            Some("HEAD"),
+            &signature,
+            &signature,
+            message,
+            &tree,
+            &[&parent_commit],
+        )?;
+        self.repo.cleanup_state()?;
+        self.repo
+            .checkout_head(Some(CheckoutBuilder::default().force()))?;
+        Ok(oid)
+    }
+
+    fn fast_forward(&self, lb: &mut git2::Reference, rc: &git2::AnnotatedCommit) -> Result<Oid> {
         let name = match lb.name() {
             Ok(s) => s.to_string(),
             Err(_) => String::from_utf8_lossy(lb.name_bytes()).to_string(),
@@ -258,14 +320,14 @@ impl Worktree {
         self.repo.set_head(&name)?;
         self.repo
             .checkout_head(Some(git2::build::CheckoutBuilder::default().force()))?;
-        Ok(())
+        Ok(rc.id())
     }
 
     fn normal_merge(
         &self,
         local: &git2::AnnotatedCommit,
         remote: &git2::AnnotatedCommit,
-    ) -> Result<()> {
+    ) -> Result<Oid> {
         let local_tree = self.repo.find_commit(local.id())?.tree()?;
         let remote_tree = self.repo.find_commit(remote.id())?.tree()?;
         let ancestor = self
@@ -285,7 +347,7 @@ impl Worktree {
         let sig = self.repo.signature()?;
         let local_commit = self.repo.find_commit(local.id())?;
         let remote_commit = self.repo.find_commit(remote.id())?;
-        let _merge_commit = self.repo.commit(
+        let merge_commit = self.repo.commit(
             Some("HEAD"),
             &sig,
             &sig,
@@ -295,41 +357,50 @@ impl Worktree {
         )?;
         self.repo
             .checkout_head(Some(git2::build::CheckoutBuilder::default().force()))?;
-        Ok(())
+
+        Ok(merge_commit)
     }
 
-    fn do_merge(&self, fetch_commit: &git2::AnnotatedCommit<'_>) -> Result<()> {
-        let analysis = self.repo.merge_analysis(&[&fetch_commit])?;
+    fn do_merge(
+        &self,
+        fetch_commit: &git2::AnnotatedCommit<'_>,
+        preference: MergePreference,
+    ) -> Result<Oid> {
+        let analysis = self.repo.merge_analysis(&[fetch_commit])?;
 
-        if analysis.0.is_fast_forward() {
-            let refname = format!("refs/heads/{}", &self.name);
-            match self.repo.find_reference(&refname) {
-                Ok(mut r) => {
-                    self.fast_forward(&mut r, &fetch_commit)?;
+        match analysis {
+            (analysis, _)
+                if analysis.is_fast_forward() && preference == MergePreference::FastForward =>
+            {
+                let refname = format!("refs/heads/{}", &self.name);
+                match self.repo.find_reference(&refname) {
+                    Ok(mut r) => Ok(self.fast_forward(&mut r, fetch_commit)?),
+                    Err(_) => {
+                        self.repo.reference(
+                            &refname,
+                            fetch_commit.id(),
+                            true,
+                            &format!("Setting {} to {}", &self.name, fetch_commit.id()),
+                        )?;
+                        self.repo.set_head(&refname)?;
+                        self.repo.checkout_head(Some(
+                            git2::build::CheckoutBuilder::default()
+                                .allow_conflicts(true)
+                                .conflict_style_merge(true)
+                                .force(),
+                        ))?;
+                        Ok(fetch_commit.id())
+                    }
                 }
-                Err(_) => {
-                    self.repo.reference(
-                        &refname,
-                        fetch_commit.id(),
-                        true,
-                        &format!("Setting {} to {}", &self.name, fetch_commit.id()),
-                    )?;
-                    self.repo.set_head(&refname)?;
-                    self.repo.checkout_head(Some(
-                        git2::build::CheckoutBuilder::default()
-                            .allow_conflicts(true)
-                            .conflict_style_merge(true)
-                            .force(),
-                    ))?;
-                }
-            };
-        } else if analysis.0.is_normal() {
-            let head_commit = self
-                .repo
-                .reference_to_annotated_commit(&self.repo.head()?)?;
-            self.normal_merge(&head_commit, &fetch_commit)?;
+            }
+            (analysis, _) if analysis.is_normal() && preference == MergePreference::Normal => {
+                let head_commit = self
+                    .repo
+                    .reference_to_annotated_commit(&self.repo.head()?)?;
+                Ok(self.normal_merge(&head_commit, fetch_commit)?)
+            }
+            _ => panic!("Unhandled merge"),
         }
-        Ok(())
     }
 }
 
@@ -339,14 +410,4 @@ pub struct LogEntry {
     pub author: Author,
     pub commit: String,
     pub time: DateTime<Utc>,
-}
-
-impl Display for LogEntry {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(
-            f,
-            "commit {}\nAuthor: {} <{}>\nDate: {}\n\n\t{}\n",
-            self.commit, self.author.name, self.author.email, self.time, self.message
-        )
-    }
 }
