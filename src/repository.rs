@@ -372,7 +372,7 @@ impl Worktree {
             (analysis, _)
                 if analysis.is_fast_forward() && preference == MergePreference::FastForward =>
             {
-                let refname = format!("refs/heads/{}", &self.name);
+                let refname = format!("refs/heads/{}", self.name);
                 match self.repo.find_reference(&refname) {
                     Ok(mut r) => Ok(self.fast_forward(&mut r, fetch_commit)?),
                     Err(_) => {
@@ -380,7 +380,7 @@ impl Worktree {
                             &refname,
                             fetch_commit.id(),
                             true,
-                            &format!("Setting {} to {}", &self.name, fetch_commit.id()),
+                            &format!("Setting {} to {}", self.name, fetch_commit.id()),
                         )?;
                         self.repo.set_head(&refname)?;
                         self.repo.checkout_head(Some(
