@@ -98,6 +98,22 @@ impl Repository {
         let repo = GitRepository::open_from_worktree(&worktree)?;
         Ok(Worktree::open(repo, name, path))
     }
+
+    pub fn checkout_tag(&self, name: &str) -> Result<PathBuf> {
+        let reference = self.repo.find_reference(&format!("refs/tags/{}", name))?;
+
+        let branch = self.repo.branch(name, &reference.peel_to_commit()?, true)?;
+        let branch_ref = branch.into_reference();
+
+        let path = self.repo_dir.join(name);
+        let mut opts = WorktreeAddOptions::new();
+        opts.checkout_existing(true);
+        opts.reference(Some(&branch_ref));
+
+        self.repo.worktree(name, &path, Some(&opts))?;
+
+        Ok(path.to_path_buf())
+    }
 }
 
 pub struct Worktree {

@@ -60,6 +60,9 @@ const (
 	// GitProxyServiceDeleteTagProcedure is the fully-qualified name of the GitProxyService's DeleteTag
 	// RPC.
 	GitProxyServiceDeleteTagProcedure = "/gitproxy.v1.GitProxyService/DeleteTag"
+	// GitProxyServiceCheckoutTagProcedure is the fully-qualified name of the GitProxyService's
+	// CheckoutTag RPC.
+	GitProxyServiceCheckoutTagProcedure = "/gitproxy.v1.GitProxyService/CheckoutTag"
 	// GitProxyServiceCommitProcedure is the fully-qualified name of the GitProxyService's Commit RPC.
 	GitProxyServiceCommitProcedure = "/gitproxy.v1.GitProxyService/Commit"
 	// GitProxyServiceMergeProcedure is the fully-qualified name of the GitProxyService's Merge RPC.
@@ -82,6 +85,7 @@ type GitProxyServiceClient interface {
 	ListTags(context.Context, *connect.Request[v1.ListTagsRequest]) (*connect.Response[v1.ListTagsResponse], error)
 	CreateTag(context.Context, *connect.Request[v1.CreateTagRequest]) (*connect.Response[v1.CreateTagResponse], error)
 	DeleteTag(context.Context, *connect.Request[v1.DeleteTagRequest]) (*connect.Response[v1.DeleteTagResponse], error)
+	CheckoutTag(context.Context, *connect.Request[v1.CheckoutTagRequest]) (*connect.Response[v1.CheckoutTagResponse], error)
 	Commit(context.Context, *connect.Request[v1.CommitRequest]) (*connect.Response[v1.CommitResponse], error)
 	Merge(context.Context, *connect.Request[v1.MergeRequest]) (*connect.Response[v1.MergeResponse], error)
 	Log(context.Context, *connect.Request[v1.LogRequest]) (*connect.Response[v1.LogResponse], error)
@@ -153,6 +157,12 @@ func NewGitProxyServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(gitProxyServiceMethods.ByName("DeleteTag")),
 			connect.WithClientOptions(opts...),
 		),
+		checkoutTag: connect.NewClient[v1.CheckoutTagRequest, v1.CheckoutTagResponse](
+			httpClient,
+			baseURL+GitProxyServiceCheckoutTagProcedure,
+			connect.WithSchema(gitProxyServiceMethods.ByName("CheckoutTag")),
+			connect.WithClientOptions(opts...),
+		),
 		commit: connect.NewClient[v1.CommitRequest, v1.CommitResponse](
 			httpClient,
 			baseURL+GitProxyServiceCommitProcedure,
@@ -191,6 +201,7 @@ type gitProxyServiceClient struct {
 	listTags         *connect.Client[v1.ListTagsRequest, v1.ListTagsResponse]
 	createTag        *connect.Client[v1.CreateTagRequest, v1.CreateTagResponse]
 	deleteTag        *connect.Client[v1.DeleteTagRequest, v1.DeleteTagResponse]
+	checkoutTag      *connect.Client[v1.CheckoutTagRequest, v1.CheckoutTagResponse]
 	commit           *connect.Client[v1.CommitRequest, v1.CommitResponse]
 	merge            *connect.Client[v1.MergeRequest, v1.MergeResponse]
 	log              *connect.Client[v1.LogRequest, v1.LogResponse]
@@ -242,6 +253,11 @@ func (c *gitProxyServiceClient) DeleteTag(ctx context.Context, req *connect.Requ
 	return c.deleteTag.CallUnary(ctx, req)
 }
 
+// CheckoutTag calls gitproxy.v1.GitProxyService.CheckoutTag.
+func (c *gitProxyServiceClient) CheckoutTag(ctx context.Context, req *connect.Request[v1.CheckoutTagRequest]) (*connect.Response[v1.CheckoutTagResponse], error) {
+	return c.checkoutTag.CallUnary(ctx, req)
+}
+
 // Commit calls gitproxy.v1.GitProxyService.Commit.
 func (c *gitProxyServiceClient) Commit(ctx context.Context, req *connect.Request[v1.CommitRequest]) (*connect.Response[v1.CommitResponse], error) {
 	return c.commit.CallUnary(ctx, req)
@@ -273,6 +289,7 @@ type GitProxyServiceHandler interface {
 	ListTags(context.Context, *connect.Request[v1.ListTagsRequest]) (*connect.Response[v1.ListTagsResponse], error)
 	CreateTag(context.Context, *connect.Request[v1.CreateTagRequest]) (*connect.Response[v1.CreateTagResponse], error)
 	DeleteTag(context.Context, *connect.Request[v1.DeleteTagRequest]) (*connect.Response[v1.DeleteTagResponse], error)
+	CheckoutTag(context.Context, *connect.Request[v1.CheckoutTagRequest]) (*connect.Response[v1.CheckoutTagResponse], error)
 	Commit(context.Context, *connect.Request[v1.CommitRequest]) (*connect.Response[v1.CommitResponse], error)
 	Merge(context.Context, *connect.Request[v1.MergeRequest]) (*connect.Response[v1.MergeResponse], error)
 	Log(context.Context, *connect.Request[v1.LogRequest]) (*connect.Response[v1.LogResponse], error)
@@ -340,6 +357,12 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 		connect.WithSchema(gitProxyServiceMethods.ByName("DeleteTag")),
 		connect.WithHandlerOptions(opts...),
 	)
+	gitProxyServiceCheckoutTagHandler := connect.NewUnaryHandler(
+		GitProxyServiceCheckoutTagProcedure,
+		svc.CheckoutTag,
+		connect.WithSchema(gitProxyServiceMethods.ByName("CheckoutTag")),
+		connect.WithHandlerOptions(opts...),
+	)
 	gitProxyServiceCommitHandler := connect.NewUnaryHandler(
 		GitProxyServiceCommitProcedure,
 		svc.Commit,
@@ -384,6 +407,8 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 			gitProxyServiceCreateTagHandler.ServeHTTP(w, r)
 		case GitProxyServiceDeleteTagProcedure:
 			gitProxyServiceDeleteTagHandler.ServeHTTP(w, r)
+		case GitProxyServiceCheckoutTagProcedure:
+			gitProxyServiceCheckoutTagHandler.ServeHTTP(w, r)
 		case GitProxyServiceCommitProcedure:
 			gitProxyServiceCommitHandler.ServeHTTP(w, r)
 		case GitProxyServiceMergeProcedure:
@@ -435,6 +460,10 @@ func (UnimplementedGitProxyServiceHandler) CreateTag(context.Context, *connect.R
 
 func (UnimplementedGitProxyServiceHandler) DeleteTag(context.Context, *connect.Request[v1.DeleteTagRequest]) (*connect.Response[v1.DeleteTagResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.DeleteTag is not implemented"))
+}
+
+func (UnimplementedGitProxyServiceHandler) CheckoutTag(context.Context, *connect.Request[v1.CheckoutTagRequest]) (*connect.Response[v1.CheckoutTagResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.CheckoutTag is not implemented"))
 }
 
 func (UnimplementedGitProxyServiceHandler) Commit(context.Context, *connect.Request[v1.CommitRequest]) (*connect.Response[v1.CommitResponse], error) {

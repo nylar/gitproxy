@@ -15,6 +15,7 @@ service GitProxyService {
     rpc ListTags(ListTagsRequest) returns (ListTagsResponse) {}
     rpc CreateTag(CreateTagRequest) returns (CreateTagResponse) {}
     rpc DeleteTag(DeleteTagRequest) returns (DeleteTagResponse) {}
+    rpc CheckoutTag(CheckoutTagRequest) returns (CheckoutTagResponse) {}
     rpc Commit(CommitRequest) returns (CommitResponse) {}
     rpc Merge(MergeRequest) returns (MergeResponse) {}
     rpc Log(LogRequest) returns (LogResponse) {}
@@ -91,6 +92,15 @@ message DeleteTagRequest {
 }
 
 message DeleteTagResponse {}
+
+message CheckoutTagRequest {
+    string namespace = 1;
+    string name = 2;
+}
+
+message CheckoutTagResponse {
+    string path = 1;
+}
 
 message CommitRequest {
     string namespace = 1;

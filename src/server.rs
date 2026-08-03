@@ -7,13 +7,13 @@ use connectrpc::{ConnectError, RequestContext, Response, ServiceRequest, Service
 use crate::{
     connect::gitproxy::v1::GitProxyService,
     proto::gitproxy::v1::{
-        CommitAuthor, CommitRequest, CommitResponse, CreateBranchRequest, CreateBranchResponse,
-        CreateRepositoryRequest, CreateRepositoryResponse, CreateTagRequest, CreateTagResponse,
-        DeleteBranchRequest, DeleteBranchResponse, DeleteRepositoryRequest,
-        DeleteRepositoryResponse, DeleteTagRequest, DeleteTagResponse, ListBranchesRequest,
-        ListBranchesResponse, ListRepositoriesRequest, ListRepositoriesResponse, ListTagsRequest,
-        ListTagsResponse, Log, LogRequest, LogResponse, MergeRequest, MergeResponse,
-        RevertMergeRequest, RevertMergeResponse,
+        CheckoutTagRequest, CheckoutTagResponse, CommitAuthor, CommitRequest, CommitResponse,
+        CreateBranchRequest, CreateBranchResponse, CreateRepositoryRequest,
+        CreateRepositoryResponse, CreateTagRequest, CreateTagResponse, DeleteBranchRequest,
+        DeleteBranchResponse, DeleteRepositoryRequest, DeleteRepositoryResponse, DeleteTagRequest,
+        DeleteTagResponse, ListBranchesRequest, ListBranchesResponse, ListRepositoriesRequest,
+        ListRepositoriesResponse, ListTagsRequest, ListTagsResponse, Log, LogRequest, LogResponse,
+        MergeRequest, MergeResponse, RevertMergeRequest, RevertMergeResponse,
     },
     repository::{Author, MergePreference, Repository},
 };
@@ -147,7 +147,10 @@ impl GitProxyService for Server {
         let branches = main.list_branches().map_err(internal)?;
 
         if branches.iter().any(|b| b == request.branch) {
-            return Err(ConnectError::already_exists("branch {} already exists"));
+            return Err(ConnectError::already_exists(format!(
+                "branch {} already exists",
+                request.branch
+            )));
         }
 
         main.new(request.branch).map_err(internal)?;
@@ -235,6 +238,22 @@ impl GitProxyService for Server {
         main.delete_tag(request.name).map_err(internal)?;
 
         Response::ok(DeleteTagResponse {
+            ..Default::default()
+        })
+    }
+
+    async fn checkout_tag(
+        &self,
+        _ctx: RequestContext,
+        request: ServiceRequest<'_, CheckoutTagRequest>,
+    ) -> ServiceResult<CheckoutTagResponse> {
+        let repo_dir = self.repo_dir(request.namespace);
+
+        let repo = Repository::open(&repo_dir).map_err(internal)?;
+        let path = repo.checkout_tag(request.name).map_err(internal)?;
+
+        Response::ok(CheckoutTagResponse {
+            path: path.to_str().unwrap().to_string(),
             ..Default::default()
         })
     }

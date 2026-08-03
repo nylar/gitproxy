@@ -40,6 +40,8 @@ pub mod __buffa {
         reg.register_json_any(super::__CREATE_TAG_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__DELETE_TAG_REQUEST_JSON_ANY);
         reg.register_json_any(super::__DELETE_TAG_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__CHECKOUT_TAG_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__CHECKOUT_TAG_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__COMMIT_REQUEST_JSON_ANY);
         reg.register_json_any(super::__COMMIT_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__MERGE_REQUEST_JSON_ANY);
@@ -125,6 +127,14 @@ pub use self::__buffa::view::DeleteTagRequestOwnedView;
 pub use self::__buffa::view::DeleteTagResponseView;
 #[doc(inline)]
 pub use self::__buffa::view::DeleteTagResponseOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::CheckoutTagRequestView;
+#[doc(inline)]
+pub use self::__buffa::view::CheckoutTagRequestOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::CheckoutTagResponseView;
+#[doc(inline)]
+pub use self::__buffa::view::CheckoutTagResponseOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::CommitRequestView;
 #[doc(inline)]

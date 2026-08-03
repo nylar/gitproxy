@@ -7,8 +7,9 @@ use gitproxy::{
     connect::gitproxy::v1::GitProxyServiceClient,
     error::Result,
     proto::gitproxy::v1::{
-        CommitAuthor, CommitRequest, CreateBranchRequest, CreateRepositoryRequest,
-        DeleteRepositoryRequest, LogRequest, LogView, MergeRequest, RevertMergeRequest,
+        CheckoutTagRequest, CommitAuthor, CommitRequest, CreateBranchRequest,
+        CreateRepositoryRequest, CreateTagRequest, DeleteBranchRequest, DeleteRepositoryRequest,
+        LogRequest, LogView, MergeRequest, RevertMergeRequest,
     },
 };
 
@@ -185,6 +186,44 @@ async fn main() {
     for log in &resp.view().logs {
         print_log(log);
     }
+
+    let tag = "my-tag";
+    client
+        .create_tag(CreateTagRequest {
+            namespace: NAMESPACE.to_owned(),
+            name: tag.to_owned(),
+            commit: None,
+            message: "Tagging my-tag".to_owned(),
+            author: MessageField::some(CommitAuthor {
+                name: "Bob".to_owned(),
+                email: "bob@example.com".to_owned(),
+                ..Default::default()
+            }),
+            overwrite: false,
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let resp = client
+        .checkout_tag(CheckoutTagRequest {
+            namespace: NAMESPACE.to_owned(),
+            name: tag.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    println!("Checked out tag {} to {}", tag, resp.view().path);
+
+    client
+        .delete_branch(DeleteBranchRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: tag.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
 }
 
 fn print_log(log: &LogView<'_>) {

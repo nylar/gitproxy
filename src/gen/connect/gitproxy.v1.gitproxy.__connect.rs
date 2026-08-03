@@ -70,6 +70,14 @@ pub type OwnedDeleteTagRequestView = ::buffa::view::OwnedView<
 pub type OwnedDeleteTagResponseView = ::buffa::view::OwnedView<
     crate::proto::gitproxy::v1::__buffa::view::DeleteTagResponseView<'static>,
 >;
+///Shorthand for `OwnedView<CheckoutTagRequestView<'static>>`.
+pub type OwnedCheckoutTagRequestView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::CheckoutTagRequestView<'static>,
+>;
+///Shorthand for `OwnedView<CheckoutTagResponseView<'static>>`.
+pub type OwnedCheckoutTagResponseView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::CheckoutTagResponseView<'static>,
+>;
 ///Shorthand for `OwnedView<CommitRequestView<'static>>`.
 pub type OwnedCommitRequestView = ::buffa::view::OwnedView<
     crate::proto::gitproxy::v1::__buffa::view::CommitRequestView<'static>,
@@ -282,6 +290,26 @@ for ::buffa::view::OwnedView<
         ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
     }
 }
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::CheckoutTagResponse>
+for crate::proto::gitproxy::v1::__buffa::view::CheckoutTagResponseView<'_> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self, codec)
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::CheckoutTagResponse>
+for ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::CheckoutTagResponseView<'static>,
+> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
+    }
+}
 impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::CommitResponse>
 for crate::proto::gitproxy::v1::__buffa::view::CommitResponseView<'_> {
     fn encode(
@@ -442,6 +470,15 @@ pub const GIT_PROXY_SERVICE_CREATE_TAG_SPEC: ::connectrpc::Spec = ::connectrpc::
 /// [`RequestContext::spec`](::connectrpc::RequestContext::spec).
 pub const GIT_PROXY_SERVICE_DELETE_TAG_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
         "/gitproxy.v1.GitProxyService/DeleteTag",
+        ::connectrpc::StreamType::Unary,
+    )
+    .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
+/// Static [`Spec`](::connectrpc::Spec) for the server-side `CheckoutTag` RPC.
+///
+/// The dispatcher surfaces this on
+/// [`RequestContext::spec`](::connectrpc::RequestContext::spec).
+pub const GIT_PROXY_SERVICE_CHECKOUT_TAG_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
+        "/gitproxy.v1.GitProxyService/CheckoutTag",
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
@@ -736,6 +773,29 @@ pub trait GitProxyService: Send + Sync + 'static {
         Output = ::connectrpc::ServiceResult<
             impl ::connectrpc::Encodable<
                 crate::proto::gitproxy::v1::DeleteTagResponse,
+            > + Send + use<'a, Self>,
+        >,
+    > + Send;
+    /// Handle the CheckoutTag RPC.
+    ///
+    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
+    ///
+    /// `request` is borrowed from the request body and is valid for the
+    /// duration of the call; message fields are read directly on it
+    /// (zero-copy). The response cannot borrow from `request` — use
+    /// `.to_owned_message()` (or copy the specific fields) for anything
+    /// returned, stored, or moved into `tokio::spawn`.
+    fn checkout_tag<'a>(
+        &'a self,
+        ctx: ::connectrpc::RequestContext,
+        request: ::connectrpc::ServiceRequest<
+            '_,
+            crate::proto::gitproxy::v1::CheckoutTagRequest,
+        >,
+    ) -> impl ::std::future::Future<
+        Output = ::connectrpc::ServiceResult<
+            impl ::connectrpc::Encodable<
+                crate::proto::gitproxy::v1::CheckoutTagResponse,
             > + Send + use<'a, Self>,
         >,
     > + Send;
@@ -1123,6 +1183,35 @@ impl<S: GitProxyService> GitProxyServiceExt for S {
             .with_spec(GIT_PROXY_SERVICE_DELETE_TAG_SPEC)
             .route_view(
                 GIT_PROXY_SERVICE_SERVICE_NAME,
+                "CheckoutTag",
+                {
+                    let svc = ::std::sync::Arc::clone(&self);
+                    ::connectrpc::view_handler_fn(move |
+                        ctx,
+                        req: ::buffa::view::OwnedView<
+                            crate::proto::gitproxy::v1::__buffa::view::CheckoutTagRequestView<
+                                'static,
+                            >,
+                        >,
+                        format|
+                    {
+                        let svc = ::std::sync::Arc::clone(&svc);
+                        async move {
+                            let sreq = ::connectrpc::ServiceRequest::<
+                                crate::proto::gitproxy::v1::CheckoutTagRequest,
+                            >::from_parts(req.reborrow(), req.bytes());
+                            svc.checkout_tag(ctx, sreq)
+                                .await?
+                                .encode::<
+                                    crate::proto::gitproxy::v1::CheckoutTagResponse,
+                                >(format)
+                        }
+                    })
+                },
+            )
+            .with_spec(GIT_PROXY_SERVICE_CHECKOUT_TAG_SPEC)
+            .route_view(
+                GIT_PROXY_SERVICE_SERVICE_NAME,
                 "Commit",
                 {
                     let svc = ::std::sync::Arc::clone(&self);
@@ -1339,6 +1428,12 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                 Some(
                     ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
                         .with_spec(GIT_PROXY_SERVICE_DELETE_TAG_SPEC),
+                )
+            }
+            "CheckoutTag" => {
+                Some(
+                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
+                        .with_spec(GIT_PROXY_SERVICE_CHECKOUT_TAG_SPEC),
                 )
             }
             "Commit" => {
@@ -1561,6 +1656,27 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                     svc.delete_tag(ctx, req)
                         .await?
                         .encode::<crate::proto::gitproxy::v1::DeleteTagResponse>(format)
+                })
+            }
+            "CheckoutTag" => {
+                let svc = ::std::sync::Arc::clone(&self.inner);
+                Box::pin(async move {
+                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
+                        crate::proto::gitproxy::v1::CheckoutTagRequest,
+                    >(request.encoded()?, format)?;
+                    let req: crate::proto::gitproxy::v1::__buffa::view::CheckoutTagRequestView<
+                        '_,
+                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
+                        &body,
+                    )?;
+                    let req = ::connectrpc::ServiceRequest::<
+                        crate::proto::gitproxy::v1::CheckoutTagRequest,
+                    >::from_parts(&req, &body);
+                    svc.checkout_tag(ctx, req)
+                        .await?
+                        .encode::<
+                            crate::proto::gitproxy::v1::CheckoutTagResponse,
+                        >(format)
                 })
             }
             "Commit" => {
@@ -2157,6 +2273,51 @@ where
                 &self.config,
                 GIT_PROXY_SERVICE_SERVICE_NAME,
                 "DeleteTag",
+                request,
+                options,
+            )
+            .await
+    }
+    /// Call the CheckoutTag RPC. Sends a request to /gitproxy.v1.GitProxyService/CheckoutTag.
+    pub async fn checkout_tag(
+        &self,
+        request: crate::proto::gitproxy::v1::CheckoutTagRequest,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::gitproxy::v1::__buffa::view::CheckoutTagResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        self.checkout_tag_with_options(
+                request,
+                ::connectrpc::client::CallOptions::default(),
+            )
+            .await
+    }
+    /// Call the CheckoutTag RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
+    pub async fn checkout_tag_with_options(
+        &self,
+        request: crate::proto::gitproxy::v1::CheckoutTagRequest,
+        options: ::connectrpc::client::CallOptions,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::gitproxy::v1::__buffa::view::CheckoutTagResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        ::connectrpc::client::call_unary(
+                &self.transport,
+                &self.config,
+                GIT_PROXY_SERVICE_SERVICE_NAME,
+                "CheckoutTag",
                 request,
                 options,
             )
