@@ -40,15 +40,14 @@ pub mod __buffa {
         reg.register_json_any(super::__CREATE_TAG_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__DELETE_TAG_REQUEST_JSON_ANY);
         reg.register_json_any(super::__DELETE_TAG_RESPONSE_JSON_ANY);
-        reg.register_json_any(super::__COMMIT_FILES_REQUEST_JSON_ANY);
-        reg.register_json_any(super::__COMMIT_FILES_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__COMMIT_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__COMMIT_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__MERGE_REQUEST_JSON_ANY);
         reg.register_json_any(super::__MERGE_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__REVERT_MERGE_REQUEST_JSON_ANY);
         reg.register_json_any(super::__REVERT_MERGE_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__LOG_REQUEST_JSON_ANY);
         reg.register_json_any(super::__LOG_RESPONSE_JSON_ANY);
-        reg.register_json_any(super::__COMMIT_FILE_JSON_ANY);
         reg.register_json_any(super::__COMMIT_AUTHOR_JSON_ANY);
         reg.register_json_any(super::__LOG_JSON_ANY);
         reg.register_json_any(super::__REPOSITORY_JSON_ANY);
@@ -127,13 +126,13 @@ pub use self::__buffa::view::DeleteTagResponseView;
 #[doc(inline)]
 pub use self::__buffa::view::DeleteTagResponseOwnedView;
 #[doc(inline)]
-pub use self::__buffa::view::CommitFilesRequestView;
+pub use self::__buffa::view::CommitRequestView;
 #[doc(inline)]
-pub use self::__buffa::view::CommitFilesRequestOwnedView;
+pub use self::__buffa::view::CommitRequestOwnedView;
 #[doc(inline)]
-pub use self::__buffa::view::CommitFilesResponseView;
+pub use self::__buffa::view::CommitResponseView;
 #[doc(inline)]
-pub use self::__buffa::view::CommitFilesResponseOwnedView;
+pub use self::__buffa::view::CommitResponseOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::MergeRequestView;
 #[doc(inline)]
@@ -158,10 +157,6 @@ pub use self::__buffa::view::LogRequestOwnedView;
 pub use self::__buffa::view::LogResponseView;
 #[doc(inline)]
 pub use self::__buffa::view::LogResponseOwnedView;
-#[doc(inline)]
-pub use self::__buffa::view::CommitFileView;
-#[doc(inline)]
-pub use self::__buffa::view::CommitFileOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::CommitAuthorView;
 #[doc(inline)]

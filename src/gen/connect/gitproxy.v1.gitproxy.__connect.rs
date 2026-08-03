@@ -70,13 +70,13 @@ pub type OwnedDeleteTagRequestView = ::buffa::view::OwnedView<
 pub type OwnedDeleteTagResponseView = ::buffa::view::OwnedView<
     crate::proto::gitproxy::v1::__buffa::view::DeleteTagResponseView<'static>,
 >;
-///Shorthand for `OwnedView<CommitFilesRequestView<'static>>`.
-pub type OwnedCommitFilesRequestView = ::buffa::view::OwnedView<
-    crate::proto::gitproxy::v1::__buffa::view::CommitFilesRequestView<'static>,
+///Shorthand for `OwnedView<CommitRequestView<'static>>`.
+pub type OwnedCommitRequestView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::CommitRequestView<'static>,
 >;
-///Shorthand for `OwnedView<CommitFilesResponseView<'static>>`.
-pub type OwnedCommitFilesResponseView = ::buffa::view::OwnedView<
-    crate::proto::gitproxy::v1::__buffa::view::CommitFilesResponseView<'static>,
+///Shorthand for `OwnedView<CommitResponseView<'static>>`.
+pub type OwnedCommitResponseView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::CommitResponseView<'static>,
 >;
 ///Shorthand for `OwnedView<MergeRequestView<'static>>`.
 pub type OwnedMergeRequestView = ::buffa::view::OwnedView<
@@ -282,8 +282,8 @@ for ::buffa::view::OwnedView<
         ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
     }
 }
-impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::CommitFilesResponse>
-for crate::proto::gitproxy::v1::__buffa::view::CommitFilesResponseView<'_> {
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::CommitResponse>
+for crate::proto::gitproxy::v1::__buffa::view::CommitResponseView<'_> {
     fn encode(
         &self,
         codec: ::connectrpc::CodecFormat,
@@ -291,9 +291,9 @@ for crate::proto::gitproxy::v1::__buffa::view::CommitFilesResponseView<'_> {
         ::connectrpc::__codegen::encode_view_body(self, codec)
     }
 }
-impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::CommitFilesResponse>
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::CommitResponse>
 for ::buffa::view::OwnedView<
-    crate::proto::gitproxy::v1::__buffa::view::CommitFilesResponseView<'static>,
+    crate::proto::gitproxy::v1::__buffa::view::CommitResponseView<'static>,
 > {
     fn encode(
         &self,
@@ -445,12 +445,12 @@ pub const GIT_PROXY_SERVICE_DELETE_TAG_SPEC: ::connectrpc::Spec = ::connectrpc::
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
-/// Static [`Spec`](::connectrpc::Spec) for the server-side `CommitFiles` RPC.
+/// Static [`Spec`](::connectrpc::Spec) for the server-side `Commit` RPC.
 ///
 /// The dispatcher surfaces this on
 /// [`RequestContext::spec`](::connectrpc::RequestContext::spec).
-pub const GIT_PROXY_SERVICE_COMMIT_FILES_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
-        "/gitproxy.v1.GitProxyService/CommitFiles",
+pub const GIT_PROXY_SERVICE_COMMIT_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
+        "/gitproxy.v1.GitProxyService/Commit",
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
@@ -739,7 +739,7 @@ pub trait GitProxyService: Send + Sync + 'static {
             > + Send + use<'a, Self>,
         >,
     > + Send;
-    /// Handle the CommitFiles RPC.
+    /// Handle the Commit RPC.
     ///
     /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
     ///
@@ -748,17 +748,17 @@ pub trait GitProxyService: Send + Sync + 'static {
     /// (zero-copy). The response cannot borrow from `request` — use
     /// `.to_owned_message()` (or copy the specific fields) for anything
     /// returned, stored, or moved into `tokio::spawn`.
-    fn commit_files<'a>(
+    fn commit<'a>(
         &'a self,
         ctx: ::connectrpc::RequestContext,
         request: ::connectrpc::ServiceRequest<
             '_,
-            crate::proto::gitproxy::v1::CommitFilesRequest,
+            crate::proto::gitproxy::v1::CommitRequest,
         >,
     ) -> impl ::std::future::Future<
         Output = ::connectrpc::ServiceResult<
             impl ::connectrpc::Encodable<
-                crate::proto::gitproxy::v1::CommitFilesResponse,
+                crate::proto::gitproxy::v1::CommitResponse,
             > + Send + use<'a, Self>,
         >,
     > + Send;
@@ -1123,13 +1123,13 @@ impl<S: GitProxyService> GitProxyServiceExt for S {
             .with_spec(GIT_PROXY_SERVICE_DELETE_TAG_SPEC)
             .route_view(
                 GIT_PROXY_SERVICE_SERVICE_NAME,
-                "CommitFiles",
+                "Commit",
                 {
                     let svc = ::std::sync::Arc::clone(&self);
                     ::connectrpc::view_handler_fn(move |
                         ctx,
                         req: ::buffa::view::OwnedView<
-                            crate::proto::gitproxy::v1::__buffa::view::CommitFilesRequestView<
+                            crate::proto::gitproxy::v1::__buffa::view::CommitRequestView<
                                 'static,
                             >,
                         >,
@@ -1138,18 +1138,18 @@ impl<S: GitProxyService> GitProxyServiceExt for S {
                         let svc = ::std::sync::Arc::clone(&svc);
                         async move {
                             let sreq = ::connectrpc::ServiceRequest::<
-                                crate::proto::gitproxy::v1::CommitFilesRequest,
+                                crate::proto::gitproxy::v1::CommitRequest,
                             >::from_parts(req.reborrow(), req.bytes());
-                            svc.commit_files(ctx, sreq)
+                            svc.commit(ctx, sreq)
                                 .await?
                                 .encode::<
-                                    crate::proto::gitproxy::v1::CommitFilesResponse,
+                                    crate::proto::gitproxy::v1::CommitResponse,
                                 >(format)
                         }
                     })
                 },
             )
-            .with_spec(GIT_PROXY_SERVICE_COMMIT_FILES_SPEC)
+            .with_spec(GIT_PROXY_SERVICE_COMMIT_SPEC)
             .route_view(
                 GIT_PROXY_SERVICE_SERVICE_NAME,
                 "Merge",
@@ -1341,10 +1341,10 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                         .with_spec(GIT_PROXY_SERVICE_DELETE_TAG_SPEC),
                 )
             }
-            "CommitFiles" => {
+            "Commit" => {
                 Some(
                     ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
-                        .with_spec(GIT_PROXY_SERVICE_COMMIT_FILES_SPEC),
+                        .with_spec(GIT_PROXY_SERVICE_COMMIT_SPEC),
                 )
             }
             "Merge" => {
@@ -1563,25 +1563,23 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                         .encode::<crate::proto::gitproxy::v1::DeleteTagResponse>(format)
                 })
             }
-            "CommitFiles" => {
+            "Commit" => {
                 let svc = ::std::sync::Arc::clone(&self.inner);
                 Box::pin(async move {
                     let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
-                        crate::proto::gitproxy::v1::CommitFilesRequest,
+                        crate::proto::gitproxy::v1::CommitRequest,
                     >(request.encoded()?, format)?;
-                    let req: crate::proto::gitproxy::v1::__buffa::view::CommitFilesRequestView<
+                    let req: crate::proto::gitproxy::v1::__buffa::view::CommitRequestView<
                         '_,
                     > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
                         &body,
                     )?;
                     let req = ::connectrpc::ServiceRequest::<
-                        crate::proto::gitproxy::v1::CommitFilesRequest,
+                        crate::proto::gitproxy::v1::CommitRequest,
                     >::from_parts(&req, &body);
-                    svc.commit_files(ctx, req)
+                    svc.commit(ctx, req)
                         .await?
-                        .encode::<
-                            crate::proto::gitproxy::v1::CommitFilesResponse,
-                        >(format)
+                        .encode::<crate::proto::gitproxy::v1::CommitResponse>(format)
                 })
             }
             "Merge" => {
@@ -2164,37 +2162,30 @@ where
             )
             .await
     }
-    /// Call the CommitFiles RPC. Sends a request to /gitproxy.v1.GitProxyService/CommitFiles.
-    pub async fn commit_files(
+    /// Call the Commit RPC. Sends a request to /gitproxy.v1.GitProxyService/Commit.
+    pub async fn commit(
         &self,
-        request: crate::proto::gitproxy::v1::CommitFilesRequest,
+        request: crate::proto::gitproxy::v1::CommitRequest,
     ) -> Result<
         ::connectrpc::client::UnaryResponse<
             ::buffa::view::OwnedView<
-                crate::proto::gitproxy::v1::__buffa::view::CommitFilesResponseView<
-                    'static,
-                >,
+                crate::proto::gitproxy::v1::__buffa::view::CommitResponseView<'static>,
             >,
         >,
         ::connectrpc::ConnectError,
     > {
-        self.commit_files_with_options(
-                request,
-                ::connectrpc::client::CallOptions::default(),
-            )
+        self.commit_with_options(request, ::connectrpc::client::CallOptions::default())
             .await
     }
-    /// Call the CommitFiles RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
-    pub async fn commit_files_with_options(
+    /// Call the Commit RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
+    pub async fn commit_with_options(
         &self,
-        request: crate::proto::gitproxy::v1::CommitFilesRequest,
+        request: crate::proto::gitproxy::v1::CommitRequest,
         options: ::connectrpc::client::CallOptions,
     ) -> Result<
         ::connectrpc::client::UnaryResponse<
             ::buffa::view::OwnedView<
-                crate::proto::gitproxy::v1::__buffa::view::CommitFilesResponseView<
-                    'static,
-                >,
+                crate::proto::gitproxy::v1::__buffa::view::CommitResponseView<'static>,
             >,
         >,
         ::connectrpc::ConnectError,
@@ -2203,7 +2194,7 @@ where
                 &self.transport,
                 &self.config,
                 GIT_PROXY_SERVICE_SERVICE_NAME,
-                "CommitFiles",
+                "Commit",
                 request,
                 options,
             )

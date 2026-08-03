@@ -148,6 +148,7 @@ func (x *CreateRepositoryRequest) GetNamespace() string {
 
 type CreateRepositoryResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Repository    *Repository            `protobuf:"bytes,1,opt,name=repository,proto3" json:"repository,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -180,6 +181,13 @@ func (x *CreateRepositoryResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use CreateRepositoryResponse.ProtoReflect.Descriptor instead.
 func (*CreateRepositoryResponse) Descriptor() ([]byte, []int) {
 	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *CreateRepositoryResponse) GetRepository() *Repository {
+	if x != nil {
+		return x.Repository
+	}
+	return nil
 }
 
 type DeleteRepositoryRequest struct {
@@ -404,6 +412,7 @@ func (x *CreateBranchRequest) GetBranch() string {
 
 type CreateBranchResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	Path          string                 `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -436,6 +445,13 @@ func (x *CreateBranchResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use CreateBranchResponse.ProtoReflect.Descriptor instead.
 func (*CreateBranchResponse) Descriptor() ([]byte, []int) {
 	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *CreateBranchResponse) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
 }
 
 type DeleteBranchRequest struct {
@@ -822,31 +838,30 @@ func (*DeleteTagResponse) Descriptor() ([]byte, []int) {
 	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{17}
 }
 
-type CommitFilesRequest struct {
+type CommitRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Namespace     string                 `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`
 	Branch        string                 `protobuf:"bytes,2,opt,name=branch,proto3" json:"branch,omitempty"`
 	Message       string                 `protobuf:"bytes,3,opt,name=message,proto3" json:"message,omitempty"`
 	Author        *CommitAuthor          `protobuf:"bytes,4,opt,name=author,proto3" json:"author,omitempty"`
-	Files         []*CommitFile          `protobuf:"bytes,5,rep,name=files,proto3" json:"files,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CommitFilesRequest) Reset() {
-	*x = CommitFilesRequest{}
+func (x *CommitRequest) Reset() {
+	*x = CommitRequest{}
 	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CommitFilesRequest) String() string {
+func (x *CommitRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CommitFilesRequest) ProtoMessage() {}
+func (*CommitRequest) ProtoMessage() {}
 
-func (x *CommitFilesRequest) ProtoReflect() protoreflect.Message {
+func (x *CommitRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -858,67 +873,60 @@ func (x *CommitFilesRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CommitFilesRequest.ProtoReflect.Descriptor instead.
-func (*CommitFilesRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use CommitRequest.ProtoReflect.Descriptor instead.
+func (*CommitRequest) Descriptor() ([]byte, []int) {
 	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{18}
 }
 
-func (x *CommitFilesRequest) GetNamespace() string {
+func (x *CommitRequest) GetNamespace() string {
 	if x != nil {
 		return x.Namespace
 	}
 	return ""
 }
 
-func (x *CommitFilesRequest) GetBranch() string {
+func (x *CommitRequest) GetBranch() string {
 	if x != nil {
 		return x.Branch
 	}
 	return ""
 }
 
-func (x *CommitFilesRequest) GetMessage() string {
+func (x *CommitRequest) GetMessage() string {
 	if x != nil {
 		return x.Message
 	}
 	return ""
 }
 
-func (x *CommitFilesRequest) GetAuthor() *CommitAuthor {
+func (x *CommitRequest) GetAuthor() *CommitAuthor {
 	if x != nil {
 		return x.Author
 	}
 	return nil
 }
 
-func (x *CommitFilesRequest) GetFiles() []*CommitFile {
-	if x != nil {
-		return x.Files
-	}
-	return nil
-}
-
-type CommitFilesResponse struct {
+type CommitResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Commit        string                 `protobuf:"bytes,1,opt,name=commit,proto3" json:"commit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CommitFilesResponse) Reset() {
-	*x = CommitFilesResponse{}
+func (x *CommitResponse) Reset() {
+	*x = CommitResponse{}
 	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CommitFilesResponse) String() string {
+func (x *CommitResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CommitFilesResponse) ProtoMessage() {}
+func (*CommitResponse) ProtoMessage() {}
 
-func (x *CommitFilesResponse) ProtoReflect() protoreflect.Message {
+func (x *CommitResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -930,12 +938,12 @@ func (x *CommitFilesResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CommitFilesResponse.ProtoReflect.Descriptor instead.
-func (*CommitFilesResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use CommitResponse.ProtoReflect.Descriptor instead.
+func (*CommitResponse) Descriptor() ([]byte, []int) {
 	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{19}
 }
 
-func (x *CommitFilesResponse) GetCommit() string {
+func (x *CommitResponse) GetCommit() string {
 	if x != nil {
 		return x.Commit
 	}
@@ -1230,58 +1238,6 @@ func (x *LogResponse) GetLogs() []*Log {
 	return nil
 }
 
-type CommitFile struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Path          string                 `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
-	Contents      []byte                 `protobuf:"bytes,2,opt,name=contents,proto3" json:"contents,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CommitFile) Reset() {
-	*x = CommitFile{}
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[26]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CommitFile) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CommitFile) ProtoMessage() {}
-
-func (x *CommitFile) ProtoReflect() protoreflect.Message {
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[26]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CommitFile.ProtoReflect.Descriptor instead.
-func (*CommitFile) Descriptor() ([]byte, []int) {
-	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{26}
-}
-
-func (x *CommitFile) GetPath() string {
-	if x != nil {
-		return x.Path
-	}
-	return ""
-}
-
-func (x *CommitFile) GetContents() []byte {
-	if x != nil {
-		return x.Contents
-	}
-	return nil
-}
-
 type CommitAuthor struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -1292,7 +1248,7 @@ type CommitAuthor struct {
 
 func (x *CommitAuthor) Reset() {
 	*x = CommitAuthor{}
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[27]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1304,7 +1260,7 @@ func (x *CommitAuthor) String() string {
 func (*CommitAuthor) ProtoMessage() {}
 
 func (x *CommitAuthor) ProtoReflect() protoreflect.Message {
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[27]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1317,7 +1273,7 @@ func (x *CommitAuthor) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CommitAuthor.ProtoReflect.Descriptor instead.
 func (*CommitAuthor) Descriptor() ([]byte, []int) {
-	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{27}
+	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *CommitAuthor) GetName() string {
@@ -1346,7 +1302,7 @@ type Log struct {
 
 func (x *Log) Reset() {
 	*x = Log{}
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[28]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1358,7 +1314,7 @@ func (x *Log) String() string {
 func (*Log) ProtoMessage() {}
 
 func (x *Log) ProtoReflect() protoreflect.Message {
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[28]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1371,7 +1327,7 @@ func (x *Log) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Log.ProtoReflect.Descriptor instead.
 func (*Log) Descriptor() ([]byte, []int) {
-	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{28}
+	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *Log) GetMessage() string {
@@ -1406,13 +1362,14 @@ type Repository struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Namespace     string                 `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`
 	HeadCommit    string                 `protobuf:"bytes,2,opt,name=head_commit,json=headCommit,proto3" json:"head_commit,omitempty"`
+	Path          string                 `protobuf:"bytes,3,opt,name=path,proto3" json:"path,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Repository) Reset() {
 	*x = Repository{}
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[29]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1424,7 +1381,7 @@ func (x *Repository) String() string {
 func (*Repository) ProtoMessage() {}
 
 func (x *Repository) ProtoReflect() protoreflect.Message {
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[29]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1437,7 +1394,7 @@ func (x *Repository) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Repository.ProtoReflect.Descriptor instead.
 func (*Repository) Descriptor() ([]byte, []int) {
-	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{29}
+	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *Repository) GetNamespace() string {
@@ -1454,6 +1411,13 @@ func (x *Repository) GetHeadCommit() string {
 	return ""
 }
 
+func (x *Repository) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
 var File_gitproxy_v1_gitproxy_proto protoreflect.FileDescriptor
 
 const file_gitproxy_v1_gitproxy_proto_rawDesc = "" +
@@ -1463,8 +1427,11 @@ const file_gitproxy_v1_gitproxy_proto_rawDesc = "" +
 	"\x18ListRepositoriesResponse\x12;\n" +
 	"\frepositories\x18\x01 \x03(\v2\x17.gitproxy.v1.RepositoryR\frepositories\"7\n" +
 	"\x17CreateRepositoryRequest\x12\x1c\n" +
-	"\tnamespace\x18\x01 \x01(\tR\tnamespace\"\x1a\n" +
-	"\x18CreateRepositoryResponse\"7\n" +
+	"\tnamespace\x18\x01 \x01(\tR\tnamespace\"S\n" +
+	"\x18CreateRepositoryResponse\x127\n" +
+	"\n" +
+	"repository\x18\x01 \x01(\v2\x17.gitproxy.v1.RepositoryR\n" +
+	"repository\"7\n" +
 	"\x17DeleteRepositoryRequest\x12\x1c\n" +
 	"\tnamespace\x18\x01 \x01(\tR\tnamespace\"\x1a\n" +
 	"\x18DeleteRepositoryResponse\"3\n" +
@@ -1474,8 +1441,9 @@ const file_gitproxy_v1_gitproxy_proto_rawDesc = "" +
 	"\bbranches\x18\x01 \x03(\tR\bbranches\"K\n" +
 	"\x13CreateBranchRequest\x12\x1c\n" +
 	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x16\n" +
-	"\x06branch\x18\x02 \x01(\tR\x06branch\"\x16\n" +
-	"\x14CreateBranchResponse\"K\n" +
+	"\x06branch\x18\x02 \x01(\tR\x06branch\"*\n" +
+	"\x14CreateBranchResponse\x12\x12\n" +
+	"\x04path\x18\x01 \x01(\tR\x04path\"K\n" +
 	"\x13DeleteBranchRequest\x12\x1c\n" +
 	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x16\n" +
 	"\x06branch\x18\x02 \x01(\tR\x06branch\"\x16\n" +
@@ -1496,14 +1464,13 @@ const file_gitproxy_v1_gitproxy_proto_rawDesc = "" +
 	"\x10DeleteTagRequest\x12\x1c\n" +
 	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\"\x13\n" +
-	"\x11DeleteTagResponse\"\xc6\x01\n" +
-	"\x12CommitFilesRequest\x12\x1c\n" +
+	"\x11DeleteTagResponse\"\x92\x01\n" +
+	"\rCommitRequest\x12\x1c\n" +
 	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x16\n" +
 	"\x06branch\x18\x02 \x01(\tR\x06branch\x12\x18\n" +
 	"\amessage\x18\x03 \x01(\tR\amessage\x121\n" +
-	"\x06author\x18\x04 \x01(\v2\x19.gitproxy.v1.CommitAuthorR\x06author\x12-\n" +
-	"\x05files\x18\x05 \x03(\v2\x17.gitproxy.v1.CommitFileR\x05files\"-\n" +
-	"\x13CommitFilesResponse\x12\x16\n" +
+	"\x06author\x18\x04 \x01(\v2\x19.gitproxy.v1.CommitAuthorR\x06author\"(\n" +
+	"\x0eCommitResponse\x12\x16\n" +
 	"\x06commit\x18\x01 \x01(\tR\x06commit\"D\n" +
 	"\fMergeRequest\x12\x1c\n" +
 	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x16\n" +
@@ -1521,11 +1488,7 @@ const file_gitproxy_v1_gitproxy_proto_rawDesc = "" +
 	"\x06branch\x18\x02 \x01(\tH\x00R\x06branch\x88\x01\x01B\t\n" +
 	"\a_branch\"3\n" +
 	"\vLogResponse\x12$\n" +
-	"\x04logs\x18\x01 \x03(\v2\x10.gitproxy.v1.LogR\x04logs\"<\n" +
-	"\n" +
-	"CommitFile\x12\x12\n" +
-	"\x04path\x18\x01 \x01(\tR\x04path\x12\x1a\n" +
-	"\bcontents\x18\x02 \x01(\fR\bcontents\"8\n" +
+	"\x04logs\x18\x01 \x03(\v2\x10.gitproxy.v1.LogR\x04logs\"8\n" +
 	"\fCommitAuthor\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\"\x9a\x01\n" +
@@ -1533,12 +1496,13 @@ const file_gitproxy_v1_gitproxy_proto_rawDesc = "" +
 	"\amessage\x18\x01 \x01(\tR\amessage\x121\n" +
 	"\x06author\x18\x02 \x01(\v2\x19.gitproxy.v1.CommitAuthorR\x06author\x12\x16\n" +
 	"\x06commit\x18\x03 \x01(\tR\x06commit\x12.\n" +
-	"\x04time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\x04time\"K\n" +
+	"\x04time\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\x04time\"_\n" +
 	"\n" +
 	"Repository\x12\x1c\n" +
 	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x1f\n" +
 	"\vhead_commit\x18\x02 \x01(\tR\n" +
-	"headCommit2\xcc\b\n" +
+	"headCommit\x12\x12\n" +
+	"\x04path\x18\x03 \x01(\tR\x04path2\xbd\b\n" +
 	"\x0fGitProxyService\x12a\n" +
 	"\x10ListRepositories\x12$.gitproxy.v1.ListRepositoriesRequest\x1a%.gitproxy.v1.ListRepositoriesResponse\"\x00\x12a\n" +
 	"\x10CreateRepository\x12$.gitproxy.v1.CreateRepositoryRequest\x1a%.gitproxy.v1.CreateRepositoryResponse\"\x00\x12a\n" +
@@ -1548,8 +1512,8 @@ const file_gitproxy_v1_gitproxy_proto_rawDesc = "" +
 	"\fDeleteBranch\x12 .gitproxy.v1.DeleteBranchRequest\x1a!.gitproxy.v1.DeleteBranchResponse\"\x00\x12I\n" +
 	"\bListTags\x12\x1c.gitproxy.v1.ListTagsRequest\x1a\x1d.gitproxy.v1.ListTagsResponse\"\x00\x12L\n" +
 	"\tCreateTag\x12\x1d.gitproxy.v1.CreateTagRequest\x1a\x1e.gitproxy.v1.CreateTagResponse\"\x00\x12L\n" +
-	"\tDeleteTag\x12\x1d.gitproxy.v1.DeleteTagRequest\x1a\x1e.gitproxy.v1.DeleteTagResponse\"\x00\x12R\n" +
-	"\vCommitFiles\x12\x1f.gitproxy.v1.CommitFilesRequest\x1a .gitproxy.v1.CommitFilesResponse\"\x00\x12@\n" +
+	"\tDeleteTag\x12\x1d.gitproxy.v1.DeleteTagRequest\x1a\x1e.gitproxy.v1.DeleteTagResponse\"\x00\x12C\n" +
+	"\x06Commit\x12\x1a.gitproxy.v1.CommitRequest\x1a\x1b.gitproxy.v1.CommitResponse\"\x00\x12@\n" +
 	"\x05Merge\x12\x19.gitproxy.v1.MergeRequest\x1a\x1a.gitproxy.v1.MergeResponse\"\x00\x12:\n" +
 	"\x03Log\x12\x17.gitproxy.v1.LogRequest\x1a\x18.gitproxy.v1.LogResponse\"\x00\x12R\n" +
 	"\vRevertMerge\x12\x1f.gitproxy.v1.RevertMergeRequest\x1a .gitproxy.v1.RevertMergeResponse\"\x00B7Z5github.com/nylar/gitproxy/go/gen/gitproxy/v1;gitproxyb\x06proto3"
@@ -1566,7 +1530,7 @@ func file_gitproxy_v1_gitproxy_proto_rawDescGZIP() []byte {
 	return file_gitproxy_v1_gitproxy_proto_rawDescData
 }
 
-var file_gitproxy_v1_gitproxy_proto_msgTypes = make([]protoimpl.MessageInfo, 30)
+var file_gitproxy_v1_gitproxy_proto_msgTypes = make([]protoimpl.MessageInfo, 29)
 var file_gitproxy_v1_gitproxy_proto_goTypes = []any{
 	(*ListRepositoriesRequest)(nil),  // 0: gitproxy.v1.ListRepositoriesRequest
 	(*ListRepositoriesResponse)(nil), // 1: gitproxy.v1.ListRepositoriesResponse
@@ -1586,28 +1550,27 @@ var file_gitproxy_v1_gitproxy_proto_goTypes = []any{
 	(*CreateTagResponse)(nil),        // 15: gitproxy.v1.CreateTagResponse
 	(*DeleteTagRequest)(nil),         // 16: gitproxy.v1.DeleteTagRequest
 	(*DeleteTagResponse)(nil),        // 17: gitproxy.v1.DeleteTagResponse
-	(*CommitFilesRequest)(nil),       // 18: gitproxy.v1.CommitFilesRequest
-	(*CommitFilesResponse)(nil),      // 19: gitproxy.v1.CommitFilesResponse
+	(*CommitRequest)(nil),            // 18: gitproxy.v1.CommitRequest
+	(*CommitResponse)(nil),           // 19: gitproxy.v1.CommitResponse
 	(*MergeRequest)(nil),             // 20: gitproxy.v1.MergeRequest
 	(*MergeResponse)(nil),            // 21: gitproxy.v1.MergeResponse
 	(*RevertMergeRequest)(nil),       // 22: gitproxy.v1.RevertMergeRequest
 	(*RevertMergeResponse)(nil),      // 23: gitproxy.v1.RevertMergeResponse
 	(*LogRequest)(nil),               // 24: gitproxy.v1.LogRequest
 	(*LogResponse)(nil),              // 25: gitproxy.v1.LogResponse
-	(*CommitFile)(nil),               // 26: gitproxy.v1.CommitFile
-	(*CommitAuthor)(nil),             // 27: gitproxy.v1.CommitAuthor
-	(*Log)(nil),                      // 28: gitproxy.v1.Log
-	(*Repository)(nil),               // 29: gitproxy.v1.Repository
-	(*timestamppb.Timestamp)(nil),    // 30: google.protobuf.Timestamp
+	(*CommitAuthor)(nil),             // 26: gitproxy.v1.CommitAuthor
+	(*Log)(nil),                      // 27: gitproxy.v1.Log
+	(*Repository)(nil),               // 28: gitproxy.v1.Repository
+	(*timestamppb.Timestamp)(nil),    // 29: google.protobuf.Timestamp
 }
 var file_gitproxy_v1_gitproxy_proto_depIdxs = []int32{
-	29, // 0: gitproxy.v1.ListRepositoriesResponse.repositories:type_name -> gitproxy.v1.Repository
-	27, // 1: gitproxy.v1.CreateTagRequest.author:type_name -> gitproxy.v1.CommitAuthor
-	27, // 2: gitproxy.v1.CommitFilesRequest.author:type_name -> gitproxy.v1.CommitAuthor
-	26, // 3: gitproxy.v1.CommitFilesRequest.files:type_name -> gitproxy.v1.CommitFile
-	28, // 4: gitproxy.v1.LogResponse.logs:type_name -> gitproxy.v1.Log
-	27, // 5: gitproxy.v1.Log.author:type_name -> gitproxy.v1.CommitAuthor
-	30, // 6: gitproxy.v1.Log.time:type_name -> google.protobuf.Timestamp
+	28, // 0: gitproxy.v1.ListRepositoriesResponse.repositories:type_name -> gitproxy.v1.Repository
+	28, // 1: gitproxy.v1.CreateRepositoryResponse.repository:type_name -> gitproxy.v1.Repository
+	26, // 2: gitproxy.v1.CreateTagRequest.author:type_name -> gitproxy.v1.CommitAuthor
+	26, // 3: gitproxy.v1.CommitRequest.author:type_name -> gitproxy.v1.CommitAuthor
+	27, // 4: gitproxy.v1.LogResponse.logs:type_name -> gitproxy.v1.Log
+	26, // 5: gitproxy.v1.Log.author:type_name -> gitproxy.v1.CommitAuthor
+	29, // 6: gitproxy.v1.Log.time:type_name -> google.protobuf.Timestamp
 	0,  // 7: gitproxy.v1.GitProxyService.ListRepositories:input_type -> gitproxy.v1.ListRepositoriesRequest
 	2,  // 8: gitproxy.v1.GitProxyService.CreateRepository:input_type -> gitproxy.v1.CreateRepositoryRequest
 	4,  // 9: gitproxy.v1.GitProxyService.DeleteRepository:input_type -> gitproxy.v1.DeleteRepositoryRequest
@@ -1617,7 +1580,7 @@ var file_gitproxy_v1_gitproxy_proto_depIdxs = []int32{
 	12, // 13: gitproxy.v1.GitProxyService.ListTags:input_type -> gitproxy.v1.ListTagsRequest
 	14, // 14: gitproxy.v1.GitProxyService.CreateTag:input_type -> gitproxy.v1.CreateTagRequest
 	16, // 15: gitproxy.v1.GitProxyService.DeleteTag:input_type -> gitproxy.v1.DeleteTagRequest
-	18, // 16: gitproxy.v1.GitProxyService.CommitFiles:input_type -> gitproxy.v1.CommitFilesRequest
+	18, // 16: gitproxy.v1.GitProxyService.Commit:input_type -> gitproxy.v1.CommitRequest
 	20, // 17: gitproxy.v1.GitProxyService.Merge:input_type -> gitproxy.v1.MergeRequest
 	24, // 18: gitproxy.v1.GitProxyService.Log:input_type -> gitproxy.v1.LogRequest
 	22, // 19: gitproxy.v1.GitProxyService.RevertMerge:input_type -> gitproxy.v1.RevertMergeRequest
@@ -1630,7 +1593,7 @@ var file_gitproxy_v1_gitproxy_proto_depIdxs = []int32{
 	13, // 26: gitproxy.v1.GitProxyService.ListTags:output_type -> gitproxy.v1.ListTagsResponse
 	15, // 27: gitproxy.v1.GitProxyService.CreateTag:output_type -> gitproxy.v1.CreateTagResponse
 	17, // 28: gitproxy.v1.GitProxyService.DeleteTag:output_type -> gitproxy.v1.DeleteTagResponse
-	19, // 29: gitproxy.v1.GitProxyService.CommitFiles:output_type -> gitproxy.v1.CommitFilesResponse
+	19, // 29: gitproxy.v1.GitProxyService.Commit:output_type -> gitproxy.v1.CommitResponse
 	21, // 30: gitproxy.v1.GitProxyService.Merge:output_type -> gitproxy.v1.MergeResponse
 	25, // 31: gitproxy.v1.GitProxyService.Log:output_type -> gitproxy.v1.LogResponse
 	23, // 32: gitproxy.v1.GitProxyService.RevertMerge:output_type -> gitproxy.v1.RevertMergeResponse
@@ -1654,7 +1617,7 @@ func file_gitproxy_v1_gitproxy_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_gitproxy_v1_gitproxy_proto_rawDesc), len(file_gitproxy_v1_gitproxy_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   30,
+			NumMessages:   29,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use buffa::MessageField;
 use buffa_types::Timestamp;
@@ -6,11 +6,10 @@ use connectrpc::{ConnectError, RequestContext, Response, ServiceRequest, Service
 
 use crate::{
     connect::gitproxy::v1::GitProxyService,
-    error::Result,
     proto::gitproxy::v1::{
-        CommitAuthor, CommitFilesRequest, CommitFilesResponse, CreateBranchRequest,
-        CreateBranchResponse, CreateRepositoryRequest, CreateRepositoryResponse, CreateTagRequest,
-        CreateTagResponse, DeleteBranchRequest, DeleteBranchResponse, DeleteRepositoryRequest,
+        CommitAuthor, CommitRequest, CommitResponse, CreateBranchRequest, CreateBranchResponse,
+        CreateRepositoryRequest, CreateRepositoryResponse, CreateTagRequest, CreateTagResponse,
+        DeleteBranchRequest, DeleteBranchResponse, DeleteRepositoryRequest,
         DeleteRepositoryResponse, DeleteTagRequest, DeleteTagResponse, ListBranchesRequest,
         ListBranchesResponse, ListRepositoriesRequest, ListRepositoriesResponse, ListTagsRequest,
         ListTagsResponse, Log, LogRequest, LogResponse, MergeRequest, MergeResponse,
@@ -30,13 +29,6 @@ impl Server {
 
     fn repo_dir(&self, namespace: &str) -> PathBuf {
         self.root_dir.join(namespace)
-    }
-
-    fn write_file(path: &Path, contents: &[u8]) -> Result<()> {
-        std::fs::create_dir_all(path.parent().unwrap())?;
-        std::fs::write(path, contents)?;
-
-        Ok(())
     }
 }
 
@@ -65,6 +57,7 @@ impl GitProxyService for Server {
             repositories.push(crate::proto::gitproxy::v1::Repository {
                 namespace: dir.file_name().into_string().unwrap(),
                 head_commit: head.id().to_string(),
+                path: repo_dir.to_str().unwrap().to_string(),
                 ..Default::default()
             });
         }
@@ -89,9 +82,21 @@ impl GitProxyService for Server {
             )));
         }
 
-        Repository::open(&repo_dir).map_err(internal)?;
+        let repo = Repository::open(&repo_dir).map_err(internal)?;
+        let main = repo.primary_worktree().map_err(internal)?;
+        let head = main
+            .head()
+            .map_err(internal)?
+            .peel_to_commit()
+            .map_err(internal)?;
 
         Response::ok(CreateRepositoryResponse {
+            repository: MessageField::some(crate::proto::gitproxy::v1::Repository {
+                namespace: request.namespace.to_string(),
+                head_commit: head.id().to_string(),
+                path: repo_dir.to_str().unwrap().to_string(),
+                ..Default::default()
+            }),
             ..Default::default()
         })
     }
@@ -148,6 +153,7 @@ impl GitProxyService for Server {
         main.new(request.branch).map_err(internal)?;
 
         Response::ok(CreateBranchResponse {
+            path: repo_dir.join(request.branch).to_str().unwrap().to_string(),
             ..Default::default()
         })
     }
@@ -233,22 +239,16 @@ impl GitProxyService for Server {
         })
     }
 
-    async fn commit_files(
+    async fn commit(
         &self,
         _ctx: RequestContext,
-        request: ServiceRequest<'_, CommitFilesRequest>,
-    ) -> ServiceResult<CommitFilesResponse> {
+        request: ServiceRequest<'_, CommitRequest>,
+    ) -> ServiceResult<CommitResponse> {
         let repo_dir = self.repo_dir(request.namespace);
 
         let repo = Repository::open(&repo_dir).map_err(internal)?;
 
         let branch = repo.worktree(request.branch).map_err(internal)?;
-
-        let branch_dir = repo_dir.join(request.branch);
-
-        for file in &request.files {
-            Self::write_file(&branch_dir.join(file.path), file.contents).map_err(internal)?;
-        }
 
         let commit = branch
             .commit_all(
@@ -260,7 +260,7 @@ impl GitProxyService for Server {
             )
             .map_err(internal)?;
 
-        Response::ok(CommitFilesResponse {
+        Response::ok(CommitResponse {
             commit: commit.to_string(),
             ..Default::default()
         })

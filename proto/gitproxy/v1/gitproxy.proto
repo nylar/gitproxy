@@ -15,7 +15,7 @@ service GitProxyService {
     rpc ListTags(ListTagsRequest) returns (ListTagsResponse) {}
     rpc CreateTag(CreateTagRequest) returns (CreateTagResponse) {}
     rpc DeleteTag(DeleteTagRequest) returns (DeleteTagResponse) {}
-    rpc CommitFiles(CommitFilesRequest) returns (CommitFilesResponse) {}
+    rpc Commit(CommitRequest) returns (CommitResponse) {}
     rpc Merge(MergeRequest) returns (MergeResponse) {}
     rpc Log(LogRequest) returns (LogResponse) {}
     rpc RevertMerge(RevertMergeRequest) returns (RevertMergeResponse) {}
@@ -32,7 +32,9 @@ message CreateRepositoryRequest {
     string namespace = 1;
 }
 
-message CreateRepositoryResponse {}
+message CreateRepositoryResponse {
+    Repository repository = 1;
+}
 
 message DeleteRepositoryRequest {
     string namespace = 1;
@@ -53,7 +55,9 @@ message CreateBranchRequest {
     string branch = 2;
 }
 
-message CreateBranchResponse {}
+message CreateBranchResponse {
+    string path = 1;
+}
 
 message DeleteBranchRequest {
     string namespace = 1;
@@ -88,15 +92,14 @@ message DeleteTagRequest {
 
 message DeleteTagResponse {}
 
-message CommitFilesRequest {
+message CommitRequest {
     string namespace = 1;
     string branch = 2;
     string message = 3;
     CommitAuthor author = 4;
-    repeated CommitFile files = 5;
 }
 
-message CommitFilesResponse {
+message CommitResponse {
     string commit = 1;
 }
 
@@ -127,11 +130,6 @@ message LogResponse {
     repeated Log logs = 1;
 }
 
-message CommitFile {
-    string path = 1;
-    bytes contents = 2;
-}
-
 message CommitAuthor {
     string name = 1;
     string email = 2;
@@ -147,4 +145,5 @@ message Log {
 message Repository {
     string namespace = 1;
     string head_commit = 2;
+    string path = 3;
 }

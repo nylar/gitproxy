@@ -60,9 +60,8 @@ const (
 	// GitProxyServiceDeleteTagProcedure is the fully-qualified name of the GitProxyService's DeleteTag
 	// RPC.
 	GitProxyServiceDeleteTagProcedure = "/gitproxy.v1.GitProxyService/DeleteTag"
-	// GitProxyServiceCommitFilesProcedure is the fully-qualified name of the GitProxyService's
-	// CommitFiles RPC.
-	GitProxyServiceCommitFilesProcedure = "/gitproxy.v1.GitProxyService/CommitFiles"
+	// GitProxyServiceCommitProcedure is the fully-qualified name of the GitProxyService's Commit RPC.
+	GitProxyServiceCommitProcedure = "/gitproxy.v1.GitProxyService/Commit"
 	// GitProxyServiceMergeProcedure is the fully-qualified name of the GitProxyService's Merge RPC.
 	GitProxyServiceMergeProcedure = "/gitproxy.v1.GitProxyService/Merge"
 	// GitProxyServiceLogProcedure is the fully-qualified name of the GitProxyService's Log RPC.
@@ -83,7 +82,7 @@ type GitProxyServiceClient interface {
 	ListTags(context.Context, *connect.Request[v1.ListTagsRequest]) (*connect.Response[v1.ListTagsResponse], error)
 	CreateTag(context.Context, *connect.Request[v1.CreateTagRequest]) (*connect.Response[v1.CreateTagResponse], error)
 	DeleteTag(context.Context, *connect.Request[v1.DeleteTagRequest]) (*connect.Response[v1.DeleteTagResponse], error)
-	CommitFiles(context.Context, *connect.Request[v1.CommitFilesRequest]) (*connect.Response[v1.CommitFilesResponse], error)
+	Commit(context.Context, *connect.Request[v1.CommitRequest]) (*connect.Response[v1.CommitResponse], error)
 	Merge(context.Context, *connect.Request[v1.MergeRequest]) (*connect.Response[v1.MergeResponse], error)
 	Log(context.Context, *connect.Request[v1.LogRequest]) (*connect.Response[v1.LogResponse], error)
 	RevertMerge(context.Context, *connect.Request[v1.RevertMergeRequest]) (*connect.Response[v1.RevertMergeResponse], error)
@@ -154,10 +153,10 @@ func NewGitProxyServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(gitProxyServiceMethods.ByName("DeleteTag")),
 			connect.WithClientOptions(opts...),
 		),
-		commitFiles: connect.NewClient[v1.CommitFilesRequest, v1.CommitFilesResponse](
+		commit: connect.NewClient[v1.CommitRequest, v1.CommitResponse](
 			httpClient,
-			baseURL+GitProxyServiceCommitFilesProcedure,
-			connect.WithSchema(gitProxyServiceMethods.ByName("CommitFiles")),
+			baseURL+GitProxyServiceCommitProcedure,
+			connect.WithSchema(gitProxyServiceMethods.ByName("Commit")),
 			connect.WithClientOptions(opts...),
 		),
 		merge: connect.NewClient[v1.MergeRequest, v1.MergeResponse](
@@ -192,7 +191,7 @@ type gitProxyServiceClient struct {
 	listTags         *connect.Client[v1.ListTagsRequest, v1.ListTagsResponse]
 	createTag        *connect.Client[v1.CreateTagRequest, v1.CreateTagResponse]
 	deleteTag        *connect.Client[v1.DeleteTagRequest, v1.DeleteTagResponse]
-	commitFiles      *connect.Client[v1.CommitFilesRequest, v1.CommitFilesResponse]
+	commit           *connect.Client[v1.CommitRequest, v1.CommitResponse]
 	merge            *connect.Client[v1.MergeRequest, v1.MergeResponse]
 	log              *connect.Client[v1.LogRequest, v1.LogResponse]
 	revertMerge      *connect.Client[v1.RevertMergeRequest, v1.RevertMergeResponse]
@@ -243,9 +242,9 @@ func (c *gitProxyServiceClient) DeleteTag(ctx context.Context, req *connect.Requ
 	return c.deleteTag.CallUnary(ctx, req)
 }
 
-// CommitFiles calls gitproxy.v1.GitProxyService.CommitFiles.
-func (c *gitProxyServiceClient) CommitFiles(ctx context.Context, req *connect.Request[v1.CommitFilesRequest]) (*connect.Response[v1.CommitFilesResponse], error) {
-	return c.commitFiles.CallUnary(ctx, req)
+// Commit calls gitproxy.v1.GitProxyService.Commit.
+func (c *gitProxyServiceClient) Commit(ctx context.Context, req *connect.Request[v1.CommitRequest]) (*connect.Response[v1.CommitResponse], error) {
+	return c.commit.CallUnary(ctx, req)
 }
 
 // Merge calls gitproxy.v1.GitProxyService.Merge.
@@ -274,7 +273,7 @@ type GitProxyServiceHandler interface {
 	ListTags(context.Context, *connect.Request[v1.ListTagsRequest]) (*connect.Response[v1.ListTagsResponse], error)
 	CreateTag(context.Context, *connect.Request[v1.CreateTagRequest]) (*connect.Response[v1.CreateTagResponse], error)
 	DeleteTag(context.Context, *connect.Request[v1.DeleteTagRequest]) (*connect.Response[v1.DeleteTagResponse], error)
-	CommitFiles(context.Context, *connect.Request[v1.CommitFilesRequest]) (*connect.Response[v1.CommitFilesResponse], error)
+	Commit(context.Context, *connect.Request[v1.CommitRequest]) (*connect.Response[v1.CommitResponse], error)
 	Merge(context.Context, *connect.Request[v1.MergeRequest]) (*connect.Response[v1.MergeResponse], error)
 	Log(context.Context, *connect.Request[v1.LogRequest]) (*connect.Response[v1.LogResponse], error)
 	RevertMerge(context.Context, *connect.Request[v1.RevertMergeRequest]) (*connect.Response[v1.RevertMergeResponse], error)
@@ -341,10 +340,10 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 		connect.WithSchema(gitProxyServiceMethods.ByName("DeleteTag")),
 		connect.WithHandlerOptions(opts...),
 	)
-	gitProxyServiceCommitFilesHandler := connect.NewUnaryHandler(
-		GitProxyServiceCommitFilesProcedure,
-		svc.CommitFiles,
-		connect.WithSchema(gitProxyServiceMethods.ByName("CommitFiles")),
+	gitProxyServiceCommitHandler := connect.NewUnaryHandler(
+		GitProxyServiceCommitProcedure,
+		svc.Commit,
+		connect.WithSchema(gitProxyServiceMethods.ByName("Commit")),
 		connect.WithHandlerOptions(opts...),
 	)
 	gitProxyServiceMergeHandler := connect.NewUnaryHandler(
@@ -385,8 +384,8 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 			gitProxyServiceCreateTagHandler.ServeHTTP(w, r)
 		case GitProxyServiceDeleteTagProcedure:
 			gitProxyServiceDeleteTagHandler.ServeHTTP(w, r)
-		case GitProxyServiceCommitFilesProcedure:
-			gitProxyServiceCommitFilesHandler.ServeHTTP(w, r)
+		case GitProxyServiceCommitProcedure:
+			gitProxyServiceCommitHandler.ServeHTTP(w, r)
 		case GitProxyServiceMergeProcedure:
 			gitProxyServiceMergeHandler.ServeHTTP(w, r)
 		case GitProxyServiceLogProcedure:
@@ -438,8 +437,8 @@ func (UnimplementedGitProxyServiceHandler) DeleteTag(context.Context, *connect.R
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.DeleteTag is not implemented"))
 }
 
-func (UnimplementedGitProxyServiceHandler) CommitFiles(context.Context, *connect.Request[v1.CommitFilesRequest]) (*connect.Response[v1.CommitFilesResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.CommitFiles is not implemented"))
+func (UnimplementedGitProxyServiceHandler) Commit(context.Context, *connect.Request[v1.CommitRequest]) (*connect.Response[v1.CommitResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.Commit is not implemented"))
 }
 
 func (UnimplementedGitProxyServiceHandler) Merge(context.Context, *connect.Request[v1.MergeRequest]) (*connect.Response[v1.MergeResponse], error) {
