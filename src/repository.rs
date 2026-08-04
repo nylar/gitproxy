@@ -1,9 +1,13 @@
-use std::path::{Path, PathBuf};
+use std::{
+    cell::RefCell,
+    path::{Path, PathBuf},
+};
 
+use buffa::{EnumValue, MessageField};
 use chrono::{DateTime, Utc};
 use git2::{
-    Oid, Repository as GitRepository, Signature, WorktreeAddOptions, WorktreePruneOptions,
-    build::CheckoutBuilder,
+    DiffFindOptions, DiffOptions, Oid, Repository as GitRepository, Signature, WorktreeAddOptions,
+    WorktreePruneOptions, build::CheckoutBuilder,
 };
 
 use crate::error::Result;
@@ -303,6 +307,91 @@ impl Worktree {
         Ok(())
     }
 
+    pub fn diff(&self, from_branch: Option<&str>, to_branch: &str) -> Result<Diff> {
+        let mut opts = DiffOptions::new();
+        opts.force_text(true);
+
+        let from_ref = match from_branch {
+            Some(from_ref) => from_ref,
+            None => DEFAULT_PRIMARY_BRANCH,
+        };
+
+        let from_ref = self.repo.find_branch(from_ref, git2::BranchType::Local)?;
+        let to_ref = self.repo.find_branch(to_branch, git2::BranchType::Local)?;
+
+        let from_tree = from_ref.get().peel_to_tree()?;
+        let to_tree = to_ref.get().peel_to_tree()?;
+
+        let mut diff =
+            self.repo
+                .diff_tree_to_tree(Some(&from_tree), Some(&to_tree), Some(&mut opts))?;
+
+        let mut opts = DiffFindOptions::new();
+        opts.renames(true);
+
+        diff.find_similar(Some(&mut opts))?;
+        let stats = diff.stats()?;
+
+        let diff_report = RefCell::new(DiffReport {
+            diff: Diff {
+                files_changes: stats.files_changed(),
+                insertions: stats.insertions(),
+                deletions: stats.deletions(),
+                deltas: vec![],
+            },
+            delta_index: -1,
+        });
+
+        diff.foreach(
+            &mut |diff_delta, _| {
+                let new_file = diff_delta.new_file();
+                let old_file = diff_delta.old_file();
+
+                let mut diff_report = diff_report.borrow_mut();
+
+                diff_report.diff.deltas.push(Delta {
+                    status: DeltaStatus::from(diff_delta.status()),
+                    old_file: DeltaFile {
+                        path: old_file.path().map(|p| p.to_path_buf()),
+                        size: old_file.size() as usize,
+                    },
+                    new_file: DeltaFile {
+                        path: new_file.path().map(|p| p.to_path_buf()),
+                        size: new_file.size() as usize,
+                    },
+                    lines: Vec::new(),
+                });
+                diff_report.delta_index += 1;
+
+                true
+            },
+            None,
+            None,
+            Some(&mut |_, _, diff_line| {
+                let mut diff_report = diff_report.borrow_mut();
+                if diff_report.delta_index < 0 {
+                    return false;
+                }
+                let index = diff_report.delta_index as usize;
+
+                if let Some(delta) = diff_report.diff.deltas.get_mut(index) {
+                    delta.lines.push(DeltaLine {
+                        new_line_number: diff_line.new_lineno(),
+                        old_line_number: diff_line.old_lineno(),
+                        number_lines: diff_line.num_lines(),
+                        content_offset: diff_line.content_offset(),
+                        content: diff_line.content().to_vec(),
+                        origin: DeltaOrigin::from(diff_line.origin_value()),
+                    })
+                }
+
+                true
+            }),
+        )?;
+
+        Ok(diff_report.into_inner().diff)
+    }
+
     fn commit(&self, message: &str, author: &Author) -> Result<Oid> {
         let signature = Signature::now(&author.name, &author.email)?;
 
@@ -426,4 +515,188 @@ pub struct LogEntry {
     pub author: Author,
     pub commit: String,
     pub time: DateTime<Utc>,
+}
+
+#[derive(Debug)]
+struct DiffReport {
+    diff: Diff,
+    delta_index: isize,
+}
+
+#[derive(Debug)]
+pub struct Diff {
+    pub files_changes: usize,
+    pub insertions: usize,
+    pub deletions: usize,
+    pub deltas: Vec<Delta>,
+}
+
+impl From<Diff> for crate::proto::gitproxy::v1::Diff {
+    fn from(value: Diff) -> Self {
+        Self {
+            files_changes: value.files_changes as u64,
+            insertions: value.insertions as u64,
+            deletions: value.deletions as u64,
+            deltas: value.deltas.into_iter().map(From::from).collect(),
+            ..Default::default()
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct Delta {
+    pub status: DeltaStatus,
+    pub old_file: DeltaFile,
+    pub new_file: DeltaFile,
+    pub lines: Vec<DeltaLine>,
+}
+
+impl From<Delta> for crate::proto::gitproxy::v1::DiffDelta {
+    fn from(value: Delta) -> Self {
+        Self {
+            status: EnumValue::Known(value.status.into()),
+            old_file: MessageField::some(value.old_file.into()),
+            new_file: MessageField::some(value.new_file.into()),
+            lines: value.lines.into_iter().map(From::from).collect(),
+            ..Default::default()
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum DeltaStatus {
+    Unmodified,
+    Added,
+    Deleted,
+    Modified,
+    Renamed,
+    Copied,
+    Ignored,
+    Untracked,
+    Typechange,
+    Unreadable,
+    Conflicted,
+}
+
+impl From<DeltaStatus> for crate::proto::gitproxy::v1::diff_delta::Status {
+    fn from(value: DeltaStatus) -> Self {
+        match value {
+            DeltaStatus::Unmodified => Self::Unmodified,
+            DeltaStatus::Added => Self::Added,
+            DeltaStatus::Deleted => Self::Deleted,
+            DeltaStatus::Modified => Self::Modified,
+            DeltaStatus::Renamed => Self::Renamed,
+            DeltaStatus::Copied => Self::Copied,
+            DeltaStatus::Ignored => Self::Ignored,
+            DeltaStatus::Untracked => Self::Untracked,
+            DeltaStatus::Typechange => Self::Typechange,
+            DeltaStatus::Unreadable => Self::Unreadable,
+            DeltaStatus::Conflicted => Self::Conflicted,
+        }
+    }
+}
+
+impl From<git2::Delta> for DeltaStatus {
+    fn from(value: git2::Delta) -> Self {
+        match value {
+            git2::Delta::Unmodified => Self::Unmodified,
+            git2::Delta::Added => Self::Added,
+            git2::Delta::Deleted => Self::Deleted,
+            git2::Delta::Modified => Self::Modified,
+            git2::Delta::Renamed => Self::Renamed,
+            git2::Delta::Copied => Self::Copied,
+            git2::Delta::Ignored => Self::Ignored,
+            git2::Delta::Untracked => Self::Untracked,
+            git2::Delta::Typechange => Self::Typechange,
+            git2::Delta::Unreadable => Self::Unreadable,
+            git2::Delta::Conflicted => Self::Conflicted,
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct DeltaFile {
+    pub path: Option<PathBuf>,
+    pub size: usize,
+}
+
+impl From<DeltaFile> for crate::proto::gitproxy::v1::diff_delta::File {
+    fn from(value: DeltaFile) -> Self {
+        Self {
+            path: value
+                .path
+                .map(|p| p.as_os_str().to_str().unwrap().to_owned()),
+            size: value.size as u64,
+            ..Default::default()
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct DeltaLine {
+    pub old_line_number: Option<u32>,
+    pub new_line_number: Option<u32>,
+    pub number_lines: u32,
+    pub content_offset: i64,
+    pub content: Vec<u8>,
+    pub origin: DeltaOrigin,
+}
+
+impl From<DeltaLine> for crate::proto::gitproxy::v1::diff_delta::Line {
+    fn from(value: DeltaLine) -> Self {
+        Self {
+            old_line_number: value.old_line_number,
+            new_line_number: value.new_line_number,
+            number_lines: value.number_lines,
+            content_offset: value.content_offset,
+            content: value.content,
+            origin: EnumValue::Known(value.origin.into()),
+            ..Default::default()
+        }
+    }
+}
+
+#[derive(Debug)]
+pub enum DeltaOrigin {
+    Context,
+    Addition,
+    Deletion,
+    ContextEOFNL,
+    AddEOFNL,
+    DeleteEOFNL,
+    FileHeader,
+    HunkHeader,
+    Binary,
+}
+
+impl From<git2::DiffLineType> for DeltaOrigin {
+    fn from(value: git2::DiffLineType) -> Self {
+        match value {
+            git2::DiffLineType::Context => Self::Context,
+            git2::DiffLineType::Addition => Self::Addition,
+            git2::DiffLineType::Deletion => Self::Deletion,
+            git2::DiffLineType::ContextEOFNL => Self::ContextEOFNL,
+            git2::DiffLineType::AddEOFNL => Self::AddEOFNL,
+            git2::DiffLineType::DeleteEOFNL => Self::DeleteEOFNL,
+            git2::DiffLineType::FileHeader => Self::FileHeader,
+            git2::DiffLineType::HunkHeader => Self::HunkHeader,
+            git2::DiffLineType::Binary => Self::Binary,
+        }
+    }
+}
+
+impl From<DeltaOrigin> for crate::proto::gitproxy::v1::diff_delta::line::Origin {
+    fn from(value: DeltaOrigin) -> Self {
+        match value {
+            DeltaOrigin::Context => Self::Context,
+            DeltaOrigin::Addition => Self::Addition,
+            DeltaOrigin::Deletion => Self::Deletion,
+            DeltaOrigin::ContextEOFNL => Self::Contexteofnl,
+            DeltaOrigin::AddEOFNL => Self::Addeofnl,
+            DeltaOrigin::DeleteEOFNL => Self::Deleteeofnl,
+            DeltaOrigin::FileHeader => Self::Fileheader,
+            DeltaOrigin::HunkHeader => Self::Hunkheader,
+            DeltaOrigin::Binary => Self::Binary,
+        }
+    }
 }

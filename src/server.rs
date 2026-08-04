@@ -11,9 +11,10 @@ use crate::{
         CreateBranchRequest, CreateBranchResponse, CreateRepositoryRequest,
         CreateRepositoryResponse, CreateTagRequest, CreateTagResponse, DeleteBranchRequest,
         DeleteBranchResponse, DeleteRepositoryRequest, DeleteRepositoryResponse, DeleteTagRequest,
-        DeleteTagResponse, ListBranchesRequest, ListBranchesResponse, ListRepositoriesRequest,
-        ListRepositoriesResponse, ListTagsRequest, ListTagsResponse, Log, LogRequest, LogResponse,
-        MergeRequest, MergeResponse, RevertMergeRequest, RevertMergeResponse,
+        DeleteTagResponse, DiffRequest, DiffResponse, ListBranchesRequest, ListBranchesResponse,
+        ListRepositoriesRequest, ListRepositoriesResponse, ListTagsRequest, ListTagsResponse, Log,
+        LogRequest, LogResponse, MergeRequest, MergeResponse, RevertMergeRequest,
+        RevertMergeResponse,
     },
     repository::{Author, MergePreference, Repository},
 };
@@ -362,6 +363,26 @@ impl GitProxyService for Server {
 
         Response::ok(RevertMergeResponse {
             commit: oid.to_string(),
+            ..Default::default()
+        })
+    }
+
+    async fn diff(
+        &self,
+        _ctx: RequestContext,
+        request: ServiceRequest<'_, DiffRequest>,
+    ) -> ServiceResult<DiffResponse> {
+        let repo_dir = self.repo_dir(request.namespace);
+
+        let repo = Repository::open(&repo_dir).map_err(internal)?;
+        let main = repo.primary_worktree().map_err(internal)?;
+
+        let diff = main
+            .diff(request.from_branch, request.to_branch)
+            .map_err(internal)?;
+
+        Response::ok(DiffResponse {
+            diff: MessageField::some(diff.into()),
             ..Default::default()
         })
     }

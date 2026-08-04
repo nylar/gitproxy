@@ -7312,6 +7312,565 @@ impl ::serde::Serialize for LogResponseOwnedView {
     }
 }
 #[derive(Clone, Debug, Default)]
+pub struct DiffRequestView<'a> {
+    /// Field 1: `namespace`
+    pub namespace: &'a str,
+    /// Field 2: `from_branch`
+    pub from_branch: ::core::option::Option<&'a str>,
+    /// Field 3: `to_branch`
+    pub to_branch: &'a str,
+    pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
+}
+impl<'a> ::buffa::MessageView<'a> for DiffRequestView<'a> {
+    type Owned = super::super::DiffRequest;
+    fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
+        <Self as ::buffa::MessageView>::decode_view_ctx(
+            buf,
+            ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit),
+        )
+    }
+    fn decode_view_with_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
+    }
+    fn merge_view_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        cur: &'a [u8],
+        before_tag: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
+        let _ = ctx;
+        #[allow(unused_variables)]
+        let view = self;
+        let mut cur = cur;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                view.namespace = ::buffa::types::borrow_str(&mut cur)?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                view.from_branch = Some(::buffa::types::borrow_str(&mut cur)?);
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                view.to_branch = ::buffa::types::borrow_str(&mut cur)?;
+            }
+            _ => {
+                ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
+                let span_len = before_tag.len() - cur.len();
+                view.__buffa_unknown_fields.push_record(before_tag, span_len, ctx)?;
+            }
+        }
+        ::core::result::Result::Ok(cur)
+    }
+    fn to_owned_message(
+        &self,
+    ) -> ::core::result::Result<super::super::DiffRequest, ::buffa::DecodeError> {
+        self.to_owned_from_source(None)
+    }
+    #[allow(clippy::useless_conversion, clippy::needless_update)]
+    fn to_owned_from_source(
+        &self,
+        __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
+    ) -> ::core::result::Result<super::super::DiffRequest, ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::alloc::string::ToString as _;
+        let _ = __buffa_src;
+        ::core::result::Result::Ok(super::super::DiffRequest {
+            namespace: self.namespace.to_string(),
+            from_branch: self.from_branch.map(|s| s.to_string()),
+            to_branch: self.to_branch.to_string(),
+            __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
+            ..::core::default::Default::default()
+        })
+    }
+}
+impl<'a> ::buffa::ViewEncode<'a> for DiffRequestView<'a> {
+    #[allow(clippy::needless_borrow, clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u32;
+        if !self.namespace.is_empty() {
+            size += 1u32 + ::buffa::types::string_encoded_len(&self.namespace) as u32;
+        }
+        if let Some(ref v) = self.from_branch {
+            size += 1u32 + ::buffa::types::string_encoded_len(v) as u32;
+        }
+        if !self.to_branch.is_empty() {
+            size += 1u32 + ::buffa::types::string_encoded_len(&self.to_branch) as u32;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u32;
+        size
+    }
+    #[allow(clippy::needless_borrow)]
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::bytes::BufMut,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if !self.namespace.is_empty() {
+            ::buffa::types::put_string_field(1u32, &self.namespace, buf);
+        }
+        if let Some(ref v) = self.from_branch {
+            ::buffa::types::put_string_field(2u32, v, buf);
+        }
+        if !self.to_branch.is_empty() {
+            ::buffa::types::put_string_field(3u32, &self.to_branch, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+}
+/// Serializes this view as protobuf JSON.
+///
+/// Implicit-presence fields with default values are omitted, `required`
+/// fields are always emitted, explicit-presence (`optional`) fields are
+/// emitted only when set, bytes fields are base64-encoded, and enum
+/// values are their proto name strings.
+///
+/// This impl uses `serialize_map(None)` because the number of emitted
+/// fields depends on default-omission rules; serializers that require
+/// known map lengths (e.g. `bincode`) will return a runtime error.
+/// Use the owned message type for those formats.
+impl<'__a> ::serde::Serialize for DiffRequestView<'__a> {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        use ::serde::ser::SerializeMap as _;
+        let mut __map = __s.serialize_map(::core::option::Option::None)?;
+        if !::buffa::json_helpers::skip_if::is_empty_str(self.namespace) {
+            __map.serialize_entry("namespace", self.namespace)?;
+        }
+        if let ::core::option::Option::Some(__v) = self.from_branch {
+            __map.serialize_entry("fromBranch", __v)?;
+        }
+        if !::buffa::json_helpers::skip_if::is_empty_str(self.to_branch) {
+            __map.serialize_entry("toBranch", self.to_branch)?;
+        }
+        __map.end()
+    }
+}
+impl<'a> ::buffa::MessageName for DiffRequestView<'a> {
+    const PACKAGE: &'static str = "gitproxy.v1";
+    const NAME: &'static str = "DiffRequest";
+    const FULL_NAME: &'static str = "gitproxy.v1.DiffRequest";
+    const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.DiffRequest";
+}
+::buffa::impl_default_view_instance!(DiffRequestView);
+::buffa::impl_view_reborrow!(DiffRequestView);
+/** Self-contained, `'static` owned view of a `DiffRequest` message.
+
+ Wraps [`::buffa::OwnedView`]`<`[`DiffRequestView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
+
+ Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`DiffRequestView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
+#[derive(Clone, Debug)]
+pub struct DiffRequestOwnedView(::buffa::OwnedView<DiffRequestView<'static>>);
+impl DiffRequestOwnedView {
+    /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
+    ///
+    /// The view borrows directly from the buffer's data; the buffer is
+    /// retained inside the returned handle.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
+    /// protobuf data.
+    pub fn decode(
+        bytes: ::buffa::bytes::Bytes,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            DiffRequestOwnedView(::buffa::OwnedView::decode(bytes)?),
+        )
+    }
+    /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
+    /// max message size).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
+    /// exceeds the configured limits.
+    pub fn decode_with_options(
+        bytes: ::buffa::bytes::Bytes,
+        opts: &::buffa::DecodeOptions,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            DiffRequestOwnedView(::buffa::OwnedView::decode_with_options(bytes, opts)?),
+        )
+    }
+    /// Build from an owned message via an encode → decode round-trip.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the re-encoded bytes are
+    /// somehow invalid (should not happen for well-formed messages).
+    pub fn from_owned(
+        msg: &super::super::DiffRequest,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            DiffRequestOwnedView(::buffa::OwnedView::from_owned(msg)?),
+        )
+    }
+    /// Borrow the full [`DiffRequestView`] with its lifetime tied to `&self`.
+    #[must_use]
+    pub fn view(&self) -> &DiffRequestView<'_> {
+        self.0.reborrow()
+    }
+    /// Convert to the owned message type.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if re-materializing preserved unknown fields
+    /// fails (e.g. the unknown-field limit is exceeded).
+    pub fn to_owned_message(
+        &self,
+    ) -> ::core::result::Result<super::super::DiffRequest, ::buffa::DecodeError> {
+        self.0.to_owned_message()
+    }
+    /// The underlying bytes buffer.
+    #[must_use]
+    pub fn bytes(&self) -> &::buffa::bytes::Bytes {
+        self.0.bytes()
+    }
+    /// Consume the handle, returning the underlying bytes buffer.
+    #[must_use]
+    pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
+        self.0.into_bytes()
+    }
+    /// Field 1: `namespace`
+    #[must_use]
+    pub fn namespace(&self) -> &'_ str {
+        self.0.reborrow().namespace
+    }
+    /// Field 2: `from_branch`
+    #[must_use]
+    pub fn from_branch(&self) -> ::core::option::Option<&'_ str> {
+        self.0.reborrow().from_branch
+    }
+    /// Field 3: `to_branch`
+    #[must_use]
+    pub fn to_branch(&self) -> &'_ str {
+        self.0.reborrow().to_branch
+    }
+}
+impl ::core::convert::From<::buffa::OwnedView<DiffRequestView<'static>>>
+for DiffRequestOwnedView {
+    fn from(inner: ::buffa::OwnedView<DiffRequestView<'static>>) -> Self {
+        DiffRequestOwnedView(inner)
+    }
+}
+impl ::core::convert::From<DiffRequestOwnedView>
+for ::buffa::OwnedView<DiffRequestView<'static>> {
+    fn from(wrapper: DiffRequestOwnedView) -> Self {
+        wrapper.0
+    }
+}
+impl ::core::convert::AsRef<::buffa::OwnedView<DiffRequestView<'static>>>
+for DiffRequestOwnedView {
+    fn as_ref(&self) -> &::buffa::OwnedView<DiffRequestView<'static>> {
+        &self.0
+    }
+}
+impl ::buffa::HasMessageView for super::super::DiffRequest {
+    type View<'a> = DiffRequestView<'a>;
+    type ViewHandle = DiffRequestOwnedView;
+}
+impl ::serde::Serialize for DiffRequestOwnedView {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        ::serde::Serialize::serialize(&self.0, __s)
+    }
+}
+#[derive(Clone, Debug, Default)]
+pub struct DiffResponseView<'a> {
+    /// Field 1: `diff`
+    pub diff: ::buffa::MessageFieldView<super::super::__buffa::view::DiffView<'a>>,
+    pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
+}
+impl<'a> ::buffa::MessageView<'a> for DiffResponseView<'a> {
+    type Owned = super::super::DiffResponse;
+    fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
+        <Self as ::buffa::MessageView>::decode_view_ctx(
+            buf,
+            ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit),
+        )
+    }
+    fn decode_view_with_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
+    }
+    fn merge_view_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        cur: &'a [u8],
+        before_tag: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
+        let _ = ctx;
+        #[allow(unused_variables)]
+        let view = self;
+        let mut cur = cur;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __sub_ctx = ctx.descend()?;
+                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
+                match view.diff.as_mut() {
+                    Some(existing) => {
+                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
+                    }
+                    None => {
+                        view.diff = ::buffa::MessageFieldView::set(
+                            <super::super::__buffa::view::DiffView as ::buffa::MessageView>::decode_view_ctx(
+                                sub,
+                                __sub_ctx,
+                            )?,
+                        );
+                    }
+                }
+            }
+            _ => {
+                ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
+                let span_len = before_tag.len() - cur.len();
+                view.__buffa_unknown_fields.push_record(before_tag, span_len, ctx)?;
+            }
+        }
+        ::core::result::Result::Ok(cur)
+    }
+    fn to_owned_message(
+        &self,
+    ) -> ::core::result::Result<super::super::DiffResponse, ::buffa::DecodeError> {
+        self.to_owned_from_source(None)
+    }
+    #[allow(clippy::useless_conversion, clippy::needless_update)]
+    fn to_owned_from_source(
+        &self,
+        __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
+    ) -> ::core::result::Result<super::super::DiffResponse, ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::alloc::string::ToString as _;
+        let _ = __buffa_src;
+        ::core::result::Result::Ok(super::super::DiffResponse {
+            diff: match self.diff.as_option() {
+                Some(v) => {
+                    ::buffa::MessageField::<
+                        super::super::Diff,
+                    >::some(v.to_owned_from_source(__buffa_src)?)
+                }
+                None => ::buffa::MessageField::none(),
+            },
+            __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
+            ..::core::default::Default::default()
+        })
+    }
+}
+impl<'a> ::buffa::ViewEncode<'a> for DiffResponseView<'a> {
+    #[allow(clippy::needless_borrow, clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u32;
+        if self.diff.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.diff.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                    + inner_size;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u32;
+        size
+    }
+    #[allow(clippy::needless_borrow)]
+    fn write_to(
+        &self,
+        __cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::bytes::BufMut,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if self.diff.is_set() {
+            ::buffa::types::put_len_delimited_header(1u32, __cache.consume_next(), buf);
+            self.diff.write_to(__cache, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+}
+/// Serializes this view as protobuf JSON.
+///
+/// Implicit-presence fields with default values are omitted, `required`
+/// fields are always emitted, explicit-presence (`optional`) fields are
+/// emitted only when set, bytes fields are base64-encoded, and enum
+/// values are their proto name strings.
+///
+/// This impl uses `serialize_map(None)` because the number of emitted
+/// fields depends on default-omission rules; serializers that require
+/// known map lengths (e.g. `bincode`) will return a runtime error.
+/// Use the owned message type for those formats.
+impl<'__a> ::serde::Serialize for DiffResponseView<'__a> {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        use ::serde::ser::SerializeMap as _;
+        let mut __map = __s.serialize_map(::core::option::Option::None)?;
+        {
+            if let ::core::option::Option::Some(__v) = self.diff.as_option() {
+                __map.serialize_entry("diff", __v)?;
+            }
+        }
+        __map.end()
+    }
+}
+impl<'a> ::buffa::MessageName for DiffResponseView<'a> {
+    const PACKAGE: &'static str = "gitproxy.v1";
+    const NAME: &'static str = "DiffResponse";
+    const FULL_NAME: &'static str = "gitproxy.v1.DiffResponse";
+    const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.DiffResponse";
+}
+::buffa::impl_default_view_instance!(DiffResponseView);
+::buffa::impl_view_reborrow!(DiffResponseView);
+/** Self-contained, `'static` owned view of a `DiffResponse` message.
+
+ Wraps [`::buffa::OwnedView`]`<`[`DiffResponseView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
+
+ Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`DiffResponseView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
+#[derive(Clone, Debug)]
+pub struct DiffResponseOwnedView(::buffa::OwnedView<DiffResponseView<'static>>);
+impl DiffResponseOwnedView {
+    /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
+    ///
+    /// The view borrows directly from the buffer's data; the buffer is
+    /// retained inside the returned handle.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
+    /// protobuf data.
+    pub fn decode(
+        bytes: ::buffa::bytes::Bytes,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            DiffResponseOwnedView(::buffa::OwnedView::decode(bytes)?),
+        )
+    }
+    /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
+    /// max message size).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
+    /// exceeds the configured limits.
+    pub fn decode_with_options(
+        bytes: ::buffa::bytes::Bytes,
+        opts: &::buffa::DecodeOptions,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            DiffResponseOwnedView(::buffa::OwnedView::decode_with_options(bytes, opts)?),
+        )
+    }
+    /// Build from an owned message via an encode → decode round-trip.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the re-encoded bytes are
+    /// somehow invalid (should not happen for well-formed messages).
+    pub fn from_owned(
+        msg: &super::super::DiffResponse,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            DiffResponseOwnedView(::buffa::OwnedView::from_owned(msg)?),
+        )
+    }
+    /// Borrow the full [`DiffResponseView`] with its lifetime tied to `&self`.
+    #[must_use]
+    pub fn view(&self) -> &DiffResponseView<'_> {
+        self.0.reborrow()
+    }
+    /// Convert to the owned message type.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if re-materializing preserved unknown fields
+    /// fails (e.g. the unknown-field limit is exceeded).
+    pub fn to_owned_message(
+        &self,
+    ) -> ::core::result::Result<super::super::DiffResponse, ::buffa::DecodeError> {
+        self.0.to_owned_message()
+    }
+    /// The underlying bytes buffer.
+    #[must_use]
+    pub fn bytes(&self) -> &::buffa::bytes::Bytes {
+        self.0.bytes()
+    }
+    /// Consume the handle, returning the underlying bytes buffer.
+    #[must_use]
+    pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
+        self.0.into_bytes()
+    }
+    /// Field 1: `diff`
+    #[must_use]
+    pub fn diff(
+        &self,
+    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::DiffView<'_>> {
+        &self.0.reborrow().diff
+    }
+}
+impl ::core::convert::From<::buffa::OwnedView<DiffResponseView<'static>>>
+for DiffResponseOwnedView {
+    fn from(inner: ::buffa::OwnedView<DiffResponseView<'static>>) -> Self {
+        DiffResponseOwnedView(inner)
+    }
+}
+impl ::core::convert::From<DiffResponseOwnedView>
+for ::buffa::OwnedView<DiffResponseView<'static>> {
+    fn from(wrapper: DiffResponseOwnedView) -> Self {
+        wrapper.0
+    }
+}
+impl ::core::convert::AsRef<::buffa::OwnedView<DiffResponseView<'static>>>
+for DiffResponseOwnedView {
+    fn as_ref(&self) -> &::buffa::OwnedView<DiffResponseView<'static>> {
+        &self.0
+    }
+}
+impl ::buffa::HasMessageView for super::super::DiffResponse {
+    type View<'a> = DiffResponseView<'a>;
+    type ViewHandle = DiffResponseOwnedView;
+}
+impl ::serde::Serialize for DiffResponseOwnedView {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        ::serde::Serialize::serialize(&self.0, __s)
+    }
+}
+#[derive(Clone, Debug, Default)]
 pub struct CommitAuthorView<'a> {
     /// Field 1: `name`
     pub name: &'a str,
@@ -8234,5 +8793,1445 @@ impl ::serde::Serialize for RepositoryOwnedView {
         __s: __S,
     ) -> ::core::result::Result<__S::Ok, __S::Error> {
         ::serde::Serialize::serialize(&self.0, __s)
+    }
+}
+#[derive(Clone, Debug, Default)]
+pub struct DiffView<'a> {
+    /// Field 1: `files_changes`
+    pub files_changes: u64,
+    /// Field 2: `insertions`
+    pub insertions: u64,
+    /// Field 3: `deletions`
+    pub deletions: u64,
+    /// Field 4: `deltas`
+    pub deltas: ::buffa::RepeatedView<
+        'a,
+        super::super::__buffa::view::DiffDeltaView<'a>,
+    >,
+    pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
+}
+impl<'a> ::buffa::MessageView<'a> for DiffView<'a> {
+    type Owned = super::super::Diff;
+    fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
+        <Self as ::buffa::MessageView>::decode_view_ctx(
+            buf,
+            ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit),
+        )
+    }
+    fn decode_view_with_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
+    }
+    fn merge_view_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        cur: &'a [u8],
+        before_tag: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
+        let _ = ctx;
+        #[allow(unused_variables)]
+        let view = self;
+        let mut cur = cur;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.files_changes = ::buffa::types::decode_uint64(&mut cur)?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.insertions = ::buffa::types::decode_uint64(&mut cur)?;
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.deletions = ::buffa::types::decode_uint64(&mut cur)?;
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __sub_ctx = ctx.descend()?;
+                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
+                view.deltas
+                    .push(
+                        <super::super::__buffa::view::DiffDeltaView as ::buffa::MessageView>::decode_view_ctx(
+                            sub,
+                            __sub_ctx,
+                        )?,
+                    );
+            }
+            _ => {
+                ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
+                let span_len = before_tag.len() - cur.len();
+                view.__buffa_unknown_fields.push_record(before_tag, span_len, ctx)?;
+            }
+        }
+        ::core::result::Result::Ok(cur)
+    }
+    fn to_owned_message(
+        &self,
+    ) -> ::core::result::Result<super::super::Diff, ::buffa::DecodeError> {
+        self.to_owned_from_source(None)
+    }
+    #[allow(clippy::useless_conversion, clippy::needless_update)]
+    fn to_owned_from_source(
+        &self,
+        __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
+    ) -> ::core::result::Result<super::super::Diff, ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::alloc::string::ToString as _;
+        let _ = __buffa_src;
+        ::core::result::Result::Ok(super::super::Diff {
+            files_changes: self.files_changes,
+            insertions: self.insertions,
+            deletions: self.deletions,
+            deltas: self
+                .deltas
+                .iter()
+                .map(|v| v.to_owned_from_source(__buffa_src))
+                .collect::<::core::result::Result<_, ::buffa::DecodeError>>()?,
+            __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
+            ..::core::default::Default::default()
+        })
+    }
+}
+impl<'a> ::buffa::ViewEncode<'a> for DiffView<'a> {
+    #[allow(clippy::needless_borrow, clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u32;
+        if self.files_changes != 0u64 {
+            size += 1u32 + ::buffa::types::uint64_encoded_len(self.files_changes) as u32;
+        }
+        if self.insertions != 0u64 {
+            size += 1u32 + ::buffa::types::uint64_encoded_len(self.insertions) as u32;
+        }
+        if self.deletions != 0u64 {
+            size += 1u32 + ::buffa::types::uint64_encoded_len(self.deletions) as u32;
+        }
+        for v in &self.deltas {
+            let __slot = __cache.reserve();
+            let inner_size = v.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                    + inner_size;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u32;
+        size
+    }
+    #[allow(clippy::needless_borrow)]
+    fn write_to(
+        &self,
+        __cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::bytes::BufMut,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if self.files_changes != 0u64 {
+            ::buffa::types::put_uint64_field(1u32, self.files_changes, buf);
+        }
+        if self.insertions != 0u64 {
+            ::buffa::types::put_uint64_field(2u32, self.insertions, buf);
+        }
+        if self.deletions != 0u64 {
+            ::buffa::types::put_uint64_field(3u32, self.deletions, buf);
+        }
+        for v in &self.deltas {
+            ::buffa::types::put_len_delimited_header(4u32, __cache.consume_next(), buf);
+            v.write_to(__cache, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+}
+/// Serializes this view as protobuf JSON.
+///
+/// Implicit-presence fields with default values are omitted, `required`
+/// fields are always emitted, explicit-presence (`optional`) fields are
+/// emitted only when set, bytes fields are base64-encoded, and enum
+/// values are their proto name strings.
+///
+/// This impl uses `serialize_map(None)` because the number of emitted
+/// fields depends on default-omission rules; serializers that require
+/// known map lengths (e.g. `bincode`) will return a runtime error.
+/// Use the owned message type for those formats.
+impl<'__a> ::serde::Serialize for DiffView<'__a> {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        use ::serde::ser::SerializeMap as _;
+        let mut __map = __s.serialize_map(::core::option::Option::None)?;
+        if !::buffa::json_helpers::skip_if::is_zero_u64(&self.files_changes) {
+            __map
+                .serialize_entry(
+                    "filesChanges",
+                    &::buffa::json_helpers::ProtoJson(&self.files_changes),
+                )?;
+        }
+        if !::buffa::json_helpers::skip_if::is_zero_u64(&self.insertions) {
+            __map
+                .serialize_entry(
+                    "insertions",
+                    &::buffa::json_helpers::ProtoJson(&self.insertions),
+                )?;
+        }
+        if !::buffa::json_helpers::skip_if::is_zero_u64(&self.deletions) {
+            __map
+                .serialize_entry(
+                    "deletions",
+                    &::buffa::json_helpers::ProtoJson(&self.deletions),
+                )?;
+        }
+        if !self.deltas.is_empty() {
+            __map.serialize_entry("deltas", &*self.deltas)?;
+        }
+        __map.end()
+    }
+}
+impl<'a> ::buffa::MessageName for DiffView<'a> {
+    const PACKAGE: &'static str = "gitproxy.v1";
+    const NAME: &'static str = "Diff";
+    const FULL_NAME: &'static str = "gitproxy.v1.Diff";
+    const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.Diff";
+}
+::buffa::impl_default_view_instance!(DiffView);
+::buffa::impl_view_reborrow!(DiffView);
+/** Self-contained, `'static` owned view of a `Diff` message.
+
+ Wraps [`::buffa::OwnedView`]`<`[`DiffView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
+
+ Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`DiffView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
+#[derive(Clone, Debug)]
+pub struct DiffOwnedView(::buffa::OwnedView<DiffView<'static>>);
+impl DiffOwnedView {
+    /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
+    ///
+    /// The view borrows directly from the buffer's data; the buffer is
+    /// retained inside the returned handle.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
+    /// protobuf data.
+    pub fn decode(
+        bytes: ::buffa::bytes::Bytes,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(DiffOwnedView(::buffa::OwnedView::decode(bytes)?))
+    }
+    /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
+    /// max message size).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
+    /// exceeds the configured limits.
+    pub fn decode_with_options(
+        bytes: ::buffa::bytes::Bytes,
+        opts: &::buffa::DecodeOptions,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            DiffOwnedView(::buffa::OwnedView::decode_with_options(bytes, opts)?),
+        )
+    }
+    /// Build from an owned message via an encode → decode round-trip.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the re-encoded bytes are
+    /// somehow invalid (should not happen for well-formed messages).
+    pub fn from_owned(
+        msg: &super::super::Diff,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(DiffOwnedView(::buffa::OwnedView::from_owned(msg)?))
+    }
+    /// Borrow the full [`DiffView`] with its lifetime tied to `&self`.
+    #[must_use]
+    pub fn view(&self) -> &DiffView<'_> {
+        self.0.reborrow()
+    }
+    /// Convert to the owned message type.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if re-materializing preserved unknown fields
+    /// fails (e.g. the unknown-field limit is exceeded).
+    pub fn to_owned_message(
+        &self,
+    ) -> ::core::result::Result<super::super::Diff, ::buffa::DecodeError> {
+        self.0.to_owned_message()
+    }
+    /// The underlying bytes buffer.
+    #[must_use]
+    pub fn bytes(&self) -> &::buffa::bytes::Bytes {
+        self.0.bytes()
+    }
+    /// Consume the handle, returning the underlying bytes buffer.
+    #[must_use]
+    pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
+        self.0.into_bytes()
+    }
+    /// Field 1: `files_changes`
+    #[must_use]
+    pub fn files_changes(&self) -> u64 {
+        self.0.reborrow().files_changes
+    }
+    /// Field 2: `insertions`
+    #[must_use]
+    pub fn insertions(&self) -> u64 {
+        self.0.reborrow().insertions
+    }
+    /// Field 3: `deletions`
+    #[must_use]
+    pub fn deletions(&self) -> u64 {
+        self.0.reborrow().deletions
+    }
+    /// Field 4: `deltas`
+    #[must_use]
+    pub fn deltas(
+        &self,
+    ) -> &::buffa::RepeatedView<'_, super::super::__buffa::view::DiffDeltaView<'_>> {
+        &self.0.reborrow().deltas
+    }
+}
+impl ::core::convert::From<::buffa::OwnedView<DiffView<'static>>> for DiffOwnedView {
+    fn from(inner: ::buffa::OwnedView<DiffView<'static>>) -> Self {
+        DiffOwnedView(inner)
+    }
+}
+impl ::core::convert::From<DiffOwnedView> for ::buffa::OwnedView<DiffView<'static>> {
+    fn from(wrapper: DiffOwnedView) -> Self {
+        wrapper.0
+    }
+}
+impl ::core::convert::AsRef<::buffa::OwnedView<DiffView<'static>>> for DiffOwnedView {
+    fn as_ref(&self) -> &::buffa::OwnedView<DiffView<'static>> {
+        &self.0
+    }
+}
+impl ::buffa::HasMessageView for super::super::Diff {
+    type View<'a> = DiffView<'a>;
+    type ViewHandle = DiffOwnedView;
+}
+impl ::serde::Serialize for DiffOwnedView {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        ::serde::Serialize::serialize(&self.0, __s)
+    }
+}
+#[derive(Clone, Debug, Default)]
+pub struct DiffDeltaView<'a> {
+    /// Field 1: `status`
+    pub status: ::buffa::EnumValue<super::super::diff_delta::Status>,
+    /// Field 2: `old_file`
+    pub old_file: ::buffa::MessageFieldView<
+        super::super::__buffa::view::diff_delta::FileView<'a>,
+    >,
+    /// Field 3: `new_file`
+    pub new_file: ::buffa::MessageFieldView<
+        super::super::__buffa::view::diff_delta::FileView<'a>,
+    >,
+    /// Field 4: `lines`
+    pub lines: ::buffa::RepeatedView<
+        'a,
+        super::super::__buffa::view::diff_delta::LineView<'a>,
+    >,
+    pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
+}
+impl<'a> ::buffa::MessageView<'a> for DiffDeltaView<'a> {
+    type Owned = super::super::DiffDelta;
+    fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
+        <Self as ::buffa::MessageView>::decode_view_ctx(
+            buf,
+            ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit),
+        )
+    }
+    fn decode_view_with_ctx(
+        buf: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
+    }
+    fn merge_view_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        cur: &'a [u8],
+        before_tag: &'a [u8],
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
+        let _ = ctx;
+        #[allow(unused_variables)]
+        let view = self;
+        let mut cur = cur;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.status = ::buffa::EnumValue::from(
+                    ::buffa::types::decode_int32(&mut cur)?,
+                );
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __sub_ctx = ctx.descend()?;
+                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
+                match view.old_file.as_mut() {
+                    Some(existing) => {
+                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
+                    }
+                    None => {
+                        view.old_file = ::buffa::MessageFieldView::set(
+                            <super::super::__buffa::view::diff_delta::FileView as ::buffa::MessageView>::decode_view_ctx(
+                                sub,
+                                __sub_ctx,
+                            )?,
+                        );
+                    }
+                }
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __sub_ctx = ctx.descend()?;
+                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
+                match view.new_file.as_mut() {
+                    Some(existing) => {
+                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
+                    }
+                    None => {
+                        view.new_file = ::buffa::MessageFieldView::set(
+                            <super::super::__buffa::view::diff_delta::FileView as ::buffa::MessageView>::decode_view_ctx(
+                                sub,
+                                __sub_ctx,
+                            )?,
+                        );
+                    }
+                }
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __sub_ctx = ctx.descend()?;
+                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
+                view.lines
+                    .push(
+                        <super::super::__buffa::view::diff_delta::LineView as ::buffa::MessageView>::decode_view_ctx(
+                            sub,
+                            __sub_ctx,
+                        )?,
+                    );
+            }
+            _ => {
+                ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
+                let span_len = before_tag.len() - cur.len();
+                view.__buffa_unknown_fields.push_record(before_tag, span_len, ctx)?;
+            }
+        }
+        ::core::result::Result::Ok(cur)
+    }
+    fn to_owned_message(
+        &self,
+    ) -> ::core::result::Result<super::super::DiffDelta, ::buffa::DecodeError> {
+        self.to_owned_from_source(None)
+    }
+    #[allow(clippy::useless_conversion, clippy::needless_update)]
+    fn to_owned_from_source(
+        &self,
+        __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
+    ) -> ::core::result::Result<super::super::DiffDelta, ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::alloc::string::ToString as _;
+        let _ = __buffa_src;
+        ::core::result::Result::Ok(super::super::DiffDelta {
+            status: self.status,
+            old_file: match self.old_file.as_option() {
+                Some(v) => {
+                    ::buffa::MessageField::<
+                        super::super::diff_delta::File,
+                    >::some(v.to_owned_from_source(__buffa_src)?)
+                }
+                None => ::buffa::MessageField::none(),
+            },
+            new_file: match self.new_file.as_option() {
+                Some(v) => {
+                    ::buffa::MessageField::<
+                        super::super::diff_delta::File,
+                    >::some(v.to_owned_from_source(__buffa_src)?)
+                }
+                None => ::buffa::MessageField::none(),
+            },
+            lines: self
+                .lines
+                .iter()
+                .map(|v| v.to_owned_from_source(__buffa_src))
+                .collect::<::core::result::Result<_, ::buffa::DecodeError>>()?,
+            __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
+            ..::core::default::Default::default()
+        })
+    }
+}
+impl<'a> ::buffa::ViewEncode<'a> for DiffDeltaView<'a> {
+    #[allow(clippy::needless_borrow, clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u32;
+        {
+            let val = self.status.to_i32();
+            if val != 0 {
+                size += 1u32 + ::buffa::types::int32_encoded_len(val) as u32;
+            }
+        }
+        if self.old_file.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.old_file.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                    + inner_size;
+        }
+        if self.new_file.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.new_file.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                    + inner_size;
+        }
+        for v in &self.lines {
+            let __slot = __cache.reserve();
+            let inner_size = v.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                    + inner_size;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u32;
+        size
+    }
+    #[allow(clippy::needless_borrow)]
+    fn write_to(
+        &self,
+        __cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::bytes::BufMut,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        {
+            let val = self.status.to_i32();
+            if val != 0 {
+                ::buffa::types::put_int32_field(1u32, val, buf);
+            }
+        }
+        if self.old_file.is_set() {
+            ::buffa::types::put_len_delimited_header(2u32, __cache.consume_next(), buf);
+            self.old_file.write_to(__cache, buf);
+        }
+        if self.new_file.is_set() {
+            ::buffa::types::put_len_delimited_header(3u32, __cache.consume_next(), buf);
+            self.new_file.write_to(__cache, buf);
+        }
+        for v in &self.lines {
+            ::buffa::types::put_len_delimited_header(4u32, __cache.consume_next(), buf);
+            v.write_to(__cache, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+}
+/// Serializes this view as protobuf JSON.
+///
+/// Implicit-presence fields with default values are omitted, `required`
+/// fields are always emitted, explicit-presence (`optional`) fields are
+/// emitted only when set, bytes fields are base64-encoded, and enum
+/// values are their proto name strings.
+///
+/// This impl uses `serialize_map(None)` because the number of emitted
+/// fields depends on default-omission rules; serializers that require
+/// known map lengths (e.g. `bincode`) will return a runtime error.
+/// Use the owned message type for those formats.
+impl<'__a> ::serde::Serialize for DiffDeltaView<'__a> {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        use ::serde::ser::SerializeMap as _;
+        let mut __map = __s.serialize_map(::core::option::Option::None)?;
+        if !::buffa::json_helpers::skip_if::is_default_enum_value(&self.status) {
+            __map.serialize_entry("status", &self.status)?;
+        }
+        {
+            if let ::core::option::Option::Some(__v) = self.old_file.as_option() {
+                __map.serialize_entry("oldFile", __v)?;
+            }
+        }
+        {
+            if let ::core::option::Option::Some(__v) = self.new_file.as_option() {
+                __map.serialize_entry("newFile", __v)?;
+            }
+        }
+        if !self.lines.is_empty() {
+            __map.serialize_entry("lines", &*self.lines)?;
+        }
+        __map.end()
+    }
+}
+impl<'a> ::buffa::MessageName for DiffDeltaView<'a> {
+    const PACKAGE: &'static str = "gitproxy.v1";
+    const NAME: &'static str = "DiffDelta";
+    const FULL_NAME: &'static str = "gitproxy.v1.DiffDelta";
+    const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.DiffDelta";
+}
+::buffa::impl_default_view_instance!(DiffDeltaView);
+::buffa::impl_view_reborrow!(DiffDeltaView);
+/** Self-contained, `'static` owned view of a `DiffDelta` message.
+
+ Wraps [`::buffa::OwnedView`]`<`[`DiffDeltaView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
+
+ Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`DiffDeltaView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
+#[derive(Clone, Debug)]
+pub struct DiffDeltaOwnedView(::buffa::OwnedView<DiffDeltaView<'static>>);
+impl DiffDeltaOwnedView {
+    /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
+    ///
+    /// The view borrows directly from the buffer's data; the buffer is
+    /// retained inside the returned handle.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
+    /// protobuf data.
+    pub fn decode(
+        bytes: ::buffa::bytes::Bytes,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            DiffDeltaOwnedView(::buffa::OwnedView::decode(bytes)?),
+        )
+    }
+    /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
+    /// max message size).
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
+    /// exceeds the configured limits.
+    pub fn decode_with_options(
+        bytes: ::buffa::bytes::Bytes,
+        opts: &::buffa::DecodeOptions,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            DiffDeltaOwnedView(::buffa::OwnedView::decode_with_options(bytes, opts)?),
+        )
+    }
+    /// Build from an owned message via an encode → decode round-trip.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`::buffa::DecodeError`] if the re-encoded bytes are
+    /// somehow invalid (should not happen for well-formed messages).
+    pub fn from_owned(
+        msg: &super::super::DiffDelta,
+    ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+        ::core::result::Result::Ok(
+            DiffDeltaOwnedView(::buffa::OwnedView::from_owned(msg)?),
+        )
+    }
+    /// Borrow the full [`DiffDeltaView`] with its lifetime tied to `&self`.
+    #[must_use]
+    pub fn view(&self) -> &DiffDeltaView<'_> {
+        self.0.reborrow()
+    }
+    /// Convert to the owned message type.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if re-materializing preserved unknown fields
+    /// fails (e.g. the unknown-field limit is exceeded).
+    pub fn to_owned_message(
+        &self,
+    ) -> ::core::result::Result<super::super::DiffDelta, ::buffa::DecodeError> {
+        self.0.to_owned_message()
+    }
+    /// The underlying bytes buffer.
+    #[must_use]
+    pub fn bytes(&self) -> &::buffa::bytes::Bytes {
+        self.0.bytes()
+    }
+    /// Consume the handle, returning the underlying bytes buffer.
+    #[must_use]
+    pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
+        self.0.into_bytes()
+    }
+    /// Field 1: `status`
+    #[must_use]
+    pub fn status(&self) -> ::buffa::EnumValue<super::super::diff_delta::Status> {
+        self.0.reborrow().status
+    }
+    /// Field 2: `old_file`
+    #[must_use]
+    pub fn old_file(
+        &self,
+    ) -> &::buffa::MessageFieldView<
+        super::super::__buffa::view::diff_delta::FileView<'_>,
+    > {
+        &self.0.reborrow().old_file
+    }
+    /// Field 3: `new_file`
+    #[must_use]
+    pub fn new_file(
+        &self,
+    ) -> &::buffa::MessageFieldView<
+        super::super::__buffa::view::diff_delta::FileView<'_>,
+    > {
+        &self.0.reborrow().new_file
+    }
+    /// Field 4: `lines`
+    #[must_use]
+    pub fn lines(
+        &self,
+    ) -> &::buffa::RepeatedView<
+        '_,
+        super::super::__buffa::view::diff_delta::LineView<'_>,
+    > {
+        &self.0.reborrow().lines
+    }
+}
+impl ::core::convert::From<::buffa::OwnedView<DiffDeltaView<'static>>>
+for DiffDeltaOwnedView {
+    fn from(inner: ::buffa::OwnedView<DiffDeltaView<'static>>) -> Self {
+        DiffDeltaOwnedView(inner)
+    }
+}
+impl ::core::convert::From<DiffDeltaOwnedView>
+for ::buffa::OwnedView<DiffDeltaView<'static>> {
+    fn from(wrapper: DiffDeltaOwnedView) -> Self {
+        wrapper.0
+    }
+}
+impl ::core::convert::AsRef<::buffa::OwnedView<DiffDeltaView<'static>>>
+for DiffDeltaOwnedView {
+    fn as_ref(&self) -> &::buffa::OwnedView<DiffDeltaView<'static>> {
+        &self.0
+    }
+}
+impl ::buffa::HasMessageView for super::super::DiffDelta {
+    type View<'a> = DiffDeltaView<'a>;
+    type ViewHandle = DiffDeltaOwnedView;
+}
+impl ::serde::Serialize for DiffDeltaOwnedView {
+    fn serialize<__S: ::serde::Serializer>(
+        &self,
+        __s: __S,
+    ) -> ::core::result::Result<__S::Ok, __S::Error> {
+        ::serde::Serialize::serialize(&self.0, __s)
+    }
+}
+pub mod diff_delta {
+    #[allow(unused_imports)]
+    use super::*;
+    #[derive(Clone, Debug, Default)]
+    pub struct FileView<'a> {
+        /// Field 1: `path`
+        pub path: ::core::option::Option<&'a str>,
+        /// Field 2: `size`
+        pub size: u64,
+        pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
+    }
+    impl<'a> ::buffa::MessageView<'a> for FileView<'a> {
+        type Owned = super::super::super::diff_delta::File;
+        fn decode_view(
+            buf: &'a [u8],
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
+            <Self as ::buffa::MessageView>::decode_view_ctx(
+                buf,
+                ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit),
+            )
+        }
+        fn decode_view_with_ctx(
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
+        }
+        fn merge_view_field(
+            &mut self,
+            tag: ::buffa::encoding::Tag,
+            cur: &'a [u8],
+            before_tag: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
+            let _ = ctx;
+            #[allow(unused_variables)]
+            let view = self;
+            let mut cur = cur;
+            match tag.field_number() {
+                1u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::LengthDelimited,
+                    )?;
+                    view.path = Some(::buffa::types::borrow_str(&mut cur)?);
+                }
+                2u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::Varint,
+                    )?;
+                    view.size = ::buffa::types::decode_uint64(&mut cur)?;
+                }
+                _ => {
+                    ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
+                    let span_len = before_tag.len() - cur.len();
+                    view.__buffa_unknown_fields.push_record(before_tag, span_len, ctx)?;
+                }
+            }
+            ::core::result::Result::Ok(cur)
+        }
+        fn to_owned_message(
+            &self,
+        ) -> ::core::result::Result<
+            super::super::super::diff_delta::File,
+            ::buffa::DecodeError,
+        > {
+            self.to_owned_from_source(None)
+        }
+        #[allow(clippy::useless_conversion, clippy::needless_update)]
+        fn to_owned_from_source(
+            &self,
+            __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
+        ) -> ::core::result::Result<
+            super::super::super::diff_delta::File,
+            ::buffa::DecodeError,
+        > {
+            #[allow(unused_imports)]
+            use ::buffa::alloc::string::ToString as _;
+            let _ = __buffa_src;
+            ::core::result::Result::Ok(super::super::super::diff_delta::File {
+                path: self.path.map(|s| s.to_string()),
+                size: self.size,
+                __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
+                ..::core::default::Default::default()
+            })
+        }
+    }
+    impl<'a> ::buffa::ViewEncode<'a> for FileView<'a> {
+        #[allow(clippy::needless_borrow, clippy::let_and_return)]
+        fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+            #[allow(unused_imports)]
+            use ::buffa::Enumeration as _;
+            let mut size = 0u32;
+            if let Some(ref v) = self.path {
+                size += 1u32 + ::buffa::types::string_encoded_len(v) as u32;
+            }
+            if self.size != 0u64 {
+                size += 1u32 + ::buffa::types::uint64_encoded_len(self.size) as u32;
+            }
+            size += self.__buffa_unknown_fields.encoded_len() as u32;
+            size
+        }
+        #[allow(clippy::needless_borrow)]
+        fn write_to(
+            &self,
+            _cache: &mut ::buffa::SizeCache,
+            buf: &mut impl ::buffa::bytes::BufMut,
+        ) {
+            #[allow(unused_imports)]
+            use ::buffa::Enumeration as _;
+            if let Some(ref v) = self.path {
+                ::buffa::types::put_string_field(1u32, v, buf);
+            }
+            if self.size != 0u64 {
+                ::buffa::types::put_uint64_field(2u32, self.size, buf);
+            }
+            self.__buffa_unknown_fields.write_to(buf);
+        }
+    }
+    /// Serializes this view as protobuf JSON.
+    ///
+    /// Implicit-presence fields with default values are omitted, `required`
+    /// fields are always emitted, explicit-presence (`optional`) fields are
+    /// emitted only when set, bytes fields are base64-encoded, and enum
+    /// values are their proto name strings.
+    ///
+    /// This impl uses `serialize_map(None)` because the number of emitted
+    /// fields depends on default-omission rules; serializers that require
+    /// known map lengths (e.g. `bincode`) will return a runtime error.
+    /// Use the owned message type for those formats.
+    impl<'__a> ::serde::Serialize for FileView<'__a> {
+        fn serialize<__S: ::serde::Serializer>(
+            &self,
+            __s: __S,
+        ) -> ::core::result::Result<__S::Ok, __S::Error> {
+            use ::serde::ser::SerializeMap as _;
+            let mut __map = __s.serialize_map(::core::option::Option::None)?;
+            if let ::core::option::Option::Some(__v) = self.path {
+                __map.serialize_entry("path", __v)?;
+            }
+            if !::buffa::json_helpers::skip_if::is_zero_u64(&self.size) {
+                __map
+                    .serialize_entry(
+                        "size",
+                        &::buffa::json_helpers::ProtoJson(&self.size),
+                    )?;
+            }
+            __map.end()
+        }
+    }
+    impl<'a> ::buffa::MessageName for FileView<'a> {
+        const PACKAGE: &'static str = "gitproxy.v1";
+        const NAME: &'static str = "DiffDelta.File";
+        const FULL_NAME: &'static str = "gitproxy.v1.DiffDelta.File";
+        const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.DiffDelta.File";
+    }
+    ::buffa::impl_default_view_instance!(FileView);
+    ::buffa::impl_view_reborrow!(FileView);
+    /** Self-contained, `'static` owned view of a `File` message.
+
+ Wraps [`::buffa::OwnedView`]`<`[`FileView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
+
+ Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`FileView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
+    #[derive(Clone, Debug)]
+    pub struct FileOwnedView(::buffa::OwnedView<FileView<'static>>);
+    impl FileOwnedView {
+        /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
+        ///
+        /// The view borrows directly from the buffer's data; the buffer is
+        /// retained inside the returned handle.
+        ///
+        /// # Errors
+        ///
+        /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
+        /// protobuf data.
+        pub fn decode(
+            bytes: ::buffa::bytes::Bytes,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            ::core::result::Result::Ok(FileOwnedView(::buffa::OwnedView::decode(bytes)?))
+        }
+        /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
+        /// max message size).
+        ///
+        /// # Errors
+        ///
+        /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
+        /// exceeds the configured limits.
+        pub fn decode_with_options(
+            bytes: ::buffa::bytes::Bytes,
+            opts: &::buffa::DecodeOptions,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            ::core::result::Result::Ok(
+                FileOwnedView(::buffa::OwnedView::decode_with_options(bytes, opts)?),
+            )
+        }
+        /// Build from an owned message via an encode → decode round-trip.
+        ///
+        /// # Errors
+        ///
+        /// Returns [`::buffa::DecodeError`] if the re-encoded bytes are
+        /// somehow invalid (should not happen for well-formed messages).
+        pub fn from_owned(
+            msg: &super::super::super::diff_delta::File,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            ::core::result::Result::Ok(
+                FileOwnedView(::buffa::OwnedView::from_owned(msg)?),
+            )
+        }
+        /// Borrow the full [`FileView`] with its lifetime tied to `&self`.
+        #[must_use]
+        pub fn view(&self) -> &FileView<'_> {
+            self.0.reborrow()
+        }
+        /// Convert to the owned message type.
+        ///
+        /// # Errors
+        ///
+        /// Returns an error if re-materializing preserved unknown fields
+        /// fails (e.g. the unknown-field limit is exceeded).
+        pub fn to_owned_message(
+            &self,
+        ) -> ::core::result::Result<
+            super::super::super::diff_delta::File,
+            ::buffa::DecodeError,
+        > {
+            self.0.to_owned_message()
+        }
+        /// The underlying bytes buffer.
+        #[must_use]
+        pub fn bytes(&self) -> &::buffa::bytes::Bytes {
+            self.0.bytes()
+        }
+        /// Consume the handle, returning the underlying bytes buffer.
+        #[must_use]
+        pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
+            self.0.into_bytes()
+        }
+        /// Field 1: `path`
+        #[must_use]
+        pub fn path(&self) -> ::core::option::Option<&'_ str> {
+            self.0.reborrow().path
+        }
+        /// Field 2: `size`
+        #[must_use]
+        pub fn size(&self) -> u64 {
+            self.0.reborrow().size
+        }
+    }
+    impl ::core::convert::From<::buffa::OwnedView<FileView<'static>>> for FileOwnedView {
+        fn from(inner: ::buffa::OwnedView<FileView<'static>>) -> Self {
+            FileOwnedView(inner)
+        }
+    }
+    impl ::core::convert::From<FileOwnedView> for ::buffa::OwnedView<FileView<'static>> {
+        fn from(wrapper: FileOwnedView) -> Self {
+            wrapper.0
+        }
+    }
+    impl ::core::convert::AsRef<::buffa::OwnedView<FileView<'static>>>
+    for FileOwnedView {
+        fn as_ref(&self) -> &::buffa::OwnedView<FileView<'static>> {
+            &self.0
+        }
+    }
+    impl ::buffa::HasMessageView for super::super::super::diff_delta::File {
+        type View<'a> = FileView<'a>;
+        type ViewHandle = FileOwnedView;
+    }
+    impl ::serde::Serialize for FileOwnedView {
+        fn serialize<__S: ::serde::Serializer>(
+            &self,
+            __s: __S,
+        ) -> ::core::result::Result<__S::Ok, __S::Error> {
+            ::serde::Serialize::serialize(&self.0, __s)
+        }
+    }
+    #[derive(Clone, Debug, Default)]
+    pub struct LineView<'a> {
+        /// Field 1: `old_line_number`
+        pub old_line_number: ::core::option::Option<u32>,
+        /// Field 2: `new_line_number`
+        pub new_line_number: ::core::option::Option<u32>,
+        /// Field 3: `number_lines`
+        pub number_lines: u32,
+        /// Field 4: `content_offset`
+        pub content_offset: i64,
+        /// Field 5: `content`
+        pub content: &'a [u8],
+        /// Field 6: `origin`
+        pub origin: ::buffa::EnumValue<super::super::super::diff_delta::line::Origin>,
+        pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
+    }
+    impl<'a> ::buffa::MessageView<'a> for LineView<'a> {
+        type Owned = super::super::super::diff_delta::Line;
+        fn decode_view(
+            buf: &'a [u8],
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
+            <Self as ::buffa::MessageView>::decode_view_ctx(
+                buf,
+                ::buffa::DecodeContext::new(::buffa::RECURSION_LIMIT, &__limit),
+            )
+        }
+        fn decode_view_with_ctx(
+            buf: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            <Self as ::buffa::MessageView>::decode_view_ctx(buf, ctx)
+        }
+        fn merge_view_field(
+            &mut self,
+            tag: ::buffa::encoding::Tag,
+            cur: &'a [u8],
+            before_tag: &'a [u8],
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<&'a [u8], ::buffa::DecodeError> {
+            let _ = ctx;
+            #[allow(unused_variables)]
+            let view = self;
+            let mut cur = cur;
+            match tag.field_number() {
+                1u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::Varint,
+                    )?;
+                    view.old_line_number = Some(
+                        ::buffa::types::decode_uint32(&mut cur)?,
+                    );
+                }
+                2u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::Varint,
+                    )?;
+                    view.new_line_number = Some(
+                        ::buffa::types::decode_uint32(&mut cur)?,
+                    );
+                }
+                3u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::Varint,
+                    )?;
+                    view.number_lines = ::buffa::types::decode_uint32(&mut cur)?;
+                }
+                4u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::Varint,
+                    )?;
+                    view.content_offset = ::buffa::types::decode_int64(&mut cur)?;
+                }
+                5u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::LengthDelimited,
+                    )?;
+                    view.content = ::buffa::types::borrow_bytes(&mut cur)?;
+                }
+                6u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::Varint,
+                    )?;
+                    view.origin = ::buffa::EnumValue::from(
+                        ::buffa::types::decode_int32(&mut cur)?,
+                    );
+                }
+                _ => {
+                    ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
+                    let span_len = before_tag.len() - cur.len();
+                    view.__buffa_unknown_fields.push_record(before_tag, span_len, ctx)?;
+                }
+            }
+            ::core::result::Result::Ok(cur)
+        }
+        fn to_owned_message(
+            &self,
+        ) -> ::core::result::Result<
+            super::super::super::diff_delta::Line,
+            ::buffa::DecodeError,
+        > {
+            self.to_owned_from_source(None)
+        }
+        #[allow(clippy::useless_conversion, clippy::needless_update)]
+        fn to_owned_from_source(
+            &self,
+            __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
+        ) -> ::core::result::Result<
+            super::super::super::diff_delta::Line,
+            ::buffa::DecodeError,
+        > {
+            #[allow(unused_imports)]
+            use ::buffa::alloc::string::ToString as _;
+            let _ = __buffa_src;
+            ::core::result::Result::Ok(super::super::super::diff_delta::Line {
+                old_line_number: self.old_line_number,
+                new_line_number: self.new_line_number,
+                number_lines: self.number_lines,
+                content_offset: self.content_offset,
+                content: (self.content).to_vec(),
+                origin: self.origin,
+                __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
+                ..::core::default::Default::default()
+            })
+        }
+    }
+    impl<'a> ::buffa::ViewEncode<'a> for LineView<'a> {
+        #[allow(clippy::needless_borrow, clippy::let_and_return)]
+        fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+            #[allow(unused_imports)]
+            use ::buffa::Enumeration as _;
+            let mut size = 0u32;
+            if let Some(v) = self.old_line_number {
+                size += 1u32 + ::buffa::types::uint32_encoded_len(v) as u32;
+            }
+            if let Some(v) = self.new_line_number {
+                size += 1u32 + ::buffa::types::uint32_encoded_len(v) as u32;
+            }
+            if self.number_lines != 0u32 {
+                size
+                    += 1u32
+                        + ::buffa::types::uint32_encoded_len(self.number_lines) as u32;
+            }
+            if self.content_offset != 0i64 {
+                size
+                    += 1u32
+                        + ::buffa::types::int64_encoded_len(self.content_offset) as u32;
+            }
+            if !self.content.is_empty() {
+                size += 1u32 + ::buffa::types::bytes_encoded_len(&self.content) as u32;
+            }
+            {
+                let val = self.origin.to_i32();
+                if val != 0 {
+                    size += 1u32 + ::buffa::types::int32_encoded_len(val) as u32;
+                }
+            }
+            size += self.__buffa_unknown_fields.encoded_len() as u32;
+            size
+        }
+        #[allow(clippy::needless_borrow)]
+        fn write_to(
+            &self,
+            _cache: &mut ::buffa::SizeCache,
+            buf: &mut impl ::buffa::bytes::BufMut,
+        ) {
+            #[allow(unused_imports)]
+            use ::buffa::Enumeration as _;
+            if let Some(v) = self.old_line_number {
+                ::buffa::types::put_uint32_field(1u32, v, buf);
+            }
+            if let Some(v) = self.new_line_number {
+                ::buffa::types::put_uint32_field(2u32, v, buf);
+            }
+            if self.number_lines != 0u32 {
+                ::buffa::types::put_uint32_field(3u32, self.number_lines, buf);
+            }
+            if self.content_offset != 0i64 {
+                ::buffa::types::put_int64_field(4u32, self.content_offset, buf);
+            }
+            if !self.content.is_empty() {
+                ::buffa::types::put_bytes_field(5u32, &self.content, buf);
+            }
+            {
+                let val = self.origin.to_i32();
+                if val != 0 {
+                    ::buffa::types::put_int32_field(6u32, val, buf);
+                }
+            }
+            self.__buffa_unknown_fields.write_to(buf);
+        }
+    }
+    /// Serializes this view as protobuf JSON.
+    ///
+    /// Implicit-presence fields with default values are omitted, `required`
+    /// fields are always emitted, explicit-presence (`optional`) fields are
+    /// emitted only when set, bytes fields are base64-encoded, and enum
+    /// values are their proto name strings.
+    ///
+    /// This impl uses `serialize_map(None)` because the number of emitted
+    /// fields depends on default-omission rules; serializers that require
+    /// known map lengths (e.g. `bincode`) will return a runtime error.
+    /// Use the owned message type for those formats.
+    impl<'__a> ::serde::Serialize for LineView<'__a> {
+        fn serialize<__S: ::serde::Serializer>(
+            &self,
+            __s: __S,
+        ) -> ::core::result::Result<__S::Ok, __S::Error> {
+            use ::serde::ser::SerializeMap as _;
+            let mut __map = __s.serialize_map(::core::option::Option::None)?;
+            if let ::core::option::Option::Some(__v) = self.old_line_number {
+                __map
+                    .serialize_entry(
+                        "oldLineNumber",
+                        &::buffa::json_helpers::ProtoJson(&__v),
+                    )?;
+            }
+            if let ::core::option::Option::Some(__v) = self.new_line_number {
+                __map
+                    .serialize_entry(
+                        "newLineNumber",
+                        &::buffa::json_helpers::ProtoJson(&__v),
+                    )?;
+            }
+            if !::buffa::json_helpers::skip_if::is_zero_u32(&self.number_lines) {
+                __map
+                    .serialize_entry(
+                        "numberLines",
+                        &::buffa::json_helpers::ProtoJson(&self.number_lines),
+                    )?;
+            }
+            if !::buffa::json_helpers::skip_if::is_zero_i64(&self.content_offset) {
+                __map
+                    .serialize_entry(
+                        "contentOffset",
+                        &::buffa::json_helpers::ProtoJson(&self.content_offset),
+                    )?;
+            }
+            if !::buffa::json_helpers::skip_if::is_empty_bytes(self.content) {
+                __map
+                    .serialize_entry(
+                        "content",
+                        &::buffa::json_helpers::BytesJson(self.content),
+                    )?;
+            }
+            if !::buffa::json_helpers::skip_if::is_default_enum_value(&self.origin) {
+                __map.serialize_entry("origin", &self.origin)?;
+            }
+            __map.end()
+        }
+    }
+    impl<'a> ::buffa::MessageName for LineView<'a> {
+        const PACKAGE: &'static str = "gitproxy.v1";
+        const NAME: &'static str = "DiffDelta.Line";
+        const FULL_NAME: &'static str = "gitproxy.v1.DiffDelta.Line";
+        const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.DiffDelta.Line";
+    }
+    ::buffa::impl_default_view_instance!(LineView);
+    ::buffa::impl_view_reborrow!(LineView);
+    /** Self-contained, `'static` owned view of a `Line` message.
+
+ Wraps [`::buffa::OwnedView`]`<`[`LineView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
+
+ Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`LineView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
+    #[derive(Clone, Debug)]
+    pub struct LineOwnedView(::buffa::OwnedView<LineView<'static>>);
+    impl LineOwnedView {
+        /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
+        ///
+        /// The view borrows directly from the buffer's data; the buffer is
+        /// retained inside the returned handle.
+        ///
+        /// # Errors
+        ///
+        /// Returns [`::buffa::DecodeError`] if the buffer contains invalid
+        /// protobuf data.
+        pub fn decode(
+            bytes: ::buffa::bytes::Bytes,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            ::core::result::Result::Ok(LineOwnedView(::buffa::OwnedView::decode(bytes)?))
+        }
+        /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
+        /// max message size).
+        ///
+        /// # Errors
+        ///
+        /// Returns [`::buffa::DecodeError`] if the buffer is invalid or
+        /// exceeds the configured limits.
+        pub fn decode_with_options(
+            bytes: ::buffa::bytes::Bytes,
+            opts: &::buffa::DecodeOptions,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            ::core::result::Result::Ok(
+                LineOwnedView(::buffa::OwnedView::decode_with_options(bytes, opts)?),
+            )
+        }
+        /// Build from an owned message via an encode → decode round-trip.
+        ///
+        /// # Errors
+        ///
+        /// Returns [`::buffa::DecodeError`] if the re-encoded bytes are
+        /// somehow invalid (should not happen for well-formed messages).
+        pub fn from_owned(
+            msg: &super::super::super::diff_delta::Line,
+        ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
+            ::core::result::Result::Ok(
+                LineOwnedView(::buffa::OwnedView::from_owned(msg)?),
+            )
+        }
+        /// Borrow the full [`LineView`] with its lifetime tied to `&self`.
+        #[must_use]
+        pub fn view(&self) -> &LineView<'_> {
+            self.0.reborrow()
+        }
+        /// Convert to the owned message type.
+        ///
+        /// # Errors
+        ///
+        /// Returns an error if re-materializing preserved unknown fields
+        /// fails (e.g. the unknown-field limit is exceeded).
+        pub fn to_owned_message(
+            &self,
+        ) -> ::core::result::Result<
+            super::super::super::diff_delta::Line,
+            ::buffa::DecodeError,
+        > {
+            self.0.to_owned_message()
+        }
+        /// The underlying bytes buffer.
+        #[must_use]
+        pub fn bytes(&self) -> &::buffa::bytes::Bytes {
+            self.0.bytes()
+        }
+        /// Consume the handle, returning the underlying bytes buffer.
+        #[must_use]
+        pub fn into_bytes(self) -> ::buffa::bytes::Bytes {
+            self.0.into_bytes()
+        }
+        /// Field 1: `old_line_number`
+        #[must_use]
+        pub fn old_line_number(&self) -> ::core::option::Option<u32> {
+            self.0.reborrow().old_line_number
+        }
+        /// Field 2: `new_line_number`
+        #[must_use]
+        pub fn new_line_number(&self) -> ::core::option::Option<u32> {
+            self.0.reborrow().new_line_number
+        }
+        /// Field 3: `number_lines`
+        #[must_use]
+        pub fn number_lines(&self) -> u32 {
+            self.0.reborrow().number_lines
+        }
+        /// Field 4: `content_offset`
+        #[must_use]
+        pub fn content_offset(&self) -> i64 {
+            self.0.reborrow().content_offset
+        }
+        /// Field 5: `content`
+        #[must_use]
+        pub fn content(&self) -> &'_ [u8] {
+            self.0.reborrow().content
+        }
+        /// Field 6: `origin`
+        #[must_use]
+        pub fn origin(
+            &self,
+        ) -> ::buffa::EnumValue<super::super::super::diff_delta::line::Origin> {
+            self.0.reborrow().origin
+        }
+    }
+    impl ::core::convert::From<::buffa::OwnedView<LineView<'static>>> for LineOwnedView {
+        fn from(inner: ::buffa::OwnedView<LineView<'static>>) -> Self {
+            LineOwnedView(inner)
+        }
+    }
+    impl ::core::convert::From<LineOwnedView> for ::buffa::OwnedView<LineView<'static>> {
+        fn from(wrapper: LineOwnedView) -> Self {
+            wrapper.0
+        }
+    }
+    impl ::core::convert::AsRef<::buffa::OwnedView<LineView<'static>>>
+    for LineOwnedView {
+        fn as_ref(&self) -> &::buffa::OwnedView<LineView<'static>> {
+            &self.0
+        }
+    }
+    impl ::buffa::HasMessageView for super::super::super::diff_delta::Line {
+        type View<'a> = LineView<'a>;
+        type ViewHandle = LineOwnedView;
+    }
+    impl ::serde::Serialize for LineOwnedView {
+        fn serialize<__S: ::serde::Serializer>(
+            &self,
+            __s: __S,
+        ) -> ::core::result::Result<__S::Ok, __S::Error> {
+            ::serde::Serialize::serialize(&self.0, __s)
+        }
     }
 }

@@ -72,6 +72,8 @@ const (
 	// GitProxyServiceRevertMergeProcedure is the fully-qualified name of the GitProxyService's
 	// RevertMerge RPC.
 	GitProxyServiceRevertMergeProcedure = "/gitproxy.v1.GitProxyService/RevertMerge"
+	// GitProxyServiceDiffProcedure is the fully-qualified name of the GitProxyService's Diff RPC.
+	GitProxyServiceDiffProcedure = "/gitproxy.v1.GitProxyService/Diff"
 )
 
 // GitProxyServiceClient is a client for the gitproxy.v1.GitProxyService service.
@@ -90,6 +92,7 @@ type GitProxyServiceClient interface {
 	Merge(context.Context, *connect.Request[v1.MergeRequest]) (*connect.Response[v1.MergeResponse], error)
 	Log(context.Context, *connect.Request[v1.LogRequest]) (*connect.Response[v1.LogResponse], error)
 	RevertMerge(context.Context, *connect.Request[v1.RevertMergeRequest]) (*connect.Response[v1.RevertMergeResponse], error)
+	Diff(context.Context, *connect.Request[v1.DiffRequest]) (*connect.Response[v1.DiffResponse], error)
 }
 
 // NewGitProxyServiceClient constructs a client for the gitproxy.v1.GitProxyService service. By
@@ -187,6 +190,12 @@ func NewGitProxyServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(gitProxyServiceMethods.ByName("RevertMerge")),
 			connect.WithClientOptions(opts...),
 		),
+		diff: connect.NewClient[v1.DiffRequest, v1.DiffResponse](
+			httpClient,
+			baseURL+GitProxyServiceDiffProcedure,
+			connect.WithSchema(gitProxyServiceMethods.ByName("Diff")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -206,6 +215,7 @@ type gitProxyServiceClient struct {
 	merge            *connect.Client[v1.MergeRequest, v1.MergeResponse]
 	log              *connect.Client[v1.LogRequest, v1.LogResponse]
 	revertMerge      *connect.Client[v1.RevertMergeRequest, v1.RevertMergeResponse]
+	diff             *connect.Client[v1.DiffRequest, v1.DiffResponse]
 }
 
 // ListRepositories calls gitproxy.v1.GitProxyService.ListRepositories.
@@ -278,6 +288,11 @@ func (c *gitProxyServiceClient) RevertMerge(ctx context.Context, req *connect.Re
 	return c.revertMerge.CallUnary(ctx, req)
 }
 
+// Diff calls gitproxy.v1.GitProxyService.Diff.
+func (c *gitProxyServiceClient) Diff(ctx context.Context, req *connect.Request[v1.DiffRequest]) (*connect.Response[v1.DiffResponse], error) {
+	return c.diff.CallUnary(ctx, req)
+}
+
 // GitProxyServiceHandler is an implementation of the gitproxy.v1.GitProxyService service.
 type GitProxyServiceHandler interface {
 	ListRepositories(context.Context, *connect.Request[v1.ListRepositoriesRequest]) (*connect.Response[v1.ListRepositoriesResponse], error)
@@ -294,6 +309,7 @@ type GitProxyServiceHandler interface {
 	Merge(context.Context, *connect.Request[v1.MergeRequest]) (*connect.Response[v1.MergeResponse], error)
 	Log(context.Context, *connect.Request[v1.LogRequest]) (*connect.Response[v1.LogResponse], error)
 	RevertMerge(context.Context, *connect.Request[v1.RevertMergeRequest]) (*connect.Response[v1.RevertMergeResponse], error)
+	Diff(context.Context, *connect.Request[v1.DiffRequest]) (*connect.Response[v1.DiffResponse], error)
 }
 
 // NewGitProxyServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -387,6 +403,12 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 		connect.WithSchema(gitProxyServiceMethods.ByName("RevertMerge")),
 		connect.WithHandlerOptions(opts...),
 	)
+	gitProxyServiceDiffHandler := connect.NewUnaryHandler(
+		GitProxyServiceDiffProcedure,
+		svc.Diff,
+		connect.WithSchema(gitProxyServiceMethods.ByName("Diff")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/gitproxy.v1.GitProxyService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case GitProxyServiceListRepositoriesProcedure:
@@ -417,6 +439,8 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 			gitProxyServiceLogHandler.ServeHTTP(w, r)
 		case GitProxyServiceRevertMergeProcedure:
 			gitProxyServiceRevertMergeHandler.ServeHTTP(w, r)
+		case GitProxyServiceDiffProcedure:
+			gitProxyServiceDiffHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -480,4 +504,8 @@ func (UnimplementedGitProxyServiceHandler) Log(context.Context, *connect.Request
 
 func (UnimplementedGitProxyServiceHandler) RevertMerge(context.Context, *connect.Request[v1.RevertMergeRequest]) (*connect.Response[v1.RevertMergeResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.RevertMerge is not implemented"))
+}
+
+func (UnimplementedGitProxyServiceHandler) Diff(context.Context, *connect.Request[v1.DiffRequest]) (*connect.Response[v1.DiffResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.Diff is not implemented"))
 }

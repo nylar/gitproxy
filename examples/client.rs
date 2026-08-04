@@ -1,6 +1,6 @@
 use std::path::Path;
 
-use buffa::MessageField;
+use buffa::{MessageField, MessageFieldView};
 use chrono::DateTime;
 use connectrpc::client::{ClientConfig, HttpClient};
 use gitproxy::{
@@ -9,9 +9,10 @@ use gitproxy::{
     proto::gitproxy::v1::{
         CheckoutTagRequest, CommitAuthor, CommitRequest, CreateBranchRequest,
         CreateRepositoryRequest, CreateTagRequest, DeleteBranchRequest, DeleteRepositoryRequest,
-        LogRequest, LogView, MergeRequest, RevertMergeRequest,
+        DiffRequest, DiffView, LogRequest, LogView, MergeRequest, RevertMergeRequest,
     },
 };
+use yansi::Paint;
 
 const NAMESPACE: &str = "example";
 
@@ -74,6 +75,18 @@ async fn main() {
         .unwrap();
     println!("Commit A: {}", resp.view().commit);
 
+    let diff = client
+        .diff(DiffRequest {
+            namespace: NAMESPACE.to_owned(),
+            from_branch: None, // Compare to main
+            to_branch: branch1.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    print_diff(&diff.view().diff);
+
     write_files(
         branch_path.view().path,
         vec![(&Path::new("my-dir/foo.txt"), "foo2".as_bytes())],
@@ -95,6 +108,18 @@ async fn main() {
         .await
         .unwrap();
     println!("Commit B: {}", resp.view().commit);
+
+    let diff = client
+        .diff(DiffRequest {
+            namespace: NAMESPACE.to_owned(),
+            from_branch: None, // Compare to main
+            to_branch: branch1.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    print_diff(&diff.view().diff);
 
     let resp = client
         .merge(MergeRequest {
@@ -138,6 +163,18 @@ async fn main() {
         .await
         .unwrap();
     println!("Commit C: {}", resp.view().commit);
+
+    let diff = client
+        .diff(DiffRequest {
+            namespace: NAMESPACE.to_owned(),
+            from_branch: None, // Compare to main
+            to_branch: branch2.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    print_diff(&diff.view().diff);
 
     let resp = client
         .merge(MergeRequest {
@@ -245,4 +282,37 @@ fn write_files(root_path: &str, files: Vec<(&Path, &[u8])>) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn print_diff(diff: &MessageFieldView<DiffView<'_>>) {
+    use gitproxy::proto::gitproxy::v1::diff_delta::line::Origin;
+
+    println!("--- DIFF ---");
+    println!(
+        "Files Changed: {}. Insertions: {}. Deletions: {}",
+        diff.files_changes,
+        diff.insertions.green(),
+        diff.deletions.red()
+    );
+    for delta in &diff.deltas {
+        println!("--- {}", delta.old_file.path.unwrap_or_default().bold());
+        println!("+++ {}", delta.new_file.path.unwrap_or_default().bold());
+        for line in &delta.lines {
+            match line.origin.as_known() {
+                Some(Origin::Addition) => println!(
+                    "{}{}",
+                    "+".green(),
+                    String::from_utf8_lossy(line.content).green()
+                ),
+                Some(Origin::Deletion) => println!(
+                    "{}{}",
+                    "-".red(),
+                    String::from_utf8_lossy(line.content).red()
+                ),
+                Some(Origin::Context) => println!(" {}", String::from_utf8_lossy(line.content)),
+                _ => (),
+            };
+        }
+    }
+    println!("--- DIFF ---");
 }

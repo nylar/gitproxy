@@ -3738,6 +3738,323 @@ pub const __LOG_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buff
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
+pub struct DiffRequest {
+    /// Field 1: `namespace`
+    #[serde(
+        rename = "namespace",
+        with = "::buffa::json_helpers::proto_string",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
+    )]
+    pub namespace: ::buffa::alloc::string::String,
+    /// Field 2: `from_branch`
+    #[serde(
+        rename = "fromBranch",
+        alias = "from_branch",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub from_branch: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 3: `to_branch`
+    #[serde(
+        rename = "toBranch",
+        alias = "to_branch",
+        with = "::buffa::json_helpers::proto_string",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
+    )]
+    pub to_branch: ::buffa::alloc::string::String,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for DiffRequest {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("DiffRequest")
+            .field("namespace", &self.namespace)
+            .field("from_branch", &self.from_branch)
+            .field("to_branch", &self.to_branch)
+            .finish()
+    }
+}
+impl DiffRequest {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.DiffRequest";
+}
+impl DiffRequest {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::from_branch`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_from_branch(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.from_branch = Some(value.into());
+        self
+    }
+}
+::buffa::impl_default_instance!(DiffRequest);
+impl ::buffa::MessageName for DiffRequest {
+    const PACKAGE: &'static str = "gitproxy.v1";
+    const NAME: &'static str = "DiffRequest";
+    const FULL_NAME: &'static str = "gitproxy.v1.DiffRequest";
+    const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.DiffRequest";
+}
+impl ::buffa::Message for DiffRequest {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// The result is a `u32`; the protobuf specification requires all
+    /// messages to fit within 2 GiB (2,147,483,647 bytes), so a
+    /// compliant message will never overflow this type.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u32;
+        if !self.namespace.is_empty() {
+            size += 1u32 + ::buffa::types::string_encoded_len(&self.namespace) as u32;
+        }
+        if let Some(ref v) = self.from_branch {
+            size += 1u32 + ::buffa::types::string_encoded_len(v) as u32;
+        }
+        if !self.to_branch.is_empty() {
+            size += 1u32 + ::buffa::types::string_encoded_len(&self.to_branch) as u32;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u32;
+        size
+    }
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::bytes::BufMut,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if !self.namespace.is_empty() {
+            ::buffa::types::put_string_field(1u32, &self.namespace, buf);
+        }
+        if let Some(ref v) = self.from_branch {
+            ::buffa::types::put_string_field(2u32, v, buf);
+        }
+        if !self.to_branch.is_empty() {
+            ::buffa::types::put_string_field(3u32, &self.to_branch, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(&mut self.namespace, buf)?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .from_branch
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(&mut self.to_branch, buf)?;
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.namespace.clear();
+        self.from_branch = ::core::option::Option::None;
+        self.to_branch.clear();
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for DiffRequest {
+    const PROTO_FQN: &'static str = "gitproxy.v1.DiffRequest";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for DiffRequest {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __DIFF_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/gitproxy.v1.DiffRequest",
+    to_json: ::buffa::type_registry::any_to_json::<DiffRequest>,
+    from_json: ::buffa::type_registry::any_from_json::<DiffRequest>,
+    is_wkt: false,
+};
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct DiffResponse {
+    /// Field 1: `diff`
+    #[serde(
+        rename = "diff",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+    )]
+    pub diff: ::buffa::MessageField<Diff>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for DiffResponse {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("DiffResponse").field("diff", &self.diff).finish()
+    }
+}
+impl DiffResponse {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.DiffResponse";
+}
+::buffa::impl_default_instance!(DiffResponse);
+impl ::buffa::MessageName for DiffResponse {
+    const PACKAGE: &'static str = "gitproxy.v1";
+    const NAME: &'static str = "DiffResponse";
+    const FULL_NAME: &'static str = "gitproxy.v1.DiffResponse";
+    const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.DiffResponse";
+}
+impl ::buffa::Message for DiffResponse {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// The result is a `u32`; the protobuf specification requires all
+    /// messages to fit within 2 GiB (2,147,483,647 bytes), so a
+    /// compliant message will never overflow this type.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u32;
+        if self.diff.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.diff.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                    + inner_size;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u32;
+        size
+    }
+    fn write_to(
+        &self,
+        __cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::bytes::BufMut,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if self.diff.is_set() {
+            ::buffa::types::put_len_delimited_header(1u32, __cache.consume_next(), buf);
+            self.diff.write_to(__cache, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::Message::merge_length_delimited(
+                    self.diff.get_or_insert_default(),
+                    buf,
+                    ctx,
+                )?;
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.diff = ::buffa::MessageField::none();
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for DiffResponse {
+    const PROTO_FQN: &'static str = "gitproxy.v1.DiffResponse";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for DiffResponse {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __DIFF_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/gitproxy.v1.DiffResponse",
+    to_json: ::buffa::type_registry::any_to_json::<DiffResponse>,
+    from_json: ::buffa::type_registry::any_from_json::<DiffResponse>,
+    is_wkt: false,
+};
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
 pub struct CommitAuthor {
     /// Field 1: `name`
     #[serde(
@@ -4258,3 +4575,1326 @@ pub const __REPOSITORY_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa:
     from_json: ::buffa::type_registry::any_from_json::<Repository>,
     is_wkt: false,
 };
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct Diff {
+    /// Field 1: `files_changes`
+    #[serde(
+        rename = "filesChanges",
+        alias = "files_changes",
+        with = "::buffa::json_helpers::uint64",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_zero_u64"
+    )]
+    pub files_changes: u64,
+    /// Field 2: `insertions`
+    #[serde(
+        rename = "insertions",
+        with = "::buffa::json_helpers::uint64",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_zero_u64"
+    )]
+    pub insertions: u64,
+    /// Field 3: `deletions`
+    #[serde(
+        rename = "deletions",
+        with = "::buffa::json_helpers::uint64",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_zero_u64"
+    )]
+    pub deletions: u64,
+    /// Field 4: `deltas`
+    #[serde(
+        rename = "deltas",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
+    )]
+    pub deltas: ::buffa::alloc::vec::Vec<DiffDelta>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for Diff {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("Diff")
+            .field("files_changes", &self.files_changes)
+            .field("insertions", &self.insertions)
+            .field("deletions", &self.deletions)
+            .field("deltas", &self.deltas)
+            .finish()
+    }
+}
+impl Diff {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.Diff";
+}
+::buffa::impl_default_instance!(Diff);
+impl ::buffa::MessageName for Diff {
+    const PACKAGE: &'static str = "gitproxy.v1";
+    const NAME: &'static str = "Diff";
+    const FULL_NAME: &'static str = "gitproxy.v1.Diff";
+    const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.Diff";
+}
+impl ::buffa::Message for Diff {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// The result is a `u32`; the protobuf specification requires all
+    /// messages to fit within 2 GiB (2,147,483,647 bytes), so a
+    /// compliant message will never overflow this type.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u32;
+        if self.files_changes != 0u64 {
+            size += 1u32 + ::buffa::types::uint64_encoded_len(self.files_changes) as u32;
+        }
+        if self.insertions != 0u64 {
+            size += 1u32 + ::buffa::types::uint64_encoded_len(self.insertions) as u32;
+        }
+        if self.deletions != 0u64 {
+            size += 1u32 + ::buffa::types::uint64_encoded_len(self.deletions) as u32;
+        }
+        for v in &self.deltas {
+            let __slot = __cache.reserve();
+            let inner_size = v.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                    + inner_size;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u32;
+        size
+    }
+    fn write_to(
+        &self,
+        __cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::bytes::BufMut,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if self.files_changes != 0u64 {
+            ::buffa::types::put_uint64_field(1u32, self.files_changes, buf);
+        }
+        if self.insertions != 0u64 {
+            ::buffa::types::put_uint64_field(2u32, self.insertions, buf);
+        }
+        if self.deletions != 0u64 {
+            ::buffa::types::put_uint64_field(3u32, self.deletions, buf);
+        }
+        for v in &self.deltas {
+            ::buffa::types::put_len_delimited_header(4u32, __cache.consume_next(), buf);
+            v.write_to(__cache, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.files_changes = ::buffa::types::decode_uint64(buf)?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.insertions = ::buffa::types::decode_uint64(buf)?;
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.deletions = ::buffa::types::decode_uint64(buf)?;
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let mut elem = ::core::default::Default::default();
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.deltas.push(elem);
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.files_changes = 0u64;
+        self.insertions = 0u64;
+        self.deletions = 0u64;
+        self.deltas.clear();
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for Diff {
+    const PROTO_FQN: &'static str = "gitproxy.v1.Diff";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for Diff {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __DIFF_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/gitproxy.v1.Diff",
+    to_json: ::buffa::type_registry::any_to_json::<Diff>,
+    from_json: ::buffa::type_registry::any_from_json::<Diff>,
+    is_wkt: false,
+};
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct DiffDelta {
+    /// Field 1: `status`
+    #[serde(
+        rename = "status",
+        with = "::buffa::json_helpers::proto_enum",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_default_enum_value"
+    )]
+    pub status: ::buffa::EnumValue<diff_delta::Status>,
+    /// Field 2: `old_file`
+    #[serde(
+        rename = "oldFile",
+        alias = "old_file",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+    )]
+    pub old_file: ::buffa::MessageField<diff_delta::File>,
+    /// Field 3: `new_file`
+    #[serde(
+        rename = "newFile",
+        alias = "new_file",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+    )]
+    pub new_file: ::buffa::MessageField<diff_delta::File>,
+    /// Field 4: `lines`
+    #[serde(
+        rename = "lines",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
+    )]
+    pub lines: ::buffa::alloc::vec::Vec<diff_delta::Line>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for DiffDelta {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("DiffDelta")
+            .field("status", &self.status)
+            .field("old_file", &self.old_file)
+            .field("new_file", &self.new_file)
+            .field("lines", &self.lines)
+            .finish()
+    }
+}
+impl DiffDelta {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.DiffDelta";
+}
+::buffa::impl_default_instance!(DiffDelta);
+impl ::buffa::MessageName for DiffDelta {
+    const PACKAGE: &'static str = "gitproxy.v1";
+    const NAME: &'static str = "DiffDelta";
+    const FULL_NAME: &'static str = "gitproxy.v1.DiffDelta";
+    const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.DiffDelta";
+}
+impl ::buffa::Message for DiffDelta {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// The result is a `u32`; the protobuf specification requires all
+    /// messages to fit within 2 GiB (2,147,483,647 bytes), so a
+    /// compliant message will never overflow this type.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u32;
+        {
+            let val = self.status.to_i32();
+            if val != 0 {
+                size += 1u32 + ::buffa::types::int32_encoded_len(val) as u32;
+            }
+        }
+        if self.old_file.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.old_file.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                    + inner_size;
+        }
+        if self.new_file.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.new_file.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                    + inner_size;
+        }
+        for v in &self.lines {
+            let __slot = __cache.reserve();
+            let inner_size = v.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                    + inner_size;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u32;
+        size
+    }
+    fn write_to(
+        &self,
+        __cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::bytes::BufMut,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        {
+            let val = self.status.to_i32();
+            if val != 0 {
+                ::buffa::types::put_int32_field(1u32, val, buf);
+            }
+        }
+        if self.old_file.is_set() {
+            ::buffa::types::put_len_delimited_header(2u32, __cache.consume_next(), buf);
+            self.old_file.write_to(__cache, buf);
+        }
+        if self.new_file.is_set() {
+            ::buffa::types::put_len_delimited_header(3u32, __cache.consume_next(), buf);
+            self.new_file.write_to(__cache, buf);
+        }
+        for v in &self.lines {
+            ::buffa::types::put_len_delimited_header(4u32, __cache.consume_next(), buf);
+            v.write_to(__cache, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.status = ::buffa::EnumValue::from(
+                    ::buffa::types::decode_int32(buf)?,
+                );
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::Message::merge_length_delimited(
+                    self.old_file.get_or_insert_default(),
+                    buf,
+                    ctx,
+                )?;
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::Message::merge_length_delimited(
+                    self.new_file.get_or_insert_default(),
+                    buf,
+                    ctx,
+                )?;
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let mut elem = ::core::default::Default::default();
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.lines.push(elem);
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.status = ::buffa::EnumValue::from(0);
+        self.old_file = ::buffa::MessageField::none();
+        self.new_file = ::buffa::MessageField::none();
+        self.lines.clear();
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for DiffDelta {
+    const PROTO_FQN: &'static str = "gitproxy.v1.DiffDelta";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for DiffDelta {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __DIFF_DELTA_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/gitproxy.v1.DiffDelta",
+    to_json: ::buffa::type_registry::any_to_json::<DiffDelta>,
+    from_json: ::buffa::type_registry::any_from_json::<DiffDelta>,
+    is_wkt: false,
+};
+pub mod diff_delta {
+    #[allow(unused_imports)]
+    use super::*;
+    #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+    #[repr(i32)]
+    pub enum Status {
+        STATUS_UNSPECIFIED = 0i32,
+        STATUS_UNMODIFIED = 1i32,
+        STATUS_ADDED = 2i32,
+        STATUS_DELETED = 3i32,
+        STATUS_MODIFIED = 4i32,
+        STATUS_RENAMED = 5i32,
+        STATUS_COPIED = 6i32,
+        STATUS_IGNORED = 7i32,
+        STATUS_UNTRACKED = 8i32,
+        STATUS_TYPECHANGE = 9i32,
+        STATUS_UNREADABLE = 10i32,
+        STATUS_CONFLICTED = 11i32,
+    }
+    impl Status {
+        ///Idiomatic alias for [`Self::STATUS_UNSPECIFIED`]; `Debug` prints the variant name.
+        #[allow(non_upper_case_globals)]
+        pub const Unspecified: Self = Self::STATUS_UNSPECIFIED;
+        ///Idiomatic alias for [`Self::STATUS_UNMODIFIED`]; `Debug` prints the variant name.
+        #[allow(non_upper_case_globals)]
+        pub const Unmodified: Self = Self::STATUS_UNMODIFIED;
+        ///Idiomatic alias for [`Self::STATUS_ADDED`]; `Debug` prints the variant name.
+        #[allow(non_upper_case_globals)]
+        pub const Added: Self = Self::STATUS_ADDED;
+        ///Idiomatic alias for [`Self::STATUS_DELETED`]; `Debug` prints the variant name.
+        #[allow(non_upper_case_globals)]
+        pub const Deleted: Self = Self::STATUS_DELETED;
+        ///Idiomatic alias for [`Self::STATUS_MODIFIED`]; `Debug` prints the variant name.
+        #[allow(non_upper_case_globals)]
+        pub const Modified: Self = Self::STATUS_MODIFIED;
+        ///Idiomatic alias for [`Self::STATUS_RENAMED`]; `Debug` prints the variant name.
+        #[allow(non_upper_case_globals)]
+        pub const Renamed: Self = Self::STATUS_RENAMED;
+        ///Idiomatic alias for [`Self::STATUS_COPIED`]; `Debug` prints the variant name.
+        #[allow(non_upper_case_globals)]
+        pub const Copied: Self = Self::STATUS_COPIED;
+        ///Idiomatic alias for [`Self::STATUS_IGNORED`]; `Debug` prints the variant name.
+        #[allow(non_upper_case_globals)]
+        pub const Ignored: Self = Self::STATUS_IGNORED;
+        ///Idiomatic alias for [`Self::STATUS_UNTRACKED`]; `Debug` prints the variant name.
+        #[allow(non_upper_case_globals)]
+        pub const Untracked: Self = Self::STATUS_UNTRACKED;
+        ///Idiomatic alias for [`Self::STATUS_TYPECHANGE`]; `Debug` prints the variant name.
+        #[allow(non_upper_case_globals)]
+        pub const Typechange: Self = Self::STATUS_TYPECHANGE;
+        ///Idiomatic alias for [`Self::STATUS_UNREADABLE`]; `Debug` prints the variant name.
+        #[allow(non_upper_case_globals)]
+        pub const Unreadable: Self = Self::STATUS_UNREADABLE;
+        ///Idiomatic alias for [`Self::STATUS_CONFLICTED`]; `Debug` prints the variant name.
+        #[allow(non_upper_case_globals)]
+        pub const Conflicted: Self = Self::STATUS_CONFLICTED;
+    }
+    impl ::core::default::Default for Status {
+        fn default() -> Self {
+            Self::STATUS_UNSPECIFIED
+        }
+    }
+    impl ::serde::Serialize for Status {
+        fn serialize<S: ::serde::Serializer>(
+            &self,
+            s: S,
+        ) -> ::core::result::Result<S::Ok, S::Error> {
+            s.serialize_str(::buffa::Enumeration::proto_name(self))
+        }
+    }
+    impl<'de> ::serde::Deserialize<'de> for Status {
+        fn deserialize<D: ::serde::Deserializer<'de>>(
+            d: D,
+        ) -> ::core::result::Result<Self, D::Error> {
+            struct _V;
+            impl ::serde::de::Visitor<'_> for _V {
+                type Value = Status;
+                fn expecting(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
+                    f.write_str(
+                        concat!("a string, integer, or null for ", stringify!(Status)),
+                    )
+                }
+                fn visit_str<E: ::serde::de::Error>(
+                    self,
+                    v: &str,
+                ) -> ::core::result::Result<Status, E> {
+                    <Status as ::buffa::Enumeration>::from_proto_name(v)
+                        .ok_or_else(|| { ::serde::de::Error::unknown_variant(v, &[]) })
+                }
+                fn visit_i64<E: ::serde::de::Error>(
+                    self,
+                    v: i64,
+                ) -> ::core::result::Result<Status, E> {
+                    let v32 = i32::try_from(v)
+                        .map_err(|_| {
+                            ::serde::de::Error::custom(
+                                ::buffa::alloc::format!("enum value {v} out of i32 range"),
+                            )
+                        })?;
+                    <Status as ::buffa::Enumeration>::from_i32(v32)
+                        .ok_or_else(|| {
+                            ::serde::de::Error::custom(
+                                ::buffa::alloc::format!("unknown enum value {v32}"),
+                            )
+                        })
+                }
+                fn visit_u64<E: ::serde::de::Error>(
+                    self,
+                    v: u64,
+                ) -> ::core::result::Result<Status, E> {
+                    let v32 = i32::try_from(v)
+                        .map_err(|_| {
+                            ::serde::de::Error::custom(
+                                ::buffa::alloc::format!("enum value {v} out of i32 range"),
+                            )
+                        })?;
+                    <Status as ::buffa::Enumeration>::from_i32(v32)
+                        .ok_or_else(|| {
+                            ::serde::de::Error::custom(
+                                ::buffa::alloc::format!("unknown enum value {v32}"),
+                            )
+                        })
+                }
+                fn visit_unit<E: ::serde::de::Error>(
+                    self,
+                ) -> ::core::result::Result<Status, E> {
+                    ::core::result::Result::Ok(::core::default::Default::default())
+                }
+            }
+            d.deserialize_any(_V)
+        }
+    }
+    impl ::buffa::json_helpers::ProtoElemJson for Status {
+        fn serialize_proto_json<S: ::serde::Serializer>(
+            v: &Self,
+            s: S,
+        ) -> ::core::result::Result<S::Ok, S::Error> {
+            ::serde::Serialize::serialize(v, s)
+        }
+        fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+            d: D,
+        ) -> ::core::result::Result<Self, D::Error> {
+            <Self as ::serde::Deserialize>::deserialize(d)
+        }
+    }
+    impl ::buffa::Enumeration for Status {
+        fn from_i32(value: i32) -> ::core::option::Option<Self> {
+            match value {
+                0i32 => ::core::option::Option::Some(Self::STATUS_UNSPECIFIED),
+                1i32 => ::core::option::Option::Some(Self::STATUS_UNMODIFIED),
+                2i32 => ::core::option::Option::Some(Self::STATUS_ADDED),
+                3i32 => ::core::option::Option::Some(Self::STATUS_DELETED),
+                4i32 => ::core::option::Option::Some(Self::STATUS_MODIFIED),
+                5i32 => ::core::option::Option::Some(Self::STATUS_RENAMED),
+                6i32 => ::core::option::Option::Some(Self::STATUS_COPIED),
+                7i32 => ::core::option::Option::Some(Self::STATUS_IGNORED),
+                8i32 => ::core::option::Option::Some(Self::STATUS_UNTRACKED),
+                9i32 => ::core::option::Option::Some(Self::STATUS_TYPECHANGE),
+                10i32 => ::core::option::Option::Some(Self::STATUS_UNREADABLE),
+                11i32 => ::core::option::Option::Some(Self::STATUS_CONFLICTED),
+                _ => ::core::option::Option::None,
+            }
+        }
+        fn to_i32(&self) -> i32 {
+            *self as i32
+        }
+        fn proto_name(&self) -> &'static str {
+            match self {
+                Self::STATUS_UNSPECIFIED => "STATUS_UNSPECIFIED",
+                Self::STATUS_UNMODIFIED => "STATUS_UNMODIFIED",
+                Self::STATUS_ADDED => "STATUS_ADDED",
+                Self::STATUS_DELETED => "STATUS_DELETED",
+                Self::STATUS_MODIFIED => "STATUS_MODIFIED",
+                Self::STATUS_RENAMED => "STATUS_RENAMED",
+                Self::STATUS_COPIED => "STATUS_COPIED",
+                Self::STATUS_IGNORED => "STATUS_IGNORED",
+                Self::STATUS_UNTRACKED => "STATUS_UNTRACKED",
+                Self::STATUS_TYPECHANGE => "STATUS_TYPECHANGE",
+                Self::STATUS_UNREADABLE => "STATUS_UNREADABLE",
+                Self::STATUS_CONFLICTED => "STATUS_CONFLICTED",
+            }
+        }
+        fn from_proto_name(name: &str) -> ::core::option::Option<Self> {
+            match name {
+                "STATUS_UNSPECIFIED" => {
+                    ::core::option::Option::Some(Self::STATUS_UNSPECIFIED)
+                }
+                "STATUS_UNMODIFIED" => {
+                    ::core::option::Option::Some(Self::STATUS_UNMODIFIED)
+                }
+                "STATUS_ADDED" => ::core::option::Option::Some(Self::STATUS_ADDED),
+                "STATUS_DELETED" => ::core::option::Option::Some(Self::STATUS_DELETED),
+                "STATUS_MODIFIED" => ::core::option::Option::Some(Self::STATUS_MODIFIED),
+                "STATUS_RENAMED" => ::core::option::Option::Some(Self::STATUS_RENAMED),
+                "STATUS_COPIED" => ::core::option::Option::Some(Self::STATUS_COPIED),
+                "STATUS_IGNORED" => ::core::option::Option::Some(Self::STATUS_IGNORED),
+                "STATUS_UNTRACKED" => {
+                    ::core::option::Option::Some(Self::STATUS_UNTRACKED)
+                }
+                "STATUS_TYPECHANGE" => {
+                    ::core::option::Option::Some(Self::STATUS_TYPECHANGE)
+                }
+                "STATUS_UNREADABLE" => {
+                    ::core::option::Option::Some(Self::STATUS_UNREADABLE)
+                }
+                "STATUS_CONFLICTED" => {
+                    ::core::option::Option::Some(Self::STATUS_CONFLICTED)
+                }
+                _ => ::core::option::Option::None,
+            }
+        }
+        fn values() -> &'static [Self] {
+            &[
+                Self::STATUS_UNSPECIFIED,
+                Self::STATUS_UNMODIFIED,
+                Self::STATUS_ADDED,
+                Self::STATUS_DELETED,
+                Self::STATUS_MODIFIED,
+                Self::STATUS_RENAMED,
+                Self::STATUS_COPIED,
+                Self::STATUS_IGNORED,
+                Self::STATUS_UNTRACKED,
+                Self::STATUS_TYPECHANGE,
+                Self::STATUS_UNREADABLE,
+                Self::STATUS_CONFLICTED,
+            ]
+        }
+    }
+    #[derive(Clone, PartialEq, Default)]
+    #[derive(::serde::Serialize, ::serde::Deserialize)]
+    #[serde(default)]
+    pub struct File {
+        /// Field 1: `path`
+        #[serde(
+            rename = "path",
+            skip_serializing_if = "::core::option::Option::is_none"
+        )]
+        pub path: ::core::option::Option<::buffa::alloc::string::String>,
+        /// Field 2: `size`
+        #[serde(
+            rename = "size",
+            with = "::buffa::json_helpers::uint64",
+            skip_serializing_if = "::buffa::json_helpers::skip_if::is_zero_u64"
+        )]
+        pub size: u64,
+        #[serde(skip)]
+        #[doc(hidden)]
+        pub __buffa_unknown_fields: ::buffa::UnknownFields,
+    }
+    impl ::core::fmt::Debug for File {
+        fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+            f.debug_struct("File")
+                .field("path", &self.path)
+                .field("size", &self.size)
+                .finish()
+        }
+    }
+    impl File {
+        /// Protobuf type URL for this message, for use with `Any::pack` and
+        /// `Any::unpack_if`.
+        ///
+        /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+        pub const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.DiffDelta.File";
+    }
+    impl File {
+        #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+        #[inline]
+        ///Sets [`Self::path`] to `Some(value)`, consuming and returning `self`.
+        pub fn with_path(
+            mut self,
+            value: impl Into<::buffa::alloc::string::String>,
+        ) -> Self {
+            self.path = Some(value.into());
+            self
+        }
+    }
+    ::buffa::impl_default_instance!(File);
+    impl ::buffa::MessageName for File {
+        const PACKAGE: &'static str = "gitproxy.v1";
+        const NAME: &'static str = "DiffDelta.File";
+        const FULL_NAME: &'static str = "gitproxy.v1.DiffDelta.File";
+        const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.DiffDelta.File";
+    }
+    impl ::buffa::Message for File {
+        /// Returns the total encoded size in bytes.
+        ///
+        /// The result is a `u32`; the protobuf specification requires all
+        /// messages to fit within 2 GiB (2,147,483,647 bytes), so a
+        /// compliant message will never overflow this type.
+        #[allow(clippy::let_and_return)]
+        fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+            #[allow(unused_imports)]
+            use ::buffa::Enumeration as _;
+            let mut size = 0u32;
+            if let Some(ref v) = self.path {
+                size += 1u32 + ::buffa::types::string_encoded_len(v) as u32;
+            }
+            if self.size != 0u64 {
+                size += 1u32 + ::buffa::types::uint64_encoded_len(self.size) as u32;
+            }
+            size += self.__buffa_unknown_fields.encoded_len() as u32;
+            size
+        }
+        fn write_to(
+            &self,
+            _cache: &mut ::buffa::SizeCache,
+            buf: &mut impl ::buffa::bytes::BufMut,
+        ) {
+            #[allow(unused_imports)]
+            use ::buffa::Enumeration as _;
+            if let Some(ref v) = self.path {
+                ::buffa::types::put_string_field(1u32, v, buf);
+            }
+            if self.size != 0u64 {
+                ::buffa::types::put_uint64_field(2u32, self.size, buf);
+            }
+            self.__buffa_unknown_fields.write_to(buf);
+        }
+        fn merge_field(
+            &mut self,
+            tag: ::buffa::encoding::Tag,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            #[allow(unused_imports)]
+            use ::buffa::bytes::Buf as _;
+            #[allow(unused_imports)]
+            use ::buffa::Enumeration as _;
+            match tag.field_number() {
+                1u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::LengthDelimited,
+                    )?;
+                    ::buffa::types::merge_string(
+                        self
+                            .path
+                            .get_or_insert_with(::buffa::alloc::string::String::new),
+                        buf,
+                    )?;
+                }
+                2u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::Varint,
+                    )?;
+                    self.size = ::buffa::types::decode_uint64(buf)?;
+                }
+                _ => {
+                    self.__buffa_unknown_fields
+                        .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+                }
+            }
+            ::core::result::Result::Ok(())
+        }
+        fn clear(&mut self) {
+            self.path = ::core::option::Option::None;
+            self.size = 0u64;
+            self.__buffa_unknown_fields.clear();
+        }
+    }
+    impl ::buffa::ExtensionSet for File {
+        const PROTO_FQN: &'static str = "gitproxy.v1.DiffDelta.File";
+        fn unknown_fields(&self) -> &::buffa::UnknownFields {
+            &self.__buffa_unknown_fields
+        }
+        fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+            &mut self.__buffa_unknown_fields
+        }
+    }
+    impl ::buffa::json_helpers::ProtoElemJson for File {
+        fn serialize_proto_json<S: ::serde::Serializer>(
+            v: &Self,
+            s: S,
+        ) -> ::core::result::Result<S::Ok, S::Error> {
+            ::serde::Serialize::serialize(v, s)
+        }
+        fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+            d: D,
+        ) -> ::core::result::Result<Self, D::Error> {
+            <Self as ::serde::Deserialize>::deserialize(d)
+        }
+    }
+    #[doc(hidden)]
+    pub const __FILE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+        type_url: "type.googleapis.com/gitproxy.v1.DiffDelta.File",
+        to_json: ::buffa::type_registry::any_to_json::<File>,
+        from_json: ::buffa::type_registry::any_from_json::<File>,
+        is_wkt: false,
+    };
+    #[derive(Clone, PartialEq, Default)]
+    #[derive(::serde::Serialize, ::serde::Deserialize)]
+    #[serde(default)]
+    pub struct Line {
+        /// Field 1: `old_line_number`
+        #[serde(
+            rename = "oldLineNumber",
+            alias = "old_line_number",
+            with = "::buffa::json_helpers::opt_uint32",
+            skip_serializing_if = "::core::option::Option::is_none"
+        )]
+        pub old_line_number: ::core::option::Option<u32>,
+        /// Field 2: `new_line_number`
+        #[serde(
+            rename = "newLineNumber",
+            alias = "new_line_number",
+            with = "::buffa::json_helpers::opt_uint32",
+            skip_serializing_if = "::core::option::Option::is_none"
+        )]
+        pub new_line_number: ::core::option::Option<u32>,
+        /// Field 3: `number_lines`
+        #[serde(
+            rename = "numberLines",
+            alias = "number_lines",
+            with = "::buffa::json_helpers::uint32",
+            skip_serializing_if = "::buffa::json_helpers::skip_if::is_zero_u32"
+        )]
+        pub number_lines: u32,
+        /// Field 4: `content_offset`
+        #[serde(
+            rename = "contentOffset",
+            alias = "content_offset",
+            with = "::buffa::json_helpers::int64",
+            skip_serializing_if = "::buffa::json_helpers::skip_if::is_zero_i64"
+        )]
+        pub content_offset: i64,
+        /// Field 5: `content`
+        #[serde(
+            rename = "content",
+            with = "::buffa::json_helpers::bytes",
+            skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_bytes"
+        )]
+        pub content: ::buffa::alloc::vec::Vec<u8>,
+        /// Field 6: `origin`
+        #[serde(
+            rename = "origin",
+            with = "::buffa::json_helpers::proto_enum",
+            skip_serializing_if = "::buffa::json_helpers::skip_if::is_default_enum_value"
+        )]
+        pub origin: ::buffa::EnumValue<super::diff_delta::line::Origin>,
+        #[serde(skip)]
+        #[doc(hidden)]
+        pub __buffa_unknown_fields: ::buffa::UnknownFields,
+    }
+    impl ::core::fmt::Debug for Line {
+        fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+            f.debug_struct("Line")
+                .field("old_line_number", &self.old_line_number)
+                .field("new_line_number", &self.new_line_number)
+                .field("number_lines", &self.number_lines)
+                .field("content_offset", &self.content_offset)
+                .field("content", &self.content)
+                .field("origin", &self.origin)
+                .finish()
+        }
+    }
+    impl Line {
+        /// Protobuf type URL for this message, for use with `Any::pack` and
+        /// `Any::unpack_if`.
+        ///
+        /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+        pub const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.DiffDelta.Line";
+    }
+    impl Line {
+        #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+        #[inline]
+        ///Sets [`Self::old_line_number`] to `Some(value)`, consuming and returning `self`.
+        pub fn with_old_line_number(mut self, value: u32) -> Self {
+            self.old_line_number = Some(value);
+            self
+        }
+        #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+        #[inline]
+        ///Sets [`Self::new_line_number`] to `Some(value)`, consuming and returning `self`.
+        pub fn with_new_line_number(mut self, value: u32) -> Self {
+            self.new_line_number = Some(value);
+            self
+        }
+    }
+    ::buffa::impl_default_instance!(Line);
+    impl ::buffa::MessageName for Line {
+        const PACKAGE: &'static str = "gitproxy.v1";
+        const NAME: &'static str = "DiffDelta.Line";
+        const FULL_NAME: &'static str = "gitproxy.v1.DiffDelta.Line";
+        const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.DiffDelta.Line";
+    }
+    impl ::buffa::Message for Line {
+        /// Returns the total encoded size in bytes.
+        ///
+        /// The result is a `u32`; the protobuf specification requires all
+        /// messages to fit within 2 GiB (2,147,483,647 bytes), so a
+        /// compliant message will never overflow this type.
+        #[allow(clippy::let_and_return)]
+        fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+            #[allow(unused_imports)]
+            use ::buffa::Enumeration as _;
+            let mut size = 0u32;
+            if let Some(v) = self.old_line_number {
+                size += 1u32 + ::buffa::types::uint32_encoded_len(v) as u32;
+            }
+            if let Some(v) = self.new_line_number {
+                size += 1u32 + ::buffa::types::uint32_encoded_len(v) as u32;
+            }
+            if self.number_lines != 0u32 {
+                size
+                    += 1u32
+                        + ::buffa::types::uint32_encoded_len(self.number_lines) as u32;
+            }
+            if self.content_offset != 0i64 {
+                size
+                    += 1u32
+                        + ::buffa::types::int64_encoded_len(self.content_offset) as u32;
+            }
+            if !self.content.is_empty() {
+                size += 1u32 + ::buffa::types::bytes_encoded_len(&self.content) as u32;
+            }
+            {
+                let val = self.origin.to_i32();
+                if val != 0 {
+                    size += 1u32 + ::buffa::types::int32_encoded_len(val) as u32;
+                }
+            }
+            size += self.__buffa_unknown_fields.encoded_len() as u32;
+            size
+        }
+        fn write_to(
+            &self,
+            _cache: &mut ::buffa::SizeCache,
+            buf: &mut impl ::buffa::bytes::BufMut,
+        ) {
+            #[allow(unused_imports)]
+            use ::buffa::Enumeration as _;
+            if let Some(v) = self.old_line_number {
+                ::buffa::types::put_uint32_field(1u32, v, buf);
+            }
+            if let Some(v) = self.new_line_number {
+                ::buffa::types::put_uint32_field(2u32, v, buf);
+            }
+            if self.number_lines != 0u32 {
+                ::buffa::types::put_uint32_field(3u32, self.number_lines, buf);
+            }
+            if self.content_offset != 0i64 {
+                ::buffa::types::put_int64_field(4u32, self.content_offset, buf);
+            }
+            if !self.content.is_empty() {
+                ::buffa::types::put_bytes_field(5u32, &self.content, buf);
+            }
+            {
+                let val = self.origin.to_i32();
+                if val != 0 {
+                    ::buffa::types::put_int32_field(6u32, val, buf);
+                }
+            }
+            self.__buffa_unknown_fields.write_to(buf);
+        }
+        fn merge_field(
+            &mut self,
+            tag: ::buffa::encoding::Tag,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            #[allow(unused_imports)]
+            use ::buffa::bytes::Buf as _;
+            #[allow(unused_imports)]
+            use ::buffa::Enumeration as _;
+            match tag.field_number() {
+                1u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::Varint,
+                    )?;
+                    self.old_line_number = ::core::option::Option::Some(
+                        ::buffa::types::decode_uint32(buf)?,
+                    );
+                }
+                2u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::Varint,
+                    )?;
+                    self.new_line_number = ::core::option::Option::Some(
+                        ::buffa::types::decode_uint32(buf)?,
+                    );
+                }
+                3u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::Varint,
+                    )?;
+                    self.number_lines = ::buffa::types::decode_uint32(buf)?;
+                }
+                4u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::Varint,
+                    )?;
+                    self.content_offset = ::buffa::types::decode_int64(buf)?;
+                }
+                5u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::LengthDelimited,
+                    )?;
+                    ::buffa::types::merge_bytes(&mut self.content, buf)?;
+                }
+                6u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::Varint,
+                    )?;
+                    self.origin = ::buffa::EnumValue::from(
+                        ::buffa::types::decode_int32(buf)?,
+                    );
+                }
+                _ => {
+                    self.__buffa_unknown_fields
+                        .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+                }
+            }
+            ::core::result::Result::Ok(())
+        }
+        fn clear(&mut self) {
+            self.old_line_number = ::core::option::Option::None;
+            self.new_line_number = ::core::option::Option::None;
+            self.number_lines = 0u32;
+            self.content_offset = 0i64;
+            self.content.clear();
+            self.origin = ::buffa::EnumValue::from(0);
+            self.__buffa_unknown_fields.clear();
+        }
+    }
+    impl ::buffa::ExtensionSet for Line {
+        const PROTO_FQN: &'static str = "gitproxy.v1.DiffDelta.Line";
+        fn unknown_fields(&self) -> &::buffa::UnknownFields {
+            &self.__buffa_unknown_fields
+        }
+        fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+            &mut self.__buffa_unknown_fields
+        }
+    }
+    impl ::buffa::json_helpers::ProtoElemJson for Line {
+        fn serialize_proto_json<S: ::serde::Serializer>(
+            v: &Self,
+            s: S,
+        ) -> ::core::result::Result<S::Ok, S::Error> {
+            ::serde::Serialize::serialize(v, s)
+        }
+        fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+            d: D,
+        ) -> ::core::result::Result<Self, D::Error> {
+            <Self as ::serde::Deserialize>::deserialize(d)
+        }
+    }
+    #[doc(hidden)]
+    pub const __LINE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+        type_url: "type.googleapis.com/gitproxy.v1.DiffDelta.Line",
+        to_json: ::buffa::type_registry::any_to_json::<Line>,
+        from_json: ::buffa::type_registry::any_from_json::<Line>,
+        is_wkt: false,
+    };
+    pub mod line {
+        #[allow(unused_imports)]
+        use super::*;
+        #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+        #[repr(i32)]
+        pub enum Origin {
+            ORIGIN_UNSPECIFIED = 0i32,
+            ORIGIN_CONTEXT = 1i32,
+            ORIGIN_ADDITION = 2i32,
+            ORIGIN_DELETION = 3i32,
+            ORIGIN_CONTEXTEOFNL = 4i32,
+            ORIGIN_ADDEOFNL = 5i32,
+            ORIGIN_DELETEEOFNL = 6i32,
+            ORIGIN_FILEHEADER = 7i32,
+            ORIGIN_HUNKHEADER = 8i32,
+            ORIGIN_BINARY = 9i32,
+        }
+        impl Origin {
+            ///Idiomatic alias for [`Self::ORIGIN_UNSPECIFIED`]; `Debug` prints the variant name.
+            #[allow(non_upper_case_globals)]
+            pub const Unspecified: Self = Self::ORIGIN_UNSPECIFIED;
+            ///Idiomatic alias for [`Self::ORIGIN_CONTEXT`]; `Debug` prints the variant name.
+            #[allow(non_upper_case_globals)]
+            pub const Context: Self = Self::ORIGIN_CONTEXT;
+            ///Idiomatic alias for [`Self::ORIGIN_ADDITION`]; `Debug` prints the variant name.
+            #[allow(non_upper_case_globals)]
+            pub const Addition: Self = Self::ORIGIN_ADDITION;
+            ///Idiomatic alias for [`Self::ORIGIN_DELETION`]; `Debug` prints the variant name.
+            #[allow(non_upper_case_globals)]
+            pub const Deletion: Self = Self::ORIGIN_DELETION;
+            ///Idiomatic alias for [`Self::ORIGIN_CONTEXTEOFNL`]; `Debug` prints the variant name.
+            #[allow(non_upper_case_globals)]
+            pub const Contexteofnl: Self = Self::ORIGIN_CONTEXTEOFNL;
+            ///Idiomatic alias for [`Self::ORIGIN_ADDEOFNL`]; `Debug` prints the variant name.
+            #[allow(non_upper_case_globals)]
+            pub const Addeofnl: Self = Self::ORIGIN_ADDEOFNL;
+            ///Idiomatic alias for [`Self::ORIGIN_DELETEEOFNL`]; `Debug` prints the variant name.
+            #[allow(non_upper_case_globals)]
+            pub const Deleteeofnl: Self = Self::ORIGIN_DELETEEOFNL;
+            ///Idiomatic alias for [`Self::ORIGIN_FILEHEADER`]; `Debug` prints the variant name.
+            #[allow(non_upper_case_globals)]
+            pub const Fileheader: Self = Self::ORIGIN_FILEHEADER;
+            ///Idiomatic alias for [`Self::ORIGIN_HUNKHEADER`]; `Debug` prints the variant name.
+            #[allow(non_upper_case_globals)]
+            pub const Hunkheader: Self = Self::ORIGIN_HUNKHEADER;
+            ///Idiomatic alias for [`Self::ORIGIN_BINARY`]; `Debug` prints the variant name.
+            #[allow(non_upper_case_globals)]
+            pub const Binary: Self = Self::ORIGIN_BINARY;
+        }
+        impl ::core::default::Default for Origin {
+            fn default() -> Self {
+                Self::ORIGIN_UNSPECIFIED
+            }
+        }
+        impl ::serde::Serialize for Origin {
+            fn serialize<S: ::serde::Serializer>(
+                &self,
+                s: S,
+            ) -> ::core::result::Result<S::Ok, S::Error> {
+                s.serialize_str(::buffa::Enumeration::proto_name(self))
+            }
+        }
+        impl<'de> ::serde::Deserialize<'de> for Origin {
+            fn deserialize<D: ::serde::Deserializer<'de>>(
+                d: D,
+            ) -> ::core::result::Result<Self, D::Error> {
+                struct _V;
+                impl ::serde::de::Visitor<'_> for _V {
+                    type Value = Origin;
+                    fn expecting(
+                        &self,
+                        f: &mut ::core::fmt::Formatter<'_>,
+                    ) -> ::core::fmt::Result {
+                        f.write_str(
+                            concat!(
+                                "a string, integer, or null for ", stringify!(Origin)
+                            ),
+                        )
+                    }
+                    fn visit_str<E: ::serde::de::Error>(
+                        self,
+                        v: &str,
+                    ) -> ::core::result::Result<Origin, E> {
+                        <Origin as ::buffa::Enumeration>::from_proto_name(v)
+                            .ok_or_else(|| {
+                                ::serde::de::Error::unknown_variant(v, &[])
+                            })
+                    }
+                    fn visit_i64<E: ::serde::de::Error>(
+                        self,
+                        v: i64,
+                    ) -> ::core::result::Result<Origin, E> {
+                        let v32 = i32::try_from(v)
+                            .map_err(|_| {
+                                ::serde::de::Error::custom(
+                                    ::buffa::alloc::format!("enum value {v} out of i32 range"),
+                                )
+                            })?;
+                        <Origin as ::buffa::Enumeration>::from_i32(v32)
+                            .ok_or_else(|| {
+                                ::serde::de::Error::custom(
+                                    ::buffa::alloc::format!("unknown enum value {v32}"),
+                                )
+                            })
+                    }
+                    fn visit_u64<E: ::serde::de::Error>(
+                        self,
+                        v: u64,
+                    ) -> ::core::result::Result<Origin, E> {
+                        let v32 = i32::try_from(v)
+                            .map_err(|_| {
+                                ::serde::de::Error::custom(
+                                    ::buffa::alloc::format!("enum value {v} out of i32 range"),
+                                )
+                            })?;
+                        <Origin as ::buffa::Enumeration>::from_i32(v32)
+                            .ok_or_else(|| {
+                                ::serde::de::Error::custom(
+                                    ::buffa::alloc::format!("unknown enum value {v32}"),
+                                )
+                            })
+                    }
+                    fn visit_unit<E: ::serde::de::Error>(
+                        self,
+                    ) -> ::core::result::Result<Origin, E> {
+                        ::core::result::Result::Ok(::core::default::Default::default())
+                    }
+                }
+                d.deserialize_any(_V)
+            }
+        }
+        impl ::buffa::json_helpers::ProtoElemJson for Origin {
+            fn serialize_proto_json<S: ::serde::Serializer>(
+                v: &Self,
+                s: S,
+            ) -> ::core::result::Result<S::Ok, S::Error> {
+                ::serde::Serialize::serialize(v, s)
+            }
+            fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+                d: D,
+            ) -> ::core::result::Result<Self, D::Error> {
+                <Self as ::serde::Deserialize>::deserialize(d)
+            }
+        }
+        impl ::buffa::Enumeration for Origin {
+            fn from_i32(value: i32) -> ::core::option::Option<Self> {
+                match value {
+                    0i32 => ::core::option::Option::Some(Self::ORIGIN_UNSPECIFIED),
+                    1i32 => ::core::option::Option::Some(Self::ORIGIN_CONTEXT),
+                    2i32 => ::core::option::Option::Some(Self::ORIGIN_ADDITION),
+                    3i32 => ::core::option::Option::Some(Self::ORIGIN_DELETION),
+                    4i32 => ::core::option::Option::Some(Self::ORIGIN_CONTEXTEOFNL),
+                    5i32 => ::core::option::Option::Some(Self::ORIGIN_ADDEOFNL),
+                    6i32 => ::core::option::Option::Some(Self::ORIGIN_DELETEEOFNL),
+                    7i32 => ::core::option::Option::Some(Self::ORIGIN_FILEHEADER),
+                    8i32 => ::core::option::Option::Some(Self::ORIGIN_HUNKHEADER),
+                    9i32 => ::core::option::Option::Some(Self::ORIGIN_BINARY),
+                    _ => ::core::option::Option::None,
+                }
+            }
+            fn to_i32(&self) -> i32 {
+                *self as i32
+            }
+            fn proto_name(&self) -> &'static str {
+                match self {
+                    Self::ORIGIN_UNSPECIFIED => "ORIGIN_UNSPECIFIED",
+                    Self::ORIGIN_CONTEXT => "ORIGIN_CONTEXT",
+                    Self::ORIGIN_ADDITION => "ORIGIN_ADDITION",
+                    Self::ORIGIN_DELETION => "ORIGIN_DELETION",
+                    Self::ORIGIN_CONTEXTEOFNL => "ORIGIN_CONTEXTEOFNL",
+                    Self::ORIGIN_ADDEOFNL => "ORIGIN_ADDEOFNL",
+                    Self::ORIGIN_DELETEEOFNL => "ORIGIN_DELETEEOFNL",
+                    Self::ORIGIN_FILEHEADER => "ORIGIN_FILEHEADER",
+                    Self::ORIGIN_HUNKHEADER => "ORIGIN_HUNKHEADER",
+                    Self::ORIGIN_BINARY => "ORIGIN_BINARY",
+                }
+            }
+            fn from_proto_name(name: &str) -> ::core::option::Option<Self> {
+                match name {
+                    "ORIGIN_UNSPECIFIED" => {
+                        ::core::option::Option::Some(Self::ORIGIN_UNSPECIFIED)
+                    }
+                    "ORIGIN_CONTEXT" => {
+                        ::core::option::Option::Some(Self::ORIGIN_CONTEXT)
+                    }
+                    "ORIGIN_ADDITION" => {
+                        ::core::option::Option::Some(Self::ORIGIN_ADDITION)
+                    }
+                    "ORIGIN_DELETION" => {
+                        ::core::option::Option::Some(Self::ORIGIN_DELETION)
+                    }
+                    "ORIGIN_CONTEXTEOFNL" => {
+                        ::core::option::Option::Some(Self::ORIGIN_CONTEXTEOFNL)
+                    }
+                    "ORIGIN_ADDEOFNL" => {
+                        ::core::option::Option::Some(Self::ORIGIN_ADDEOFNL)
+                    }
+                    "ORIGIN_DELETEEOFNL" => {
+                        ::core::option::Option::Some(Self::ORIGIN_DELETEEOFNL)
+                    }
+                    "ORIGIN_FILEHEADER" => {
+                        ::core::option::Option::Some(Self::ORIGIN_FILEHEADER)
+                    }
+                    "ORIGIN_HUNKHEADER" => {
+                        ::core::option::Option::Some(Self::ORIGIN_HUNKHEADER)
+                    }
+                    "ORIGIN_BINARY" => ::core::option::Option::Some(Self::ORIGIN_BINARY),
+                    _ => ::core::option::Option::None,
+                }
+            }
+            fn values() -> &'static [Self] {
+                &[
+                    Self::ORIGIN_UNSPECIFIED,
+                    Self::ORIGIN_CONTEXT,
+                    Self::ORIGIN_ADDITION,
+                    Self::ORIGIN_DELETION,
+                    Self::ORIGIN_CONTEXTEOFNL,
+                    Self::ORIGIN_ADDEOFNL,
+                    Self::ORIGIN_DELETEEOFNL,
+                    Self::ORIGIN_FILEHEADER,
+                    Self::ORIGIN_HUNKHEADER,
+                    Self::ORIGIN_BINARY,
+                ]
+            }
+        }
+    }
+    #[doc(inline)]
+    pub use super::__buffa::view::diff_delta::FileView;
+    #[doc(inline)]
+    pub use super::__buffa::view::diff_delta::FileOwnedView;
+    #[doc(inline)]
+    pub use super::__buffa::view::diff_delta::LineView;
+    #[doc(inline)]
+    pub use super::__buffa::view::diff_delta::LineOwnedView;
+}

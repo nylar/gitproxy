@@ -20,6 +20,7 @@ service GitProxyService {
     rpc Merge(MergeRequest) returns (MergeResponse) {}
     rpc Log(LogRequest) returns (LogResponse) {}
     rpc RevertMerge(RevertMergeRequest) returns (RevertMergeResponse) {}
+    rpc Diff(DiffRequest) returns (DiffResponse) {}
 }
 
 message ListRepositoriesRequest {
@@ -140,6 +141,16 @@ message LogResponse {
     repeated Log logs = 1;
 }
 
+message DiffRequest {
+    string namespace = 1;
+    optional string from_branch = 2;
+    string to_branch = 3;
+}
+
+message DiffResponse {
+    Diff diff = 1;
+}
+
 message CommitAuthor {
     string name = 1;
     string email = 2;
@@ -156,4 +167,59 @@ message Repository {
     string namespace = 1;
     string head_commit = 2;
     string path = 3;
+}
+
+message Diff {
+    uint64 files_changes = 1;
+    uint64 insertions = 2;
+    uint64 deletions = 3;
+    repeated DiffDelta deltas = 4;
+}
+
+message DiffDelta {
+    enum Status {
+        STATUS_UNSPECIFIED = 0;
+        STATUS_UNMODIFIED = 1;
+        STATUS_ADDED = 2;
+        STATUS_DELETED = 3;
+        STATUS_MODIFIED = 4;
+        STATUS_RENAMED = 5;
+        STATUS_COPIED = 6;
+        STATUS_IGNORED = 7;
+        STATUS_UNTRACKED = 8;
+        STATUS_TYPECHANGE = 9;
+        STATUS_UNREADABLE = 10;
+        STATUS_CONFLICTED = 11;
+    }
+
+    message File {
+        optional string path = 1;
+        uint64 size = 2;
+    }
+
+    message Line {
+        enum Origin {
+            ORIGIN_UNSPECIFIED = 0;
+            ORIGIN_CONTEXT = 1;
+            ORIGIN_ADDITION = 2;
+            ORIGIN_DELETION = 3;
+            ORIGIN_CONTEXTEOFNL = 4;
+            ORIGIN_ADDEOFNL = 5;
+            ORIGIN_DELETEEOFNL = 6;
+            ORIGIN_FILEHEADER = 7;
+            ORIGIN_HUNKHEADER = 8;
+            ORIGIN_BINARY = 9;
+        }
+        optional uint32 old_line_number = 1;
+        optional uint32 new_line_number = 2;
+        uint32 number_lines = 3;
+        int64 content_offset = 4;
+        bytes content = 5;
+        Origin origin = 6;
+    }
+
+    Status status = 1;
+    File old_file = 2;
+    File new_file = 3;
+    repeated Line lines = 4;
 }
