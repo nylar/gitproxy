@@ -59,6 +59,7 @@ pub mod __buffa {
         reg.register_json_any(super::__DIFF_DELTA_JSON_ANY);
         reg.register_json_any(super::diff_delta::__FILE_JSON_ANY);
         reg.register_json_any(super::diff_delta::__LINE_JSON_ANY);
+        reg.register_json_any(super::__BRANCH_JSON_ANY);
     }
 }
 #[doc(inline)]
@@ -201,5 +202,9 @@ pub use self::__buffa::view::DiffOwnedView;
 pub use self::__buffa::view::DiffDeltaView;
 #[doc(inline)]
 pub use self::__buffa::view::DiffDeltaOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::BranchView;
+#[doc(inline)]
+pub use self::__buffa::view::BranchOwnedView;
 #[doc(inline)]
 pub use self::__buffa::register_types;

@@ -7,8 +7,8 @@ use connectrpc::{ConnectError, RequestContext, Response, ServiceRequest, Service
 use crate::{
     connect::gitproxy::v1::GitProxyService,
     proto::gitproxy::v1::{
-        CheckoutTagRequest, CheckoutTagResponse, CommitAuthor, CommitRequest, CommitResponse,
-        CreateBranchRequest, CreateBranchResponse, CreateRepositoryRequest,
+        Branch, CheckoutTagRequest, CheckoutTagResponse, CommitAuthor, CommitRequest,
+        CommitResponse, CreateBranchRequest, CreateBranchResponse, CreateRepositoryRequest,
         CreateRepositoryResponse, CreateTagRequest, CreateTagResponse, DeleteBranchRequest,
         DeleteBranchResponse, DeleteRepositoryRequest, DeleteRepositoryResponse, DeleteTagRequest,
         DeleteTagResponse, DiffRequest, DiffResponse, ListBranchesRequest, ListBranchesResponse,
@@ -127,7 +127,16 @@ impl GitProxyService for Server {
         let repo = Repository::open(&repo_dir).map_err(internal)?;
         let main = repo.primary_worktree().map_err(internal)?;
 
-        let branches = main.list_branches().map_err(internal)?;
+        let branches = main
+            .list_branches()
+            .map_err(internal)?
+            .iter()
+            .map(|b| Branch {
+                name: b.to_owned(),
+                path: repo_dir.join(b).to_str().unwrap().to_string(),
+                ..Default::default()
+            })
+            .collect();
 
         Response::ok(ListBranchesResponse {
             branches,
@@ -157,7 +166,11 @@ impl GitProxyService for Server {
         main.new(request.branch).map_err(internal)?;
 
         Response::ok(CreateBranchResponse {
-            path: repo_dir.join(request.branch).to_str().unwrap().to_string(),
+            branch: MessageField::some(Branch {
+                name: request.branch.to_owned(),
+                path: repo_dir.join(request.branch).to_str().unwrap().to_string(),
+                ..Default::default()
+            }),
             ..Default::default()
         })
     }

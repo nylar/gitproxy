@@ -51,7 +51,7 @@ async fn main() {
     println!("Branch created: {}", branch1);
 
     write_files(
-        branch_path.view().path,
+        branch_path.view().branch.path,
         vec![
             (&Path::new("my-dir/foo.txt"), "foo".as_bytes()),
             (&Path::new("my-dir/bar.txt"), "bar".as_bytes()),
@@ -88,7 +88,7 @@ async fn main() {
     print_diff(&diff.view().diff);
 
     write_files(
-        branch_path.view().path,
+        branch_path.view().branch.path,
         vec![(&Path::new("my-dir/foo.txt"), "foo2".as_bytes())],
     )
     .unwrap();
@@ -143,7 +143,7 @@ async fn main() {
     println!("Branch created: {}", branch2);
 
     write_files(
-        branch_path.view().path,
+        branch_path.view().branch.path,
         vec![(&Path::new("my-dir/foo.txt"), "foo3".as_bytes())],
     )
     .unwrap();

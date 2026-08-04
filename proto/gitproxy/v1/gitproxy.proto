@@ -49,7 +49,7 @@ message ListBranchesRequest {
 }
 
 message ListBranchesResponse {
-    repeated string branches = 1;
+    repeated Branch branches = 1;
 }
 
 message CreateBranchRequest {
@@ -58,7 +58,7 @@ message CreateBranchRequest {
 }
 
 message CreateBranchResponse {
-    string path = 1;
+    Branch branch = 1;
 }
 
 message DeleteBranchRequest {
@@ -222,4 +222,9 @@ message DiffDelta {
     File old_file = 2;
     File new_file = 3;
     repeated Line lines = 4;
+}
+
+message Branch {
+    string name = 1;
+    string path = 2;
 }
