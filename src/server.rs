@@ -14,7 +14,7 @@ use crate::{
         DeleteTagResponse, DiffRequest, DiffResponse, ListBranchesRequest, ListBranchesResponse,
         ListRepositoriesRequest, ListRepositoriesResponse, ListTagsRequest, ListTagsResponse, Log,
         LogRequest, LogResponse, MergeRequest, MergeResponse, RevertMergeRequest,
-        RevertMergeResponse,
+        RevertMergeResponse, StatusRequest, StatusResponse,
     },
     repository::{Author, MergePreference, Repository},
 };
@@ -396,6 +396,34 @@ impl GitProxyService for Server {
 
         Response::ok(DiffResponse {
             diff: MessageField::some(diff.into()),
+            ..Default::default()
+        })
+    }
+
+    async fn status(
+        &self,
+        _ctx: RequestContext,
+        request: ServiceRequest<'_, StatusRequest>,
+    ) -> ServiceResult<StatusResponse> {
+        let repo_dir = self.repo_dir(request.namespace);
+
+        let repo = Repository::open(&repo_dir).map_err(internal)?;
+
+        let clean = match request.branch {
+            Some(branch) => repo
+                .worktree(branch)
+                .map_err(internal)?
+                .clean()
+                .map_err(internal)?,
+            None => repo
+                .primary_worktree()
+                .map_err(internal)?
+                .clean()
+                .map_err(internal)?,
+        };
+
+        Response::ok(StatusResponse {
+            dirty: !clean,
             ..Default::default()
         })
     }

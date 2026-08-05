@@ -392,6 +392,10 @@ impl Worktree {
         Ok(diff_report.into_inner().diff)
     }
 
+    pub fn clean(&self) -> Result<bool> {
+        Ok(self.repo.statuses(None)?.is_empty())
+    }
+
     fn commit(&self, message: &str, author: &Author) -> Result<Oid> {
         let signature = Signature::now(&author.name, &author.email)?;
 

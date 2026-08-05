@@ -21,6 +21,7 @@ service GitProxyService {
     rpc Log(LogRequest) returns (LogResponse) {}
     rpc RevertMerge(RevertMergeRequest) returns (RevertMergeResponse) {}
     rpc Diff(DiffRequest) returns (DiffResponse) {}
+    rpc Status(StatusRequest) returns (StatusResponse) {}
 }
 
 message ListRepositoriesRequest {
@@ -149,6 +150,15 @@ message DiffRequest {
 
 message DiffResponse {
     Diff diff = 1;
+}
+
+message StatusRequest {
+    string namespace = 1;
+    optional string branch = 2;
+}
+
+message StatusResponse {
+    bool dirty = 1;
 }
 
 message CommitAuthor {

@@ -95,7 +95,7 @@ func (x DiffDelta_Status) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use DiffDelta_Status.Descriptor instead.
 func (DiffDelta_Status) EnumDescriptor() ([]byte, []int) {
-	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{34, 0}
+	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{36, 0}
 }
 
 type DiffDelta_Line_Origin int32
@@ -165,7 +165,7 @@ func (x DiffDelta_Line_Origin) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use DiffDelta_Line_Origin.Descriptor instead.
 func (DiffDelta_Line_Origin) EnumDescriptor() ([]byte, []int) {
-	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{34, 1, 0}
+	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{36, 1, 0}
 }
 
 type ListRepositoriesRequest struct {
@@ -1584,6 +1584,102 @@ func (x *DiffResponse) GetDiff() *Diff {
 	return nil
 }
 
+type StatusRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Namespace     string                 `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`
+	Branch        *string                `protobuf:"bytes,2,opt,name=branch,proto3,oneof" json:"branch,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StatusRequest) Reset() {
+	*x = StatusRequest{}
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StatusRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StatusRequest) ProtoMessage() {}
+
+func (x *StatusRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StatusRequest.ProtoReflect.Descriptor instead.
+func (*StatusRequest) Descriptor() ([]byte, []int) {
+	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{30}
+}
+
+func (x *StatusRequest) GetNamespace() string {
+	if x != nil {
+		return x.Namespace
+	}
+	return ""
+}
+
+func (x *StatusRequest) GetBranch() string {
+	if x != nil && x.Branch != nil {
+		return *x.Branch
+	}
+	return ""
+}
+
+type StatusResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Dirty         bool                   `protobuf:"varint,1,opt,name=dirty,proto3" json:"dirty,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StatusResponse) Reset() {
+	*x = StatusResponse{}
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[31]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StatusResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StatusResponse) ProtoMessage() {}
+
+func (x *StatusResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[31]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StatusResponse.ProtoReflect.Descriptor instead.
+func (*StatusResponse) Descriptor() ([]byte, []int) {
+	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{31}
+}
+
+func (x *StatusResponse) GetDirty() bool {
+	if x != nil {
+		return x.Dirty
+	}
+	return false
+}
+
 type CommitAuthor struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
@@ -1594,7 +1690,7 @@ type CommitAuthor struct {
 
 func (x *CommitAuthor) Reset() {
 	*x = CommitAuthor{}
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[30]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1606,7 +1702,7 @@ func (x *CommitAuthor) String() string {
 func (*CommitAuthor) ProtoMessage() {}
 
 func (x *CommitAuthor) ProtoReflect() protoreflect.Message {
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[30]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1619,7 +1715,7 @@ func (x *CommitAuthor) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CommitAuthor.ProtoReflect.Descriptor instead.
 func (*CommitAuthor) Descriptor() ([]byte, []int) {
-	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{30}
+	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *CommitAuthor) GetName() string {
@@ -1648,7 +1744,7 @@ type Log struct {
 
 func (x *Log) Reset() {
 	*x = Log{}
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[31]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1660,7 +1756,7 @@ func (x *Log) String() string {
 func (*Log) ProtoMessage() {}
 
 func (x *Log) ProtoReflect() protoreflect.Message {
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[31]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1673,7 +1769,7 @@ func (x *Log) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Log.ProtoReflect.Descriptor instead.
 func (*Log) Descriptor() ([]byte, []int) {
-	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{31}
+	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *Log) GetMessage() string {
@@ -1715,7 +1811,7 @@ type Repository struct {
 
 func (x *Repository) Reset() {
 	*x = Repository{}
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[32]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1727,7 +1823,7 @@ func (x *Repository) String() string {
 func (*Repository) ProtoMessage() {}
 
 func (x *Repository) ProtoReflect() protoreflect.Message {
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[32]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1740,7 +1836,7 @@ func (x *Repository) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Repository.ProtoReflect.Descriptor instead.
 func (*Repository) Descriptor() ([]byte, []int) {
-	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{32}
+	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *Repository) GetNamespace() string {
@@ -1776,7 +1872,7 @@ type Diff struct {
 
 func (x *Diff) Reset() {
 	*x = Diff{}
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[33]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1788,7 +1884,7 @@ func (x *Diff) String() string {
 func (*Diff) ProtoMessage() {}
 
 func (x *Diff) ProtoReflect() protoreflect.Message {
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[33]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1801,7 +1897,7 @@ func (x *Diff) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Diff.ProtoReflect.Descriptor instead.
 func (*Diff) Descriptor() ([]byte, []int) {
-	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{33}
+	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *Diff) GetFilesChanges() uint64 {
@@ -1844,7 +1940,7 @@ type DiffDelta struct {
 
 func (x *DiffDelta) Reset() {
 	*x = DiffDelta{}
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[34]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1856,7 +1952,7 @@ func (x *DiffDelta) String() string {
 func (*DiffDelta) ProtoMessage() {}
 
 func (x *DiffDelta) ProtoReflect() protoreflect.Message {
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[34]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1869,7 +1965,7 @@ func (x *DiffDelta) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DiffDelta.ProtoReflect.Descriptor instead.
 func (*DiffDelta) Descriptor() ([]byte, []int) {
-	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{34}
+	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *DiffDelta) GetStatus() DiffDelta_Status {
@@ -1910,7 +2006,7 @@ type Branch struct {
 
 func (x *Branch) Reset() {
 	*x = Branch{}
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[35]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1922,7 +2018,7 @@ func (x *Branch) String() string {
 func (*Branch) ProtoMessage() {}
 
 func (x *Branch) ProtoReflect() protoreflect.Message {
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[35]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1935,7 +2031,7 @@ func (x *Branch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Branch.ProtoReflect.Descriptor instead.
 func (*Branch) Descriptor() ([]byte, []int) {
-	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{35}
+	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *Branch) GetName() string {
@@ -1962,7 +2058,7 @@ type DiffDelta_File struct {
 
 func (x *DiffDelta_File) Reset() {
 	*x = DiffDelta_File{}
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[36]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1974,7 +2070,7 @@ func (x *DiffDelta_File) String() string {
 func (*DiffDelta_File) ProtoMessage() {}
 
 func (x *DiffDelta_File) ProtoReflect() protoreflect.Message {
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[36]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1987,7 +2083,7 @@ func (x *DiffDelta_File) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DiffDelta_File.ProtoReflect.Descriptor instead.
 func (*DiffDelta_File) Descriptor() ([]byte, []int) {
-	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{34, 0}
+	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{36, 0}
 }
 
 func (x *DiffDelta_File) GetPath() string {
@@ -2018,7 +2114,7 @@ type DiffDelta_Line struct {
 
 func (x *DiffDelta_Line) Reset() {
 	*x = DiffDelta_Line{}
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[37]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2030,7 +2126,7 @@ func (x *DiffDelta_Line) String() string {
 func (*DiffDelta_Line) ProtoMessage() {}
 
 func (x *DiffDelta_Line) ProtoReflect() protoreflect.Message {
-	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[37]
+	mi := &file_gitproxy_v1_gitproxy_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2043,7 +2139,7 @@ func (x *DiffDelta_Line) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DiffDelta_Line.ProtoReflect.Descriptor instead.
 func (*DiffDelta_Line) Descriptor() ([]byte, []int) {
-	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{34, 1}
+	return file_gitproxy_v1_gitproxy_proto_rawDescGZIP(), []int{36, 1}
 }
 
 func (x *DiffDelta_Line) GetOldLineNumber() uint32 {
@@ -2171,7 +2267,13 @@ const file_gitproxy_v1_gitproxy_proto_rawDesc = "" +
 	"\tto_branch\x18\x03 \x01(\tR\btoBranchB\x0e\n" +
 	"\f_from_branch\"5\n" +
 	"\fDiffResponse\x12%\n" +
-	"\x04diff\x18\x01 \x01(\v2\x11.gitproxy.v1.DiffR\x04diff\"8\n" +
+	"\x04diff\x18\x01 \x01(\v2\x11.gitproxy.v1.DiffR\x04diff\"U\n" +
+	"\rStatusRequest\x12\x1c\n" +
+	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x1b\n" +
+	"\x06branch\x18\x02 \x01(\tH\x00R\x06branch\x88\x01\x01B\t\n" +
+	"\a_branch\"&\n" +
+	"\x0eStatusResponse\x12\x14\n" +
+	"\x05dirty\x18\x01 \x01(\bR\x05dirty\"8\n" +
 	"\fCommitAuthor\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\"\x9a\x01\n" +
@@ -2238,7 +2340,8 @@ const file_gitproxy_v1_gitproxy_proto_rawDesc = "" +
 	"\x11STATUS_CONFLICTED\x10\v\"0\n" +
 	"\x06Branch\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x12\n" +
-	"\x04path\x18\x02 \x01(\tR\x04path2\xd0\t\n" +
+	"\x04path\x18\x02 \x01(\tR\x04path2\x95\n" +
+	"\n" +
 	"\x0fGitProxyService\x12a\n" +
 	"\x10ListRepositories\x12$.gitproxy.v1.ListRepositoriesRequest\x1a%.gitproxy.v1.ListRepositoriesResponse\"\x00\x12a\n" +
 	"\x10CreateRepository\x12$.gitproxy.v1.CreateRepositoryRequest\x1a%.gitproxy.v1.CreateRepositoryResponse\"\x00\x12a\n" +
@@ -2254,7 +2357,8 @@ const file_gitproxy_v1_gitproxy_proto_rawDesc = "" +
 	"\x05Merge\x12\x19.gitproxy.v1.MergeRequest\x1a\x1a.gitproxy.v1.MergeResponse\"\x00\x12:\n" +
 	"\x03Log\x12\x17.gitproxy.v1.LogRequest\x1a\x18.gitproxy.v1.LogResponse\"\x00\x12R\n" +
 	"\vRevertMerge\x12\x1f.gitproxy.v1.RevertMergeRequest\x1a .gitproxy.v1.RevertMergeResponse\"\x00\x12=\n" +
-	"\x04Diff\x12\x18.gitproxy.v1.DiffRequest\x1a\x19.gitproxy.v1.DiffResponse\"\x00B7Z5github.com/nylar/gitproxy/go/gen/gitproxy/v1;gitproxyb\x06proto3"
+	"\x04Diff\x12\x18.gitproxy.v1.DiffRequest\x1a\x19.gitproxy.v1.DiffResponse\"\x00\x12C\n" +
+	"\x06Status\x12\x1a.gitproxy.v1.StatusRequest\x1a\x1b.gitproxy.v1.StatusResponse\"\x00B7Z5github.com/nylar/gitproxy/go/gen/gitproxy/v1;gitproxyb\x06proto3"
 
 var (
 	file_gitproxy_v1_gitproxy_proto_rawDescOnce sync.Once
@@ -2269,7 +2373,7 @@ func file_gitproxy_v1_gitproxy_proto_rawDescGZIP() []byte {
 }
 
 var file_gitproxy_v1_gitproxy_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
-var file_gitproxy_v1_gitproxy_proto_msgTypes = make([]protoimpl.MessageInfo, 38)
+var file_gitproxy_v1_gitproxy_proto_msgTypes = make([]protoimpl.MessageInfo, 40)
 var file_gitproxy_v1_gitproxy_proto_goTypes = []any{
 	(DiffDelta_Status)(0),            // 0: gitproxy.v1.DiffDelta.Status
 	(DiffDelta_Line_Origin)(0),       // 1: gitproxy.v1.DiffDelta.Line.Origin
@@ -2303,32 +2407,34 @@ var file_gitproxy_v1_gitproxy_proto_goTypes = []any{
 	(*LogResponse)(nil),              // 29: gitproxy.v1.LogResponse
 	(*DiffRequest)(nil),              // 30: gitproxy.v1.DiffRequest
 	(*DiffResponse)(nil),             // 31: gitproxy.v1.DiffResponse
-	(*CommitAuthor)(nil),             // 32: gitproxy.v1.CommitAuthor
-	(*Log)(nil),                      // 33: gitproxy.v1.Log
-	(*Repository)(nil),               // 34: gitproxy.v1.Repository
-	(*Diff)(nil),                     // 35: gitproxy.v1.Diff
-	(*DiffDelta)(nil),                // 36: gitproxy.v1.DiffDelta
-	(*Branch)(nil),                   // 37: gitproxy.v1.Branch
-	(*DiffDelta_File)(nil),           // 38: gitproxy.v1.DiffDelta.File
-	(*DiffDelta_Line)(nil),           // 39: gitproxy.v1.DiffDelta.Line
-	(*timestamppb.Timestamp)(nil),    // 40: google.protobuf.Timestamp
+	(*StatusRequest)(nil),            // 32: gitproxy.v1.StatusRequest
+	(*StatusResponse)(nil),           // 33: gitproxy.v1.StatusResponse
+	(*CommitAuthor)(nil),             // 34: gitproxy.v1.CommitAuthor
+	(*Log)(nil),                      // 35: gitproxy.v1.Log
+	(*Repository)(nil),               // 36: gitproxy.v1.Repository
+	(*Diff)(nil),                     // 37: gitproxy.v1.Diff
+	(*DiffDelta)(nil),                // 38: gitproxy.v1.DiffDelta
+	(*Branch)(nil),                   // 39: gitproxy.v1.Branch
+	(*DiffDelta_File)(nil),           // 40: gitproxy.v1.DiffDelta.File
+	(*DiffDelta_Line)(nil),           // 41: gitproxy.v1.DiffDelta.Line
+	(*timestamppb.Timestamp)(nil),    // 42: google.protobuf.Timestamp
 }
 var file_gitproxy_v1_gitproxy_proto_depIdxs = []int32{
-	34, // 0: gitproxy.v1.ListRepositoriesResponse.repositories:type_name -> gitproxy.v1.Repository
-	34, // 1: gitproxy.v1.CreateRepositoryResponse.repository:type_name -> gitproxy.v1.Repository
-	37, // 2: gitproxy.v1.ListBranchesResponse.branches:type_name -> gitproxy.v1.Branch
-	37, // 3: gitproxy.v1.CreateBranchResponse.branch:type_name -> gitproxy.v1.Branch
-	32, // 4: gitproxy.v1.CreateTagRequest.author:type_name -> gitproxy.v1.CommitAuthor
-	32, // 5: gitproxy.v1.CommitRequest.author:type_name -> gitproxy.v1.CommitAuthor
-	33, // 6: gitproxy.v1.LogResponse.logs:type_name -> gitproxy.v1.Log
-	35, // 7: gitproxy.v1.DiffResponse.diff:type_name -> gitproxy.v1.Diff
-	32, // 8: gitproxy.v1.Log.author:type_name -> gitproxy.v1.CommitAuthor
-	40, // 9: gitproxy.v1.Log.time:type_name -> google.protobuf.Timestamp
-	36, // 10: gitproxy.v1.Diff.deltas:type_name -> gitproxy.v1.DiffDelta
+	36, // 0: gitproxy.v1.ListRepositoriesResponse.repositories:type_name -> gitproxy.v1.Repository
+	36, // 1: gitproxy.v1.CreateRepositoryResponse.repository:type_name -> gitproxy.v1.Repository
+	39, // 2: gitproxy.v1.ListBranchesResponse.branches:type_name -> gitproxy.v1.Branch
+	39, // 3: gitproxy.v1.CreateBranchResponse.branch:type_name -> gitproxy.v1.Branch
+	34, // 4: gitproxy.v1.CreateTagRequest.author:type_name -> gitproxy.v1.CommitAuthor
+	34, // 5: gitproxy.v1.CommitRequest.author:type_name -> gitproxy.v1.CommitAuthor
+	35, // 6: gitproxy.v1.LogResponse.logs:type_name -> gitproxy.v1.Log
+	37, // 7: gitproxy.v1.DiffResponse.diff:type_name -> gitproxy.v1.Diff
+	34, // 8: gitproxy.v1.Log.author:type_name -> gitproxy.v1.CommitAuthor
+	42, // 9: gitproxy.v1.Log.time:type_name -> google.protobuf.Timestamp
+	38, // 10: gitproxy.v1.Diff.deltas:type_name -> gitproxy.v1.DiffDelta
 	0,  // 11: gitproxy.v1.DiffDelta.status:type_name -> gitproxy.v1.DiffDelta.Status
-	38, // 12: gitproxy.v1.DiffDelta.old_file:type_name -> gitproxy.v1.DiffDelta.File
-	38, // 13: gitproxy.v1.DiffDelta.new_file:type_name -> gitproxy.v1.DiffDelta.File
-	39, // 14: gitproxy.v1.DiffDelta.lines:type_name -> gitproxy.v1.DiffDelta.Line
+	40, // 12: gitproxy.v1.DiffDelta.old_file:type_name -> gitproxy.v1.DiffDelta.File
+	40, // 13: gitproxy.v1.DiffDelta.new_file:type_name -> gitproxy.v1.DiffDelta.File
+	41, // 14: gitproxy.v1.DiffDelta.lines:type_name -> gitproxy.v1.DiffDelta.Line
 	1,  // 15: gitproxy.v1.DiffDelta.Line.origin:type_name -> gitproxy.v1.DiffDelta.Line.Origin
 	2,  // 16: gitproxy.v1.GitProxyService.ListRepositories:input_type -> gitproxy.v1.ListRepositoriesRequest
 	4,  // 17: gitproxy.v1.GitProxyService.CreateRepository:input_type -> gitproxy.v1.CreateRepositoryRequest
@@ -2345,23 +2451,25 @@ var file_gitproxy_v1_gitproxy_proto_depIdxs = []int32{
 	28, // 28: gitproxy.v1.GitProxyService.Log:input_type -> gitproxy.v1.LogRequest
 	26, // 29: gitproxy.v1.GitProxyService.RevertMerge:input_type -> gitproxy.v1.RevertMergeRequest
 	30, // 30: gitproxy.v1.GitProxyService.Diff:input_type -> gitproxy.v1.DiffRequest
-	3,  // 31: gitproxy.v1.GitProxyService.ListRepositories:output_type -> gitproxy.v1.ListRepositoriesResponse
-	5,  // 32: gitproxy.v1.GitProxyService.CreateRepository:output_type -> gitproxy.v1.CreateRepositoryResponse
-	7,  // 33: gitproxy.v1.GitProxyService.DeleteRepository:output_type -> gitproxy.v1.DeleteRepositoryResponse
-	9,  // 34: gitproxy.v1.GitProxyService.ListBranches:output_type -> gitproxy.v1.ListBranchesResponse
-	11, // 35: gitproxy.v1.GitProxyService.CreateBranch:output_type -> gitproxy.v1.CreateBranchResponse
-	13, // 36: gitproxy.v1.GitProxyService.DeleteBranch:output_type -> gitproxy.v1.DeleteBranchResponse
-	15, // 37: gitproxy.v1.GitProxyService.ListTags:output_type -> gitproxy.v1.ListTagsResponse
-	17, // 38: gitproxy.v1.GitProxyService.CreateTag:output_type -> gitproxy.v1.CreateTagResponse
-	19, // 39: gitproxy.v1.GitProxyService.DeleteTag:output_type -> gitproxy.v1.DeleteTagResponse
-	21, // 40: gitproxy.v1.GitProxyService.CheckoutTag:output_type -> gitproxy.v1.CheckoutTagResponse
-	23, // 41: gitproxy.v1.GitProxyService.Commit:output_type -> gitproxy.v1.CommitResponse
-	25, // 42: gitproxy.v1.GitProxyService.Merge:output_type -> gitproxy.v1.MergeResponse
-	29, // 43: gitproxy.v1.GitProxyService.Log:output_type -> gitproxy.v1.LogResponse
-	27, // 44: gitproxy.v1.GitProxyService.RevertMerge:output_type -> gitproxy.v1.RevertMergeResponse
-	31, // 45: gitproxy.v1.GitProxyService.Diff:output_type -> gitproxy.v1.DiffResponse
-	31, // [31:46] is the sub-list for method output_type
-	16, // [16:31] is the sub-list for method input_type
+	32, // 31: gitproxy.v1.GitProxyService.Status:input_type -> gitproxy.v1.StatusRequest
+	3,  // 32: gitproxy.v1.GitProxyService.ListRepositories:output_type -> gitproxy.v1.ListRepositoriesResponse
+	5,  // 33: gitproxy.v1.GitProxyService.CreateRepository:output_type -> gitproxy.v1.CreateRepositoryResponse
+	7,  // 34: gitproxy.v1.GitProxyService.DeleteRepository:output_type -> gitproxy.v1.DeleteRepositoryResponse
+	9,  // 35: gitproxy.v1.GitProxyService.ListBranches:output_type -> gitproxy.v1.ListBranchesResponse
+	11, // 36: gitproxy.v1.GitProxyService.CreateBranch:output_type -> gitproxy.v1.CreateBranchResponse
+	13, // 37: gitproxy.v1.GitProxyService.DeleteBranch:output_type -> gitproxy.v1.DeleteBranchResponse
+	15, // 38: gitproxy.v1.GitProxyService.ListTags:output_type -> gitproxy.v1.ListTagsResponse
+	17, // 39: gitproxy.v1.GitProxyService.CreateTag:output_type -> gitproxy.v1.CreateTagResponse
+	19, // 40: gitproxy.v1.GitProxyService.DeleteTag:output_type -> gitproxy.v1.DeleteTagResponse
+	21, // 41: gitproxy.v1.GitProxyService.CheckoutTag:output_type -> gitproxy.v1.CheckoutTagResponse
+	23, // 42: gitproxy.v1.GitProxyService.Commit:output_type -> gitproxy.v1.CommitResponse
+	25, // 43: gitproxy.v1.GitProxyService.Merge:output_type -> gitproxy.v1.MergeResponse
+	29, // 44: gitproxy.v1.GitProxyService.Log:output_type -> gitproxy.v1.LogResponse
+	27, // 45: gitproxy.v1.GitProxyService.RevertMerge:output_type -> gitproxy.v1.RevertMergeResponse
+	31, // 46: gitproxy.v1.GitProxyService.Diff:output_type -> gitproxy.v1.DiffResponse
+	33, // 47: gitproxy.v1.GitProxyService.Status:output_type -> gitproxy.v1.StatusResponse
+	32, // [32:48] is the sub-list for method output_type
+	16, // [16:32] is the sub-list for method input_type
 	16, // [16:16] is the sub-list for extension type_name
 	16, // [16:16] is the sub-list for extension extendee
 	0,  // [0:16] is the sub-list for field type_name
@@ -2375,15 +2483,16 @@ func file_gitproxy_v1_gitproxy_proto_init() {
 	file_gitproxy_v1_gitproxy_proto_msgTypes[14].OneofWrappers = []any{}
 	file_gitproxy_v1_gitproxy_proto_msgTypes[26].OneofWrappers = []any{}
 	file_gitproxy_v1_gitproxy_proto_msgTypes[28].OneofWrappers = []any{}
-	file_gitproxy_v1_gitproxy_proto_msgTypes[36].OneofWrappers = []any{}
-	file_gitproxy_v1_gitproxy_proto_msgTypes[37].OneofWrappers = []any{}
+	file_gitproxy_v1_gitproxy_proto_msgTypes[30].OneofWrappers = []any{}
+	file_gitproxy_v1_gitproxy_proto_msgTypes[38].OneofWrappers = []any{}
+	file_gitproxy_v1_gitproxy_proto_msgTypes[39].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_gitproxy_v1_gitproxy_proto_rawDesc), len(file_gitproxy_v1_gitproxy_proto_rawDesc)),
 			NumEnums:      2,
-			NumMessages:   38,
+			NumMessages:   40,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

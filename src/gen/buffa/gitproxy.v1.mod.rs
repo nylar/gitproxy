@@ -52,6 +52,8 @@ pub mod __buffa {
         reg.register_json_any(super::__LOG_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__DIFF_REQUEST_JSON_ANY);
         reg.register_json_any(super::__DIFF_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__STATUS_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__STATUS_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__COMMIT_AUTHOR_JSON_ANY);
         reg.register_json_any(super::__LOG_JSON_ANY);
         reg.register_json_any(super::__REPOSITORY_JSON_ANY);
@@ -182,6 +184,14 @@ pub use self::__buffa::view::DiffRequestOwnedView;
 pub use self::__buffa::view::DiffResponseView;
 #[doc(inline)]
 pub use self::__buffa::view::DiffResponseOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::StatusRequestView;
+#[doc(inline)]
+pub use self::__buffa::view::StatusRequestOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::StatusResponseView;
+#[doc(inline)]
+pub use self::__buffa::view::StatusResponseOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::CommitAuthorView;
 #[doc(inline)]

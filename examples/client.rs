@@ -10,6 +10,7 @@ use gitproxy::{
         CheckoutTagRequest, CommitAuthor, CommitRequest, CreateBranchRequest,
         CreateRepositoryRequest, CreateTagRequest, DeleteBranchRequest, DeleteRepositoryRequest,
         DiffRequest, DiffView, LogRequest, LogView, MergeRequest, RevertMergeRequest,
+        StatusRequest,
     },
 };
 use yansi::Paint;
@@ -148,6 +149,8 @@ async fn main() {
     )
     .unwrap();
 
+    println!("Dirty: {}", dirty(&client, NAMESPACE, Some(branch2)).await);
+
     let resp = client
         .commit(CommitRequest {
             namespace: NAMESPACE.to_owned(),
@@ -163,6 +166,8 @@ async fn main() {
         .await
         .unwrap();
     println!("Commit C: {}", resp.view().commit);
+
+    println!("Dirty: {}", dirty(&client, NAMESPACE, Some(branch2)).await);
 
     let diff = client
         .diff(DiffRequest {
@@ -315,4 +320,20 @@ fn print_diff(diff: &MessageFieldView<DiffView<'_>>) {
         }
     }
     println!("--- DIFF ---");
+}
+
+async fn dirty(
+    client: &GitProxyServiceClient<HttpClient>,
+    namespace: &str,
+    branch: Option<&str>,
+) -> bool {
+    let resp = client
+        .status(StatusRequest {
+            namespace: namespace.to_owned(),
+            branch: branch.map(|b| b.to_owned()),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+    resp.view().dirty
 }
