@@ -21,7 +21,7 @@ pub enum MergePreference {
     FastForward,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Author {
     pub name: String,
     pub email: String,
@@ -30,10 +30,11 @@ pub struct Author {
 pub struct Repository {
     repo: GitRepository,
     repo_dir: PathBuf,
+    default_author: Author,
 }
 
 impl Repository {
-    pub fn open(repo_dir: &Path) -> Result<Self> {
+    pub fn open(repo_dir: &Path, default_author: &Author) -> Result<Self> {
         std::fs::create_dir_all(repo_dir)?;
 
         let git_dir = repo_dir.join(".git");
@@ -43,18 +44,19 @@ impl Repository {
         } else {
             std::fs::create_dir_all(&git_dir)?;
             let repo = GitRepository::init_bare(&git_dir)?;
-            Self::init_repo(&repo, repo_dir)?;
+            Self::init_repo(&repo, repo_dir, default_author)?;
             repo
         };
 
         Ok(Self {
             repo,
             repo_dir: repo_dir.to_path_buf(),
+            default_author: default_author.clone(),
         })
     }
 
-    fn init_repo(repo: &GitRepository, repo_dir: &Path) -> Result<()> {
-        let sig = repo.signature()?;
+    fn init_repo(repo: &GitRepository, repo_dir: &Path, author: &Author) -> Result<()> {
+        let sig = Signature::now(&author.name, &author.email)?;
         let tree_id = {
             let mut index = repo.index()?;
             index.write_tree()?
@@ -100,7 +102,12 @@ impl Repository {
         };
 
         let repo = GitRepository::open_from_worktree(&worktree)?;
-        Ok(Worktree::open(repo, name, path))
+        Ok(Worktree::open(
+            repo,
+            name,
+            path,
+            self.default_author.clone(),
+        ))
     }
 
     pub fn checkout_tag(&self, name: &str) -> Result<PathBuf> {
@@ -124,14 +131,16 @@ pub struct Worktree {
     repo: GitRepository,
     name: String,
     path: PathBuf,
+    default_author: Author,
 }
 
 impl Worktree {
-    fn open(repo: GitRepository, name: &str, path: PathBuf) -> Self {
+    fn open(repo: GitRepository, name: &str, path: PathBuf, default_author: Author) -> Self {
         Self {
             repo,
             name: name.to_owned(),
             path,
+            default_author,
         }
     }
 
@@ -143,7 +152,7 @@ impl Worktree {
             .worktree(name, &path, Some(&WorktreeAddOptions::new()))?;
 
         let repo = GitRepository::open_from_worktree(&worktree)?;
-        Ok(Self::open(repo, name, path))
+        Ok(Self::open(repo, name, path, self.default_author.clone()))
     }
 
     pub fn remove(&self) -> Result<()> {
@@ -181,7 +190,7 @@ impl Worktree {
                 opts.checkout_builder(checkout);
                 self.repo.revert(&commit, Some(&mut opts))?;
 
-                let sig = self.repo.signature()?;
+                let sig = Signature::now(&self.default_author.name, &self.default_author.email)?;
                 let oid = self.commit(
                     &format!("Reverted {}", reference),
                     &Author {
@@ -453,7 +462,7 @@ impl Worktree {
         }
         let result_tree = self.repo.find_tree(idx.write_tree_to(&self.repo)?)?;
         let msg = format!("Merge: {} into {}", remote.id(), local.id());
-        let sig = self.repo.signature()?;
+        let sig = Signature::now(&self.default_author.name, &self.default_author.email)?;
         let local_commit = self.repo.find_commit(local.id())?;
         let remote_commit = self.repo.find_commit(remote.id())?;
         let merge_commit = self.repo.commit(

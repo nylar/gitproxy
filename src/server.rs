@@ -5,6 +5,7 @@ use buffa_types::Timestamp;
 use connectrpc::{ConnectError, RequestContext, Response, ServiceRequest, ServiceResult};
 
 use crate::{
+    config::Config,
     connect::gitproxy::v1::GitProxyService,
     proto::gitproxy::v1::{
         Branch, CheckoutTagRequest, CheckoutTagResponse, CommitAuthor, CommitRequest,
@@ -21,11 +22,18 @@ use crate::{
 
 pub struct Server {
     root_dir: PathBuf,
+    default_author: Author,
 }
 
 impl Server {
-    pub fn new(root_dir: PathBuf) -> Self {
-        Self { root_dir }
+    pub fn new(config: &Config) -> Self {
+        Self {
+            root_dir: config.root_dir.to_owned(),
+            default_author: Author {
+                name: config.git_user_name.to_owned(),
+                email: config.git_user_email.to_owned(),
+            },
+        }
     }
 
     fn repo_dir(&self, namespace: &str) -> PathBuf {
@@ -47,7 +55,7 @@ impl GitProxyService for Server {
 
             let repo_dir = self.root_dir.join(dir.path());
 
-            let repo = Repository::open(&repo_dir).map_err(internal)?;
+            let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
             let main = repo.primary_worktree().map_err(internal)?;
             let head = main
                 .head()
@@ -83,7 +91,7 @@ impl GitProxyService for Server {
             )));
         }
 
-        let repo = Repository::open(&repo_dir).map_err(internal)?;
+        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
         let main = repo.primary_worktree().map_err(internal)?;
         let head = main
             .head()
@@ -109,7 +117,7 @@ impl GitProxyService for Server {
     ) -> ServiceResult<DeleteRepositoryResponse> {
         let repo_dir = self.repo_dir(request.namespace);
 
-        let repo = Repository::open(&repo_dir).map_err(internal)?;
+        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
         repo.remove().map_err(internal)?;
 
         Response::ok(DeleteRepositoryResponse {
@@ -124,7 +132,7 @@ impl GitProxyService for Server {
     ) -> ServiceResult<ListBranchesResponse> {
         let repo_dir = self.repo_dir(request.namespace);
 
-        let repo = Repository::open(&repo_dir).map_err(internal)?;
+        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
         let main = repo.primary_worktree().map_err(internal)?;
 
         let branches = main
@@ -151,7 +159,7 @@ impl GitProxyService for Server {
     ) -> ServiceResult<CreateBranchResponse> {
         let repo_dir = self.repo_dir(request.namespace);
 
-        let repo = Repository::open(&repo_dir).map_err(internal)?;
+        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
         let main = repo.primary_worktree().map_err(internal)?;
 
         let branches = main.list_branches().map_err(internal)?;
@@ -182,7 +190,7 @@ impl GitProxyService for Server {
     ) -> ServiceResult<DeleteBranchResponse> {
         let repo_dir = self.repo_dir(request.namespace);
 
-        let repo = Repository::open(&repo_dir).map_err(internal)?;
+        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
         let main = repo.primary_worktree().map_err(internal)?;
         let branch = repo.worktree(request.branch).map_err(internal)?;
         branch.remove().map_err(internal)?;
@@ -200,7 +208,7 @@ impl GitProxyService for Server {
     ) -> ServiceResult<ListTagsResponse> {
         let repo_dir = self.repo_dir(request.namespace);
 
-        let repo = Repository::open(&repo_dir).map_err(internal)?;
+        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
         let main = repo.primary_worktree().map_err(internal)?;
 
         let tags = main.list_tags().map_err(internal)?;
@@ -223,7 +231,7 @@ impl GitProxyService for Server {
             email: request.author.email.to_owned(),
         };
 
-        let repo = Repository::open(&repo_dir).map_err(internal)?;
+        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
         let main = repo.primary_worktree().map_err(internal)?;
 
         main.create_tag(
@@ -247,7 +255,7 @@ impl GitProxyService for Server {
     ) -> ServiceResult<DeleteTagResponse> {
         let repo_dir = self.repo_dir(request.namespace);
 
-        let repo = Repository::open(&repo_dir).map_err(internal)?;
+        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
         let main = repo.primary_worktree().map_err(internal)?;
         main.delete_tag(request.name).map_err(internal)?;
 
@@ -263,7 +271,7 @@ impl GitProxyService for Server {
     ) -> ServiceResult<CheckoutTagResponse> {
         let repo_dir = self.repo_dir(request.namespace);
 
-        let repo = Repository::open(&repo_dir).map_err(internal)?;
+        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
         let path = repo.checkout_tag(request.name).map_err(internal)?;
 
         Response::ok(CheckoutTagResponse {
@@ -279,7 +287,7 @@ impl GitProxyService for Server {
     ) -> ServiceResult<CommitResponse> {
         let repo_dir = self.repo_dir(request.namespace);
 
-        let repo = Repository::open(&repo_dir).map_err(internal)?;
+        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
 
         let branch = repo.worktree(request.branch).map_err(internal)?;
 
@@ -306,7 +314,7 @@ impl GitProxyService for Server {
     ) -> ServiceResult<MergeResponse> {
         let repo_dir = self.repo_dir(request.namespace);
 
-        let repo = Repository::open(&repo_dir).map_err(internal)?;
+        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
 
         let main = repo.primary_worktree().map_err(internal)?;
         let branch = repo.worktree(request.branch).map_err(internal)?;
@@ -331,7 +339,7 @@ impl GitProxyService for Server {
     ) -> ServiceResult<LogResponse> {
         let repo_dir = self.repo_dir(request.namespace);
 
-        let repo = Repository::open(&repo_dir).map_err(internal)?;
+        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
 
         let branch = match request.branch {
             Some(branch) => repo.worktree(branch).map_err(internal)?,
@@ -367,7 +375,7 @@ impl GitProxyService for Server {
     ) -> ServiceResult<RevertMergeResponse> {
         let repo_dir = self.repo_dir(request.namespace);
 
-        let repo = Repository::open(&repo_dir).map_err(internal)?;
+        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
 
         let main = repo.primary_worktree().map_err(internal)?;
         let oid = main
@@ -387,7 +395,7 @@ impl GitProxyService for Server {
     ) -> ServiceResult<DiffResponse> {
         let repo_dir = self.repo_dir(request.namespace);
 
-        let repo = Repository::open(&repo_dir).map_err(internal)?;
+        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
         let main = repo.primary_worktree().map_err(internal)?;
 
         let diff = main
@@ -407,7 +415,7 @@ impl GitProxyService for Server {
     ) -> ServiceResult<StatusResponse> {
         let repo_dir = self.repo_dir(request.namespace);
 
-        let repo = Repository::open(&repo_dir).map_err(internal)?;
+        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
 
         let clean = match request.branch {
             Some(branch) => repo
