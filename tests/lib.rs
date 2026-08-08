@@ -1,6 +1,5 @@
 use std::{net::SocketAddr, path::Path};
 
-use assertables::assert_contains;
 use buffa::MessageField;
 use connectrpc::client::{ClientConfig, HttpClient};
 use gitproxy::{
@@ -10,6 +9,7 @@ use gitproxy::{
         CommitAuthor, CommitRequest, CreateBranchRequest, CreateRepositoryRequest,
         CreateTagRequest, DeleteBranchRequest, DeleteRepositoryRequest, DeleteTagRequest,
         ListBranchesRequest, ListRepositoriesRequest, ListTagsRequest, LogRequest, MergeRequest,
+        RevertMergeRequest,
     },
 };
 
@@ -195,6 +195,82 @@ async fn test_branch_merges_successfully() {
     let addr = start_server(root_dir.path()).await;
     let client = make_client(&addr);
 
+    let resp = client
+        .create_repository(CreateRepositoryRequest {
+            namespace: NAMESPACE.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let main_head_commit = resp.view().repository.head_commit;
+
+    let branch: &str = "my-branch";
+
+    let resp = client
+        .create_branch(CreateBranchRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: branch.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let branch_dir = Path::new(resp.view().branch.path);
+    std::fs::write(branch_dir.join("my_file.txt"), "foo\nbar\nbaz\n".as_bytes()).unwrap();
+
+    let resp = client
+        .commit(CommitRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: branch.to_owned(),
+            message: "Added my_file".to_owned(),
+            author: MessageField::some(CommitAuthor {
+                name: "test".to_owned(),
+                email: "test@example.com".to_owned(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let last_commit_before_merge = resp.view().commit;
+
+    client
+        .merge(MergeRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: branch.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let log = client
+        .log(LogRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: None,
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let most_recent_commit = log.view().logs.first().unwrap();
+
+    assert_eq!(
+        most_recent_commit.message,
+        &format!(
+            "Merge: {} into {}",
+            last_commit_before_merge, main_head_commit
+        )
+    );
+}
+
+#[tokio::test]
+async fn test_merge_reverts_successfully() {
+    let root_dir = tempfile::tempdir().unwrap();
+    let addr = start_server(root_dir.path()).await;
+    let client = make_client(&addr);
+
     client
         .create_repository(CreateRepositoryRequest {
             namespace: NAMESPACE.to_owned(),
@@ -232,10 +308,21 @@ async fn test_branch_merges_successfully() {
         .await
         .unwrap();
 
-    client
+    let resp = client
         .merge(MergeRequest {
             namespace: NAMESPACE.to_owned(),
             branch: branch.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let merge_commit = resp.view().commit;
+
+    client
+        .revert_merge(RevertMergeRequest {
+            namespace: NAMESPACE.to_owned(),
+            commit: merge_commit.to_owned(),
             ..Default::default()
         })
         .await
@@ -252,7 +339,10 @@ async fn test_branch_merges_successfully() {
 
     let most_recent_commit = log.view().logs.first().unwrap();
 
-    assert_contains!(most_recent_commit.message, "Merge: ");
+    assert_eq!(
+        most_recent_commit.message,
+        &format!("Reverted {}", merge_commit)
+    );
 }
 
 async fn start_server(root_dir: &Path) -> SocketAddr {
