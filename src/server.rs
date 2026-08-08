@@ -17,7 +17,7 @@ use crate::{
         LogRequest, LogResponse, MergeRequest, MergeResponse, RevertMergeRequest,
         RevertMergeResponse, StatusRequest, StatusResponse,
     },
-    repository::{Author, MergePreference, Repository},
+    repository::{Author, Repository},
 };
 
 pub struct Server {
@@ -377,9 +377,7 @@ impl GitProxyService for Server {
         let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
 
         let main = repo.primary_worktree().map_err(internal)?;
-        let oid = main
-            .revert(request.commit, MergePreference::Normal)
-            .map_err(internal)?;
+        let oid = main.revert(request.commit).map_err(internal)?;
 
         Response::ok(RevertMergeResponse {
             commit: oid.to_string(),

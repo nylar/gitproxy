@@ -14,13 +14,6 @@ use crate::error::Result;
 
 const DEFAULT_PRIMARY_BRANCH: &str = "main";
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
-pub enum MergePreference {
-    #[default]
-    Normal,
-    FastForward,
-}
-
 #[derive(Clone, Debug)]
 pub struct Author {
     pub name: String,
@@ -175,33 +168,28 @@ impl Worktree {
         Ok(head)
     }
 
-    pub fn revert(&self, reference: &str, preference: MergePreference) -> Result<Oid> {
-        match preference {
-            MergePreference::FastForward => todo!("Handle fast-forward revert"),
-            MergePreference::Normal => {
-                let oid = Oid::from_str(reference)?;
-                let commit = self.repo.find_commit(oid)?;
+    pub fn revert(&self, reference: &str) -> Result<Oid> {
+        let oid = Oid::from_str(reference)?;
+        let commit = self.repo.find_commit(oid)?;
 
-                let mut checkout = CheckoutBuilder::new();
-                checkout.allow_conflicts(true).conflict_style_merge(true);
+        let mut checkout = CheckoutBuilder::new();
+        checkout.allow_conflicts(true).conflict_style_merge(true);
 
-                let mut opts = git2::RevertOptions::new();
-                opts.mainline(1);
-                opts.checkout_builder(checkout);
-                self.repo.revert(&commit, Some(&mut opts))?;
+        let mut opts = git2::RevertOptions::new();
+        opts.mainline(1);
+        opts.checkout_builder(checkout);
+        self.repo.revert(&commit, Some(&mut opts))?;
 
-                let sig = Signature::now(&self.default_author.name, &self.default_author.email)?;
-                let oid = self.commit(
-                    &format!("Reverted {}", reference),
-                    &Author {
-                        name: sig.name()?.to_owned(),
-                        email: sig.email()?.to_owned(),
-                    },
-                )?;
+        let sig = Signature::now(&self.default_author.name, &self.default_author.email)?;
+        let oid = self.commit(
+            &format!("Reverted {}", reference),
+            &Author {
+                name: sig.name()?.to_owned(),
+                email: sig.email()?.to_owned(),
+            },
+        )?;
 
-                Ok(oid)
-            }
-        }
+        Ok(oid)
     }
 
     pub fn merge(&self, reference: &git2::Reference<'_>) -> Result<Oid> {
