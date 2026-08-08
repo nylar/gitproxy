@@ -6,9 +6,9 @@ use gitproxy::{
     config::Config,
     connect::gitproxy::v1::GitProxyServiceClient,
     proto::gitproxy::v1::{
-        CommitAuthor, CreateBranchRequest, CreateRepositoryRequest, CreateTagRequest,
-        DeleteBranchRequest, DeleteRepositoryRequest, DeleteTagRequest, ListBranchesRequest,
-        ListRepositoriesRequest, ListTagsRequest,
+        CommitAuthor, CommitRequest, CreateBranchRequest, CreateRepositoryRequest,
+        CreateTagRequest, DeleteBranchRequest, DeleteRepositoryRequest, DeleteTagRequest,
+        ListBranchesRequest, ListRepositoriesRequest, ListTagsRequest, MergeRequest,
     },
 };
 
@@ -182,6 +182,59 @@ async fn test_tags() {
         .delete_tag(DeleteTagRequest {
             namespace: NAMESPACE.to_owned(),
             name: tag.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+}
+
+#[tokio::test]
+async fn test_branch_merges_successfully() {
+    let root_dir = tempfile::tempdir().unwrap();
+    let addr = start_server(root_dir.path()).await;
+    let client = make_client(&addr);
+
+    client
+        .create_repository(CreateRepositoryRequest {
+            namespace: NAMESPACE.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let branch: &str = "my-branch";
+
+    let resp = client
+        .create_branch(CreateBranchRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: branch.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let branch_dir = Path::new(resp.view().branch.path);
+    std::fs::write(branch_dir.join("my_file.txt"), "foo\nbar\nbaz\n".as_bytes()).unwrap();
+
+    client
+        .commit(CommitRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: branch.to_owned(),
+            message: "Added my_file".to_owned(),
+            author: MessageField::some(CommitAuthor {
+                name: "test".to_owned(),
+                email: "test@example.com".to_owned(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    client
+        .merge(MergeRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: branch.to_owned(),
             ..Default::default()
         })
         .await
