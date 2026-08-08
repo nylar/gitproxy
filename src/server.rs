@@ -321,9 +321,7 @@ impl GitProxyService for Server {
         let branch = repo.worktree(request.branch).map_err(internal)?;
 
         let head = branch.head().map_err(internal)?;
-        let commit = main
-            .merge(&head, MergePreference::Normal)
-            .map_err(internal)?;
+        let commit = main.merge(&head).map_err(internal)?;
         branch.remove().map_err(internal)?;
         main.delete_branch(request.branch).map_err(internal)?;
 

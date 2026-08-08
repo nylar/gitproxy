@@ -204,17 +204,16 @@ impl Worktree {
         }
     }
 
-    pub fn merge(
-        &self,
-        reference: &git2::Reference<'_>,
-        preference: MergePreference,
-    ) -> Result<Oid> {
-        let commit = self
+    pub fn merge(&self, reference: &git2::Reference<'_>) -> Result<Oid> {
+        let remote_commit = self
             .repo
             .find_annotated_commit(reference.peel_to_commit()?.id())?;
 
-        let oid = self.do_merge(&commit, preference)?;
-        Ok(oid)
+        let local_commit = self
+            .repo
+            .reference_to_annotated_commit(&self.repo.head()?)?;
+
+        self.normal_merge(&local_commit, &remote_commit)
     }
 
     pub fn commit_all(&self, message: &str, author: &Author) -> Result<Oid> {
@@ -428,19 +427,6 @@ impl Worktree {
         Ok(oid)
     }
 
-    fn fast_forward(&self, lb: &mut git2::Reference, rc: &git2::AnnotatedCommit) -> Result<Oid> {
-        let name = match lb.name() {
-            Ok(s) => s.to_string(),
-            Err(_) => String::from_utf8_lossy(lb.name_bytes()).to_string(),
-        };
-        let msg = format!("Fast-Forward: Setting {} to id: {}", name, rc.id());
-        lb.set_target(rc.id(), &msg)?;
-        self.repo.set_head(&name)?;
-        self.repo
-            .checkout_head(Some(git2::build::CheckoutBuilder::default().force()))?;
-        Ok(rc.id())
-    }
-
     fn normal_merge(
         &self,
         local: &git2::AnnotatedCommit,
@@ -477,48 +463,6 @@ impl Worktree {
             .checkout_head(Some(git2::build::CheckoutBuilder::default().force()))?;
 
         Ok(merge_commit)
-    }
-
-    fn do_merge(
-        &self,
-        fetch_commit: &git2::AnnotatedCommit<'_>,
-        preference: MergePreference,
-    ) -> Result<Oid> {
-        let analysis = self.repo.merge_analysis(&[fetch_commit])?;
-
-        match analysis {
-            (analysis, _)
-                if analysis.is_fast_forward() && preference == MergePreference::FastForward =>
-            {
-                let refname = format!("refs/heads/{}", self.name);
-                match self.repo.find_reference(&refname) {
-                    Ok(mut r) => Ok(self.fast_forward(&mut r, fetch_commit)?),
-                    Err(_) => {
-                        self.repo.reference(
-                            &refname,
-                            fetch_commit.id(),
-                            true,
-                            &format!("Setting {} to {}", self.name, fetch_commit.id()),
-                        )?;
-                        self.repo.set_head(&refname)?;
-                        self.repo.checkout_head(Some(
-                            git2::build::CheckoutBuilder::default()
-                                .allow_conflicts(true)
-                                .conflict_style_merge(true)
-                                .force(),
-                        ))?;
-                        Ok(fetch_commit.id())
-                    }
-                }
-            }
-            (analysis, _) if analysis.is_normal() && preference == MergePreference::Normal => {
-                let head_commit = self
-                    .repo
-                    .reference_to_annotated_commit(&self.repo.head()?)?;
-                Ok(self.normal_merge(&head_commit, fetch_commit)?)
-            }
-            _ => panic!("Unhandled merge"),
-        }
     }
 }
 
