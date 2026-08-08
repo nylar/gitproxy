@@ -1,5 +1,6 @@
 use std::{net::SocketAddr, path::Path};
 
+use assertables::assert_contains;
 use buffa::MessageField;
 use connectrpc::client::{ClientConfig, HttpClient};
 use gitproxy::{
@@ -8,7 +9,7 @@ use gitproxy::{
     proto::gitproxy::v1::{
         CommitAuthor, CommitRequest, CreateBranchRequest, CreateRepositoryRequest,
         CreateTagRequest, DeleteBranchRequest, DeleteRepositoryRequest, DeleteTagRequest,
-        ListBranchesRequest, ListRepositoriesRequest, ListTagsRequest, MergeRequest,
+        ListBranchesRequest, ListRepositoriesRequest, ListTagsRequest, LogRequest, MergeRequest,
     },
 };
 
@@ -239,6 +240,19 @@ async fn test_branch_merges_successfully() {
         })
         .await
         .unwrap();
+
+    let log = client
+        .log(LogRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: None,
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let most_recent_commit = log.view().logs.first().unwrap();
+
+    assert_contains!(most_recent_commit.message, "Merge: ");
 }
 
 async fn start_server(root_dir: &Path) -> SocketAddr {

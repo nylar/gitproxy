@@ -6,8 +6,8 @@ use std::{
 use buffa::{EnumValue, MessageField};
 use chrono::{DateTime, Utc};
 use git2::{
-    DiffFindOptions, DiffOptions, Oid, Repository as GitRepository, Signature, WorktreeAddOptions,
-    WorktreePruneOptions, build::CheckoutBuilder,
+    DiffFindOptions, DiffOptions, Oid, Repository as GitRepository, Signature, Sort,
+    WorktreeAddOptions, WorktreePruneOptions, build::CheckoutBuilder,
 };
 
 use crate::error::Result;
@@ -240,6 +240,7 @@ impl Worktree {
     pub fn log(&self) -> Result<impl Iterator<Item = LogEntry>> {
         let mut revwalk = self.repo.revwalk()?;
         revwalk.push_head()?;
+        revwalk.set_sorting(Sort::TOPOLOGICAL)?;
 
         Ok(revwalk
             .flatten()
