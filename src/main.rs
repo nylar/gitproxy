@@ -1,12 +1,7 @@
-use std::sync::Arc;
-
-use axum::Router;
-use connectrpc::Router as ConnectRouter;
 use tokio::signal;
-use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
-use gitproxy::{config::Config, error::Result, interceptor::Logging, server::Server};
+use gitproxy::{config::Config, error::Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -20,16 +15,9 @@ async fn main() -> Result<()> {
         .with(tracing_subscriber::fmt::layer().json())
         .init();
 
-    let router = ConnectRouter::new().add_service(Arc::new(Server::new(&config)));
-
-    let app = Router::new()
-        .route("/health", axum::routing::get(|| async { "OK" }))
-        .layer(TraceLayer::new_for_http())
-        .fallback_service(router.into_axum_service().with_interceptor(Logging));
-
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.port)).await?;
     tracing::info!(target: "Serving app", port = config.port, root_dir = config.root_dir.to_str());
-    axum::serve(listener, app)
+    axum::serve(listener, gitproxy::app(&config))
         .with_graceful_shutdown(shutdown_signal())
         .await?;
     Ok(())
