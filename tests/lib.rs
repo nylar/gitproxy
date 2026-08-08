@@ -49,6 +49,46 @@ async fn test_repositories() {
 }
 
 #[tokio::test]
+#[should_panic(expected = "namespace: value is required")]
+async fn test_create_repository_empty_namespace() {
+    let root_dir = tempfile::tempdir().unwrap();
+    let addr = start_server(root_dir.path()).await;
+    let client = make_client(&addr);
+
+    client
+        .create_repository(CreateRepositoryRequest {
+            namespace: "".to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+}
+
+#[tokio::test]
+#[should_panic(expected = "namespace: value is required")]
+async fn test_delete_repository_empty_namespace() {
+    let root_dir = tempfile::tempdir().unwrap();
+    let addr = start_server(root_dir.path()).await;
+    let client = make_client(&addr);
+
+    client
+        .create_repository(CreateRepositoryRequest {
+            namespace: NAMESPACE.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    client
+        .delete_repository(DeleteRepositoryRequest {
+            namespace: "".to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+}
+
+#[tokio::test]
 async fn test_branches() {
     let root_dir = tempfile::tempdir().unwrap();
     let addr = start_server(root_dir.path()).await;

@@ -42,6 +42,7 @@ impl Server {
 }
 
 #[allow(refining_impl_trait)]
+#[protovalidate_buffa::connect_impl]
 impl GitProxyService for Server {
     async fn list_repositories(
         &self,

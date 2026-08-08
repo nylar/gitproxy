@@ -2,6 +2,7 @@ syntax = "proto3";
 
 package gitproxy.v1;
 import "google/protobuf/timestamp.proto";
+import "buf/validate/validate.proto";
 
 option go_package = "github.com/nylar/gitproxy/go/gen/gitproxy/v1;gitproxy";
 
@@ -32,7 +33,7 @@ message ListRepositoriesResponse {
 }
 
 message CreateRepositoryRequest {
-    string namespace = 1;
+    string namespace = 1 [(buf.validate.field).required = true];
 }
 
 message CreateRepositoryResponse {
@@ -40,13 +41,13 @@ message CreateRepositoryResponse {
 }
 
 message DeleteRepositoryRequest {
-    string namespace = 1;
+    string namespace = 1 [(buf.validate.field).required = true];
 }
 
 message DeleteRepositoryResponse {}
 
 message ListBranchesRequest {
-    string namespace = 1;
+    string namespace = 1 [(buf.validate.field).required = true];
 }
 
 message ListBranchesResponse {
@@ -54,23 +55,23 @@ message ListBranchesResponse {
 }
 
 message CreateBranchRequest {
-    string namespace = 1;
-    string branch = 2;
+    string namespace = 1 [(buf.validate.field).required = true];
+    string branch = 2 [(buf.validate.field).required = true];
 }
 
 message CreateBranchResponse {
-    Branch branch = 1;
+    Branch branch = 1 [(buf.validate.field).required = true];
 }
 
 message DeleteBranchRequest {
-    string namespace = 1;
-    string branch = 2;
+    string namespace = 1 [(buf.validate.field).required = true];
+    string branch = 2 [(buf.validate.field).required = true];
 }
 
 message DeleteBranchResponse {}
 
 message ListTagsRequest {
-    string namespace = 1;
+    string namespace = 1 [(buf.validate.field).required = true];
 }
 
 message ListTagsResponse {
@@ -78,37 +79,37 @@ message ListTagsResponse {
 }
 
 message CreateTagRequest {
-    string namespace = 1;
-    string name = 2;
+    string namespace = 1 [(buf.validate.field).required = true];
+    string name = 2 [(buf.validate.field).required = true];
     optional string commit = 3;
-    string message = 4;
-    bool overwrite = 5;
-    CommitAuthor author = 6;
+    string message = 4 [(buf.validate.field).required = true];
+    bool overwrite = 5 [(buf.validate.field).required = true];
+    CommitAuthor author = 6 [(buf.validate.field).required = true];
 }
 
 message CreateTagResponse {}
 
 message DeleteTagRequest {
-    string namespace = 1;
-    string name = 2;
+    string namespace = 1 [(buf.validate.field).required = true];
+    string name = 2 [(buf.validate.field).required = true];
 }
 
 message DeleteTagResponse {}
 
 message CheckoutTagRequest {
-    string namespace = 1;
-    string name = 2;
+    string namespace = 1 [(buf.validate.field).required = true];
+    string name = 2 [(buf.validate.field).required = true];
 }
 
 message CheckoutTagResponse {
-    string path = 1;
+    string path = 1 [(buf.validate.field).required = true];
 }
 
 message CommitRequest {
-    string namespace = 1;
-    string branch = 2;
-    string message = 3;
-    CommitAuthor author = 4;
+    string namespace = 1 [(buf.validate.field).required = true];
+    string branch = 2 [(buf.validate.field).required = true];
+    string message = 3 [(buf.validate.field).required = true];
+    CommitAuthor author = 4 [(buf.validate.field).required = true];
 }
 
 message CommitResponse {
@@ -116,8 +117,8 @@ message CommitResponse {
 }
 
 message MergeRequest {
-    string namespace = 1;
-    string branch = 2;
+    string namespace = 1 [(buf.validate.field).required = true];
+    string branch = 2 [(buf.validate.field).required = true];
 }
 
 message MergeResponse {
@@ -125,8 +126,8 @@ message MergeResponse {
 }
 
 message RevertMergeRequest {
-    string namespace = 1;
-    string commit = 2;
+    string namespace = 1 [(buf.validate.field).required = true];
+    string commit = 2 [(buf.validate.field).required = true];
 }
 
 message RevertMergeResponse {
@@ -134,7 +135,7 @@ message RevertMergeResponse {
 }
 
 message LogRequest {
-    string namespace = 1;
+    string namespace = 1 [(buf.validate.field).required = true];
     optional string branch = 2;
 }
 
@@ -143,9 +144,9 @@ message LogResponse {
 }
 
 message DiffRequest {
-    string namespace = 1;
+    string namespace = 1 [(buf.validate.field).required = true];
     optional string from_branch = 2;
-    string to_branch = 3;
+    string to_branch = 3 [(buf.validate.field).required = true];
 }
 
 message DiffResponse {
@@ -153,7 +154,7 @@ message DiffResponse {
 }
 
 message StatusRequest {
-    string namespace = 1;
+    string namespace = 1 [(buf.validate.field).required = true];
     optional string branch = 2;
 }
 
@@ -162,8 +163,8 @@ message StatusResponse {
 }
 
 message CommitAuthor {
-    string name = 1;
-    string email = 2;
+    string name = 1 [(buf.validate.field).required = true];
+    string email = 2 [(buf.validate.field).required = true];
 }
 
 message Log {

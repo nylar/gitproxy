@@ -14,6 +14,9 @@ plugins:
     out: src/gen/connect
     strategy: all
     opt: [filter=services]
+  - local: protoc-gen-protovalidate-buffa
+    out: src/gen/protovalidate
+    strategy: all
   # Go
   - remote: buf.build/protocolbuffers/go:v1.36.11
     out: go/gen

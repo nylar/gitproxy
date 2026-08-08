@@ -7,6 +7,7 @@
 package gitproxy
 
 import (
+	_ "buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
@@ -2188,95 +2189,95 @@ var File_gitproxy_v1_gitproxy_proto protoreflect.FileDescriptor
 
 const file_gitproxy_v1_gitproxy_proto_rawDesc = "" +
 	"\n" +
-	"\x1agitproxy/v1/gitproxy.proto\x12\vgitproxy.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"\x19\n" +
+	"\x1agitproxy/v1/gitproxy.proto\x12\vgitproxy.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bbuf/validate/validate.proto\"\x19\n" +
 	"\x17ListRepositoriesRequest\"W\n" +
 	"\x18ListRepositoriesResponse\x12;\n" +
-	"\frepositories\x18\x01 \x03(\v2\x17.gitproxy.v1.RepositoryR\frepositories\"7\n" +
-	"\x17CreateRepositoryRequest\x12\x1c\n" +
-	"\tnamespace\x18\x01 \x01(\tR\tnamespace\"S\n" +
+	"\frepositories\x18\x01 \x03(\v2\x17.gitproxy.v1.RepositoryR\frepositories\"?\n" +
+	"\x17CreateRepositoryRequest\x12$\n" +
+	"\tnamespace\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tnamespace\"S\n" +
 	"\x18CreateRepositoryResponse\x127\n" +
 	"\n" +
 	"repository\x18\x01 \x01(\v2\x17.gitproxy.v1.RepositoryR\n" +
-	"repository\"7\n" +
-	"\x17DeleteRepositoryRequest\x12\x1c\n" +
-	"\tnamespace\x18\x01 \x01(\tR\tnamespace\"\x1a\n" +
-	"\x18DeleteRepositoryResponse\"3\n" +
-	"\x13ListBranchesRequest\x12\x1c\n" +
-	"\tnamespace\x18\x01 \x01(\tR\tnamespace\"G\n" +
+	"repository\"?\n" +
+	"\x17DeleteRepositoryRequest\x12$\n" +
+	"\tnamespace\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tnamespace\"\x1a\n" +
+	"\x18DeleteRepositoryResponse\";\n" +
+	"\x13ListBranchesRequest\x12$\n" +
+	"\tnamespace\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tnamespace\"G\n" +
 	"\x14ListBranchesResponse\x12/\n" +
-	"\bbranches\x18\x01 \x03(\v2\x13.gitproxy.v1.BranchR\bbranches\"K\n" +
-	"\x13CreateBranchRequest\x12\x1c\n" +
-	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x16\n" +
-	"\x06branch\x18\x02 \x01(\tR\x06branch\"C\n" +
-	"\x14CreateBranchResponse\x12+\n" +
-	"\x06branch\x18\x01 \x01(\v2\x13.gitproxy.v1.BranchR\x06branch\"K\n" +
-	"\x13DeleteBranchRequest\x12\x1c\n" +
-	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x16\n" +
-	"\x06branch\x18\x02 \x01(\tR\x06branch\"\x16\n" +
-	"\x14DeleteBranchResponse\"/\n" +
-	"\x0fListTagsRequest\x12\x1c\n" +
-	"\tnamespace\x18\x01 \x01(\tR\tnamespace\"&\n" +
+	"\bbranches\x18\x01 \x03(\v2\x13.gitproxy.v1.BranchR\bbranches\"[\n" +
+	"\x13CreateBranchRequest\x12$\n" +
+	"\tnamespace\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tnamespace\x12\x1e\n" +
+	"\x06branch\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x06branch\"K\n" +
+	"\x14CreateBranchResponse\x123\n" +
+	"\x06branch\x18\x01 \x01(\v2\x13.gitproxy.v1.BranchB\x06\xbaH\x03\xc8\x01\x01R\x06branch\"[\n" +
+	"\x13DeleteBranchRequest\x12$\n" +
+	"\tnamespace\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tnamespace\x12\x1e\n" +
+	"\x06branch\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x06branch\"\x16\n" +
+	"\x14DeleteBranchResponse\"7\n" +
+	"\x0fListTagsRequest\x12$\n" +
+	"\tnamespace\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tnamespace\"&\n" +
 	"\x10ListTagsResponse\x12\x12\n" +
-	"\x04tags\x18\x01 \x03(\tR\x04tags\"\xd7\x01\n" +
-	"\x10CreateTagRequest\x12\x1c\n" +
-	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1b\n" +
-	"\x06commit\x18\x03 \x01(\tH\x00R\x06commit\x88\x01\x01\x12\x18\n" +
-	"\amessage\x18\x04 \x01(\tR\amessage\x12\x1c\n" +
-	"\toverwrite\x18\x05 \x01(\bR\toverwrite\x121\n" +
-	"\x06author\x18\x06 \x01(\v2\x19.gitproxy.v1.CommitAuthorR\x06authorB\t\n" +
+	"\x04tags\x18\x01 \x03(\tR\x04tags\"\xff\x01\n" +
+	"\x10CreateTagRequest\x12$\n" +
+	"\tnamespace\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tnamespace\x12\x1a\n" +
+	"\x04name\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04name\x12\x1b\n" +
+	"\x06commit\x18\x03 \x01(\tH\x00R\x06commit\x88\x01\x01\x12 \n" +
+	"\amessage\x18\x04 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\amessage\x12$\n" +
+	"\toverwrite\x18\x05 \x01(\bB\x06\xbaH\x03\xc8\x01\x01R\toverwrite\x129\n" +
+	"\x06author\x18\x06 \x01(\v2\x19.gitproxy.v1.CommitAuthorB\x06\xbaH\x03\xc8\x01\x01R\x06authorB\t\n" +
 	"\a_commit\"\x13\n" +
-	"\x11CreateTagResponse\"D\n" +
-	"\x10DeleteTagRequest\x12\x1c\n" +
-	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\"\x13\n" +
-	"\x11DeleteTagResponse\"F\n" +
-	"\x12CheckoutTagRequest\x12\x1c\n" +
-	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\")\n" +
-	"\x13CheckoutTagResponse\x12\x12\n" +
-	"\x04path\x18\x01 \x01(\tR\x04path\"\x92\x01\n" +
-	"\rCommitRequest\x12\x1c\n" +
-	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x16\n" +
-	"\x06branch\x18\x02 \x01(\tR\x06branch\x12\x18\n" +
-	"\amessage\x18\x03 \x01(\tR\amessage\x121\n" +
-	"\x06author\x18\x04 \x01(\v2\x19.gitproxy.v1.CommitAuthorR\x06author\"(\n" +
+	"\x11CreateTagResponse\"T\n" +
+	"\x10DeleteTagRequest\x12$\n" +
+	"\tnamespace\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tnamespace\x12\x1a\n" +
+	"\x04name\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04name\"\x13\n" +
+	"\x11DeleteTagResponse\"V\n" +
+	"\x12CheckoutTagRequest\x12$\n" +
+	"\tnamespace\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tnamespace\x12\x1a\n" +
+	"\x04name\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04name\"1\n" +
+	"\x13CheckoutTagResponse\x12\x1a\n" +
+	"\x04path\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04path\"\xb2\x01\n" +
+	"\rCommitRequest\x12$\n" +
+	"\tnamespace\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tnamespace\x12\x1e\n" +
+	"\x06branch\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x06branch\x12 \n" +
+	"\amessage\x18\x03 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\amessage\x129\n" +
+	"\x06author\x18\x04 \x01(\v2\x19.gitproxy.v1.CommitAuthorB\x06\xbaH\x03\xc8\x01\x01R\x06author\"(\n" +
 	"\x0eCommitResponse\x12\x16\n" +
-	"\x06commit\x18\x01 \x01(\tR\x06commit\"D\n" +
-	"\fMergeRequest\x12\x1c\n" +
-	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x16\n" +
-	"\x06branch\x18\x02 \x01(\tR\x06branch\"'\n" +
+	"\x06commit\x18\x01 \x01(\tR\x06commit\"T\n" +
+	"\fMergeRequest\x12$\n" +
+	"\tnamespace\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tnamespace\x12\x1e\n" +
+	"\x06branch\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x06branch\"'\n" +
 	"\rMergeResponse\x12\x16\n" +
-	"\x06commit\x18\x01 \x01(\tR\x06commit\"J\n" +
-	"\x12RevertMergeRequest\x12\x1c\n" +
-	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x16\n" +
-	"\x06commit\x18\x02 \x01(\tR\x06commit\"-\n" +
+	"\x06commit\x18\x01 \x01(\tR\x06commit\"Z\n" +
+	"\x12RevertMergeRequest\x12$\n" +
+	"\tnamespace\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tnamespace\x12\x1e\n" +
+	"\x06commit\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x06commit\"-\n" +
 	"\x13RevertMergeResponse\x12\x16\n" +
-	"\x06commit\x18\x01 \x01(\tR\x06commit\"R\n" +
+	"\x06commit\x18\x01 \x01(\tR\x06commit\"Z\n" +
 	"\n" +
-	"LogRequest\x12\x1c\n" +
-	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x1b\n" +
+	"LogRequest\x12$\n" +
+	"\tnamespace\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tnamespace\x12\x1b\n" +
 	"\x06branch\x18\x02 \x01(\tH\x00R\x06branch\x88\x01\x01B\t\n" +
 	"\a_branch\"3\n" +
 	"\vLogResponse\x12$\n" +
-	"\x04logs\x18\x01 \x03(\v2\x10.gitproxy.v1.LogR\x04logs\"~\n" +
-	"\vDiffRequest\x12\x1c\n" +
-	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12$\n" +
+	"\x04logs\x18\x01 \x03(\v2\x10.gitproxy.v1.LogR\x04logs\"\x8e\x01\n" +
+	"\vDiffRequest\x12$\n" +
+	"\tnamespace\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tnamespace\x12$\n" +
 	"\vfrom_branch\x18\x02 \x01(\tH\x00R\n" +
-	"fromBranch\x88\x01\x01\x12\x1b\n" +
-	"\tto_branch\x18\x03 \x01(\tR\btoBranchB\x0e\n" +
+	"fromBranch\x88\x01\x01\x12#\n" +
+	"\tto_branch\x18\x03 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\btoBranchB\x0e\n" +
 	"\f_from_branch\"5\n" +
 	"\fDiffResponse\x12%\n" +
-	"\x04diff\x18\x01 \x01(\v2\x11.gitproxy.v1.DiffR\x04diff\"U\n" +
-	"\rStatusRequest\x12\x1c\n" +
-	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x1b\n" +
+	"\x04diff\x18\x01 \x01(\v2\x11.gitproxy.v1.DiffR\x04diff\"]\n" +
+	"\rStatusRequest\x12$\n" +
+	"\tnamespace\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tnamespace\x12\x1b\n" +
 	"\x06branch\x18\x02 \x01(\tH\x00R\x06branch\x88\x01\x01B\t\n" +
 	"\a_branch\"&\n" +
 	"\x0eStatusResponse\x12\x14\n" +
-	"\x05dirty\x18\x01 \x01(\bR\x05dirty\"8\n" +
-	"\fCommitAuthor\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
-	"\x05email\x18\x02 \x01(\tR\x05email\"\x9a\x01\n" +
+	"\x05dirty\x18\x01 \x01(\bR\x05dirty\"H\n" +
+	"\fCommitAuthor\x12\x1a\n" +
+	"\x04name\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x04name\x12\x1c\n" +
+	"\x05email\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x05email\"\x9a\x01\n" +
 	"\x03Log\x12\x18\n" +
 	"\amessage\x18\x01 \x01(\tR\amessage\x121\n" +
 	"\x06author\x18\x02 \x01(\v2\x19.gitproxy.v1.CommitAuthorR\x06author\x12\x16\n" +
