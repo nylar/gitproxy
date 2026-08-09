@@ -10,4 +10,6 @@ pub enum Error {
     Axum(#[from] axum::Error),
     #[error("Reading environment {0}")]
     Envy(#[from] envy::Error),
+    #[error("reference {0} is not a valid commit ")]
+    InvalidCommit(String),
 }

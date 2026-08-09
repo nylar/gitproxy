@@ -7366,10 +7366,10 @@ impl ::serde::Serialize for LogResponseOwnedView {
 pub struct DiffRequestView<'a> {
     /// Field 1: `namespace`
     pub namespace: &'a str,
-    /// Field 2: `from_branch`
-    pub from_branch: ::core::option::Option<&'a str>,
-    /// Field 3: `to_branch`
-    pub to_branch: &'a str,
+    /// Field 2: `base_reference`
+    pub base_reference: &'a str,
+    /// Field 3: `target_reference`
+    pub target_reference: &'a str,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for DiffRequestView<'a> {
@@ -7411,14 +7411,14 @@ impl<'a> ::buffa::MessageView<'a> for DiffRequestView<'a> {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
-                view.from_branch = Some(::buffa::types::borrow_str(&mut cur)?);
+                view.base_reference = ::buffa::types::borrow_str(&mut cur)?;
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
-                view.to_branch = ::buffa::types::borrow_str(&mut cur)?;
+                view.target_reference = ::buffa::types::borrow_str(&mut cur)?;
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -7443,8 +7443,8 @@ impl<'a> ::buffa::MessageView<'a> for DiffRequestView<'a> {
         let _ = __buffa_src;
         ::core::result::Result::Ok(super::super::DiffRequest {
             namespace: self.namespace.to_string(),
-            from_branch: self.from_branch.map(|s| s.to_string()),
-            to_branch: self.to_branch.to_string(),
+            base_reference: self.base_reference.to_string(),
+            target_reference: self.target_reference.to_string(),
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
@@ -7459,11 +7459,15 @@ impl<'a> ::buffa::ViewEncode<'a> for DiffRequestView<'a> {
         if !self.namespace.is_empty() {
             size += 1u32 + ::buffa::types::string_encoded_len(&self.namespace) as u32;
         }
-        if let Some(ref v) = self.from_branch {
-            size += 1u32 + ::buffa::types::string_encoded_len(v) as u32;
+        if !self.base_reference.is_empty() {
+            size
+                += 1u32
+                    + ::buffa::types::string_encoded_len(&self.base_reference) as u32;
         }
-        if !self.to_branch.is_empty() {
-            size += 1u32 + ::buffa::types::string_encoded_len(&self.to_branch) as u32;
+        if !self.target_reference.is_empty() {
+            size
+                += 1u32
+                    + ::buffa::types::string_encoded_len(&self.target_reference) as u32;
         }
         size += self.__buffa_unknown_fields.encoded_len() as u32;
         size
@@ -7479,11 +7483,11 @@ impl<'a> ::buffa::ViewEncode<'a> for DiffRequestView<'a> {
         if !self.namespace.is_empty() {
             ::buffa::types::put_string_field(1u32, &self.namespace, buf);
         }
-        if let Some(ref v) = self.from_branch {
-            ::buffa::types::put_string_field(2u32, v, buf);
+        if !self.base_reference.is_empty() {
+            ::buffa::types::put_string_field(2u32, &self.base_reference, buf);
         }
-        if !self.to_branch.is_empty() {
-            ::buffa::types::put_string_field(3u32, &self.to_branch, buf);
+        if !self.target_reference.is_empty() {
+            ::buffa::types::put_string_field(3u32, &self.target_reference, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -7509,11 +7513,11 @@ impl<'__a> ::serde::Serialize for DiffRequestView<'__a> {
         if !::buffa::json_helpers::skip_if::is_empty_str(self.namespace) {
             __map.serialize_entry("namespace", self.namespace)?;
         }
-        if let ::core::option::Option::Some(__v) = self.from_branch {
-            __map.serialize_entry("fromBranch", __v)?;
+        if !::buffa::json_helpers::skip_if::is_empty_str(self.base_reference) {
+            __map.serialize_entry("baseReference", self.base_reference)?;
         }
-        if !::buffa::json_helpers::skip_if::is_empty_str(self.to_branch) {
-            __map.serialize_entry("toBranch", self.to_branch)?;
+        if !::buffa::json_helpers::skip_if::is_empty_str(self.target_reference) {
+            __map.serialize_entry("targetReference", self.target_reference)?;
         }
         __map.end()
     }
@@ -7609,15 +7613,15 @@ impl DiffRequestOwnedView {
     pub fn namespace(&self) -> &'_ str {
         self.0.reborrow().namespace
     }
-    /// Field 2: `from_branch`
+    /// Field 2: `base_reference`
     #[must_use]
-    pub fn from_branch(&self) -> ::core::option::Option<&'_ str> {
-        self.0.reborrow().from_branch
+    pub fn base_reference(&self) -> &'_ str {
+        self.0.reborrow().base_reference
     }
-    /// Field 3: `to_branch`
+    /// Field 3: `target_reference`
     #[must_use]
-    pub fn to_branch(&self) -> &'_ str {
-        self.0.reborrow().to_branch
+    pub fn target_reference(&self) -> &'_ str {
+        self.0.reborrow().target_reference
     }
 }
 impl ::core::convert::From<::buffa::OwnedView<DiffRequestView<'static>>>

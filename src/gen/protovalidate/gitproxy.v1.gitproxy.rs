@@ -2309,16 +2309,16 @@ impl ::protovalidate_buffa::Validate for DiffRequest {
                 });
         }
         if !self.namespace.is_empty() {}
-        if self.to_branch.is_empty() {
+        if self.base_reference.is_empty() {
             violations
                 .push(::protovalidate_buffa::Violation {
                     field: ::protovalidate_buffa::FieldPath {
                         elements: ::std::vec![
                             ::protovalidate_buffa::FieldPathElement { field_number :
-                            Some(3i32), field_name :
-                            Some(::std::borrow::Cow::Borrowed("to_branch")), field_type :
-                            Some(::protovalidate_buffa::FieldType::String), key_type :
-                            None, value_type : None, subscript : None, },
+                            Some(2i32), field_name :
+                            Some(::std::borrow::Cow::Borrowed("base_reference")),
+                            field_type : Some(::protovalidate_buffa::FieldType::String),
+                            key_type : None, value_type : None, subscript : None, },
                         ],
                     },
                     rule: ::protovalidate_buffa::FieldPath {
@@ -2335,7 +2335,34 @@ impl ::protovalidate_buffa::Validate for DiffRequest {
                     for_key: false,
                 });
         }
-        if !self.to_branch.is_empty() {}
+        if !self.base_reference.is_empty() {}
+        if self.target_reference.is_empty() {
+            violations
+                .push(::protovalidate_buffa::Violation {
+                    field: ::protovalidate_buffa::FieldPath {
+                        elements: ::std::vec![
+                            ::protovalidate_buffa::FieldPathElement { field_number :
+                            Some(3i32), field_name :
+                            Some(::std::borrow::Cow::Borrowed("target_reference")),
+                            field_type : Some(::protovalidate_buffa::FieldType::String),
+                            key_type : None, value_type : None, subscript : None, },
+                        ],
+                    },
+                    rule: ::protovalidate_buffa::FieldPath {
+                        elements: ::std::vec![
+                            ::protovalidate_buffa::FieldPathElement { field_number :
+                            Some(25i32), field_name :
+                            Some(::std::borrow::Cow::Borrowed("required")), field_type :
+                            Some(::protovalidate_buffa::FieldType::Bool), key_type :
+                            None, value_type : None, subscript : None, },
+                        ],
+                    },
+                    rule_id: ::std::borrow::Cow::Borrowed("required"),
+                    message: ::std::borrow::Cow::Borrowed("value is required"),
+                    for_key: false,
+                });
+        }
+        if !self.target_reference.is_empty() {}
         let (
             rt_violation,
             violations,

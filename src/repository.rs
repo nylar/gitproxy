@@ -6,11 +6,11 @@ use std::{
 use buffa::{EnumValue, MessageField};
 use chrono::{DateTime, Utc};
 use git2::{
-    DiffFindOptions, DiffOptions, Oid, Repository as GitRepository, Signature, Sort,
+    DiffFindOptions, DiffOptions, Oid, Repository as GitRepository, Signature, Sort, Tree,
     WorktreeAddOptions, WorktreePruneOptions, build::CheckoutBuilder,
 };
 
-use crate::error::Result;
+use crate::error::{Error, Result};
 
 const DEFAULT_PRIMARY_BRANCH: &str = "main";
 
@@ -304,24 +304,16 @@ impl Worktree {
         Ok(())
     }
 
-    pub fn diff(&self, from_branch: Option<&str>, to_branch: &str) -> Result<Diff> {
+    pub fn diff(&self, base_reference: &str, target_reference: &str) -> Result<Diff> {
         let mut opts = DiffOptions::new();
         opts.force_text(true);
 
-        let from_ref = match from_branch {
-            Some(from_ref) => from_ref,
-            None => DEFAULT_PRIMARY_BRANCH,
-        };
-
-        let from_ref = self.repo.find_branch(from_ref, git2::BranchType::Local)?;
-        let to_ref = self.repo.find_branch(to_branch, git2::BranchType::Local)?;
-
-        let from_tree = from_ref.get().peel_to_tree()?;
-        let to_tree = to_ref.get().peel_to_tree()?;
+        let base_tree = resolve_to_tree(&self.repo, base_reference)?;
+        let target_tree = resolve_to_tree(&self.repo, target_reference)?;
 
         let mut diff =
             self.repo
-                .diff_tree_to_tree(Some(&from_tree), Some(&to_tree), Some(&mut opts))?;
+                .diff_tree_to_tree(Some(&base_tree), Some(&target_tree), Some(&mut opts))?;
 
         let mut opts = DiffFindOptions::new();
         opts.renames(true);
@@ -645,4 +637,13 @@ impl From<DeltaOrigin> for crate::proto::gitproxy::v1::diff_delta::line::Origin 
             DeltaOrigin::Binary => Self::Binary,
         }
     }
+}
+
+fn resolve_to_tree<'a>(repo: &'a GitRepository, reference: &str) -> Result<Tree<'a>> {
+    let object = repo.revparse_single(reference)?;
+    let commit = object
+        .into_commit()
+        .map_err(|_| Error::InvalidCommit(reference.to_owned()))?;
+    let tree = commit.tree()?;
+    Ok(tree)
 }

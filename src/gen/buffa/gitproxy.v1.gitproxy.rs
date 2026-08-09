@@ -3763,21 +3763,22 @@ pub struct DiffRequest {
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
     )]
     pub namespace: ::buffa::alloc::string::String,
-    /// Field 2: `from_branch`
+    /// Field 2: `base_reference`
     #[serde(
-        rename = "fromBranch",
-        alias = "from_branch",
-        skip_serializing_if = "::core::option::Option::is_none"
-    )]
-    pub from_branch: ::core::option::Option<::buffa::alloc::string::String>,
-    /// Field 3: `to_branch`
-    #[serde(
-        rename = "toBranch",
-        alias = "to_branch",
+        rename = "baseReference",
+        alias = "base_reference",
         with = "::buffa::json_helpers::proto_string",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
     )]
-    pub to_branch: ::buffa::alloc::string::String,
+    pub base_reference: ::buffa::alloc::string::String,
+    /// Field 3: `target_reference`
+    #[serde(
+        rename = "targetReference",
+        alias = "target_reference",
+        with = "::buffa::json_helpers::proto_string",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
+    )]
+    pub target_reference: ::buffa::alloc::string::String,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -3786,8 +3787,8 @@ impl ::core::fmt::Debug for DiffRequest {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
         f.debug_struct("DiffRequest")
             .field("namespace", &self.namespace)
-            .field("from_branch", &self.from_branch)
-            .field("to_branch", &self.to_branch)
+            .field("base_reference", &self.base_reference)
+            .field("target_reference", &self.target_reference)
             .finish()
     }
 }
@@ -3797,18 +3798,6 @@ impl DiffRequest {
     ///
     /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
     pub const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.DiffRequest";
-}
-impl DiffRequest {
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::from_branch`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_from_branch(
-        mut self,
-        value: impl Into<::buffa::alloc::string::String>,
-    ) -> Self {
-        self.from_branch = Some(value.into());
-        self
-    }
 }
 ::buffa::impl_default_instance!(DiffRequest);
 impl ::buffa::MessageName for DiffRequest {
@@ -3831,11 +3820,15 @@ impl ::buffa::Message for DiffRequest {
         if !self.namespace.is_empty() {
             size += 1u32 + ::buffa::types::string_encoded_len(&self.namespace) as u32;
         }
-        if let Some(ref v) = self.from_branch {
-            size += 1u32 + ::buffa::types::string_encoded_len(v) as u32;
+        if !self.base_reference.is_empty() {
+            size
+                += 1u32
+                    + ::buffa::types::string_encoded_len(&self.base_reference) as u32;
         }
-        if !self.to_branch.is_empty() {
-            size += 1u32 + ::buffa::types::string_encoded_len(&self.to_branch) as u32;
+        if !self.target_reference.is_empty() {
+            size
+                += 1u32
+                    + ::buffa::types::string_encoded_len(&self.target_reference) as u32;
         }
         size += self.__buffa_unknown_fields.encoded_len() as u32;
         size
@@ -3850,11 +3843,11 @@ impl ::buffa::Message for DiffRequest {
         if !self.namespace.is_empty() {
             ::buffa::types::put_string_field(1u32, &self.namespace, buf);
         }
-        if let Some(ref v) = self.from_branch {
-            ::buffa::types::put_string_field(2u32, v, buf);
+        if !self.base_reference.is_empty() {
+            ::buffa::types::put_string_field(2u32, &self.base_reference, buf);
         }
-        if !self.to_branch.is_empty() {
-            ::buffa::types::put_string_field(3u32, &self.to_branch, buf);
+        if !self.target_reference.is_empty() {
+            ::buffa::types::put_string_field(3u32, &self.target_reference, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -3881,19 +3874,14 @@ impl ::buffa::Message for DiffRequest {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
-                ::buffa::types::merge_string(
-                    self
-                        .from_branch
-                        .get_or_insert_with(::buffa::alloc::string::String::new),
-                    buf,
-                )?;
+                ::buffa::types::merge_string(&mut self.base_reference, buf)?;
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
-                ::buffa::types::merge_string(&mut self.to_branch, buf)?;
+                ::buffa::types::merge_string(&mut self.target_reference, buf)?;
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -3904,8 +3892,8 @@ impl ::buffa::Message for DiffRequest {
     }
     fn clear(&mut self) {
         self.namespace.clear();
-        self.from_branch = ::core::option::Option::None;
-        self.to_branch.clear();
+        self.base_reference.clear();
+        self.target_reference.clear();
         self.__buffa_unknown_fields.clear();
     }
 }

@@ -396,7 +396,7 @@ impl GitProxyService for Server {
         let main = repo.primary_worktree().map_err(internal)?;
 
         let diff = main
-            .diff(request.from_branch, request.to_branch)
+            .diff(request.base_reference, request.target_reference)
             .map_err(internal)?;
 
         Response::ok(DiffResponse {

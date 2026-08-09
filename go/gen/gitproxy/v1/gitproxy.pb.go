@@ -1482,12 +1482,12 @@ func (x *LogResponse) GetLogs() []*Log {
 }
 
 type DiffRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Namespace     string                 `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`
-	FromBranch    *string                `protobuf:"bytes,2,opt,name=from_branch,json=fromBranch,proto3,oneof" json:"from_branch,omitempty"`
-	ToBranch      string                 `protobuf:"bytes,3,opt,name=to_branch,json=toBranch,proto3" json:"to_branch,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Namespace       string                 `protobuf:"bytes,1,opt,name=namespace,proto3" json:"namespace,omitempty"`
+	BaseReference   string                 `protobuf:"bytes,2,opt,name=base_reference,json=baseReference,proto3" json:"base_reference,omitempty"`
+	TargetReference string                 `protobuf:"bytes,3,opt,name=target_reference,json=targetReference,proto3" json:"target_reference,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *DiffRequest) Reset() {
@@ -1527,16 +1527,16 @@ func (x *DiffRequest) GetNamespace() string {
 	return ""
 }
 
-func (x *DiffRequest) GetFromBranch() string {
-	if x != nil && x.FromBranch != nil {
-		return *x.FromBranch
+func (x *DiffRequest) GetBaseReference() string {
+	if x != nil {
+		return x.BaseReference
 	}
 	return ""
 }
 
-func (x *DiffRequest) GetToBranch() string {
+func (x *DiffRequest) GetTargetReference() string {
 	if x != nil {
-		return x.ToBranch
+		return x.TargetReference
 	}
 	return ""
 }
@@ -2260,13 +2260,11 @@ const file_gitproxy_v1_gitproxy_proto_rawDesc = "" +
 	"\x06branch\x18\x02 \x01(\tH\x00R\x06branch\x88\x01\x01B\t\n" +
 	"\a_branch\"3\n" +
 	"\vLogResponse\x12$\n" +
-	"\x04logs\x18\x01 \x03(\v2\x10.gitproxy.v1.LogR\x04logs\"\x8e\x01\n" +
+	"\x04logs\x18\x01 \x03(\v2\x10.gitproxy.v1.LogR\x04logs\"\x95\x01\n" +
 	"\vDiffRequest\x12$\n" +
-	"\tnamespace\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tnamespace\x12$\n" +
-	"\vfrom_branch\x18\x02 \x01(\tH\x00R\n" +
-	"fromBranch\x88\x01\x01\x12#\n" +
-	"\tto_branch\x18\x03 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\btoBranchB\x0e\n" +
-	"\f_from_branch\"5\n" +
+	"\tnamespace\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tnamespace\x12-\n" +
+	"\x0ebase_reference\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\rbaseReference\x121\n" +
+	"\x10target_reference\x18\x03 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\x0ftargetReference\"5\n" +
 	"\fDiffResponse\x12%\n" +
 	"\x04diff\x18\x01 \x01(\v2\x11.gitproxy.v1.DiffR\x04diff\"]\n" +
 	"\rStatusRequest\x12$\n" +
@@ -2483,7 +2481,6 @@ func file_gitproxy_v1_gitproxy_proto_init() {
 	}
 	file_gitproxy_v1_gitproxy_proto_msgTypes[14].OneofWrappers = []any{}
 	file_gitproxy_v1_gitproxy_proto_msgTypes[26].OneofWrappers = []any{}
-	file_gitproxy_v1_gitproxy_proto_msgTypes[28].OneofWrappers = []any{}
 	file_gitproxy_v1_gitproxy_proto_msgTypes[30].OneofWrappers = []any{}
 	file_gitproxy_v1_gitproxy_proto_msgTypes[38].OneofWrappers = []any{}
 	file_gitproxy_v1_gitproxy_proto_msgTypes[39].OneofWrappers = []any{}

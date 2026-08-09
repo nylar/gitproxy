@@ -145,8 +145,8 @@ message LogResponse {
 
 message DiffRequest {
     string namespace = 1 [(buf.validate.field).required = true];
-    optional string from_branch = 2;
-    string to_branch = 3 [(buf.validate.field).required = true];
+    string base_reference = 2 [(buf.validate.field).required = true];
+    string target_reference = 3 [(buf.validate.field).required = true];
 }
 
 message DiffResponse {

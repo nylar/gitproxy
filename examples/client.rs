@@ -79,8 +79,8 @@ async fn main() {
     let diff = client
         .diff(DiffRequest {
             namespace: NAMESPACE.to_owned(),
-            from_branch: None, // Compare to main
-            to_branch: branch1.to_owned(),
+            base_reference: "main".to_owned(),
+            target_reference: branch1.to_owned(),
             ..Default::default()
         })
         .await
@@ -113,8 +113,8 @@ async fn main() {
     let diff = client
         .diff(DiffRequest {
             namespace: NAMESPACE.to_owned(),
-            from_branch: None, // Compare to main
-            to_branch: branch1.to_owned(),
+            base_reference: "main".to_owned(),
+            target_reference: branch1.to_owned(),
             ..Default::default()
         })
         .await
@@ -172,8 +172,8 @@ async fn main() {
     let diff = client
         .diff(DiffRequest {
             namespace: NAMESPACE.to_owned(),
-            from_branch: None, // Compare to main
-            to_branch: branch2.to_owned(),
+            base_reference: "main".to_owned(),
+            target_reference: branch2.to_owned(),
             ..Default::default()
         })
         .await
