@@ -22,6 +22,7 @@ pub enum Error {
 
 impl From<Error> for ConnectError {
     fn from(err: Error) -> Self {
+        tracing::error!(error = err.to_string());
         match err {
             Error::Git(error) => ConnectError::internal(error.to_string()),
             Error::IO(error) => ConnectError::internal(error.to_string()),
