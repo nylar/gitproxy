@@ -63,8 +63,8 @@ impl GitProxyService for Server {
     ) -> ServiceResult<ListRepositoriesResponse> {
         let mut repositories = Vec::new();
 
-        for dir in std::fs::read_dir(&self.root_dir).map_err(internal)? {
-            let dir = dir.map_err(internal)?;
+        for dir in std::fs::read_dir(&self.root_dir)? {
+            let dir = dir?;
             let service = self.service_with_repo_dir(self.root_dir.join(dir.path()));
 
             let head = spawn_blocking(move || service.fetch_repository_head_commit())
@@ -421,9 +421,4 @@ impl GitProxyService for Server {
             ..Default::default()
         })
     }
-}
-
-fn internal<E: std::error::Error>(err: E) -> ConnectError {
-    tracing::error!(error = err.to_string());
-    ConnectError::internal(err.to_string())
 }
