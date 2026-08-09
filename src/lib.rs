@@ -20,6 +20,7 @@ pub mod server;
 #[rustfmt::skip]
 #[path = "gen/protovalidate/mod.rs"]
 pub mod validate;
+pub mod service;
 
 pub fn app(config: &Config) -> Router {
     let router = ConnectRouter::new().add_service(Arc::new(Server::new(config)));

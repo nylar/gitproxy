@@ -3,10 +3,12 @@ use std::path::PathBuf;
 use buffa::MessageField;
 use buffa_types::Timestamp;
 use connectrpc::{ConnectError, RequestContext, Response, ServiceRequest, ServiceResult};
+use tokio::task::spawn_blocking;
 
 use crate::{
     config::Config,
     connect::gitproxy::v1::GitProxyService,
+    error::Error,
     proto::gitproxy::v1::{
         Branch, CheckoutTagRequest, CheckoutTagResponse, CommitAuthor, CommitRequest,
         CommitResponse, CreateBranchRequest, CreateBranchResponse, CreateRepositoryRequest,
@@ -17,7 +19,8 @@ use crate::{
         LogRequest, LogResponse, MergeRequest, MergeResponse, RevertMergeRequest,
         RevertMergeResponse, StatusRequest, StatusResponse,
     },
-    repository::{Author, Repository},
+    repository::Author,
+    service::Service,
 };
 
 pub struct Server {
@@ -34,6 +37,15 @@ impl Server {
                 email: config.git_user_email.to_owned(),
             },
         }
+    }
+
+    fn service(&self, namespace: &str) -> Service {
+        let repo_dir = self.root_dir.join(namespace);
+        Service::new(repo_dir, self.default_author.clone())
+    }
+
+    fn service_with_repo_dir(&self, repo_dir: PathBuf) -> Service {
+        Service::new(repo_dir, self.default_author.clone())
     }
 
     fn repo_dir(&self, namespace: &str) -> PathBuf {
@@ -53,21 +65,16 @@ impl GitProxyService for Server {
 
         for dir in std::fs::read_dir(&self.root_dir).map_err(internal)? {
             let dir = dir.map_err(internal)?;
+            let service = self.service_with_repo_dir(self.root_dir.join(dir.path()));
 
-            let repo_dir = self.root_dir.join(dir.path());
-
-            let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
-            let main = repo.primary_worktree().map_err(internal)?;
-            let head = main
-                .head()
-                .map_err(internal)?
-                .peel_to_commit()
-                .map_err(internal)?;
+            let head = spawn_blocking(move || service.fetch_repository_head_commit())
+                .await
+                .map_err(Error::TokioTask)??;
 
             repositories.push(crate::proto::gitproxy::v1::Repository {
                 namespace: dir.file_name().into_string().unwrap(),
-                head_commit: head.id().to_string(),
-                path: repo_dir.to_str().unwrap().to_string(),
+                head_commit: head.to_string(),
+                path: self.root_dir.join(dir.path()).to_str().unwrap().to_string(),
                 ..Default::default()
             });
         }
@@ -91,20 +98,21 @@ impl GitProxyService for Server {
                 request.namespace,
             )));
         }
+        let service = self.service_with_repo_dir(repo_dir);
 
-        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
-        let main = repo.primary_worktree().map_err(internal)?;
-        let head = main
-            .head()
-            .map_err(internal)?
-            .peel_to_commit()
-            .map_err(internal)?;
+        let head = spawn_blocking(move || service.fetch_repository_head_commit())
+            .await
+            .map_err(Error::TokioTask)??;
 
         Response::ok(CreateRepositoryResponse {
             repository: MessageField::some(crate::proto::gitproxy::v1::Repository {
                 namespace: request.namespace.to_string(),
-                head_commit: head.id().to_string(),
-                path: repo_dir.to_str().unwrap().to_string(),
+                head_commit: head.to_string(),
+                path: self
+                    .repo_dir(request.namespace)
+                    .to_str()
+                    .unwrap()
+                    .to_string(),
                 ..Default::default()
             }),
             ..Default::default()
@@ -116,10 +124,11 @@ impl GitProxyService for Server {
         _ctx: RequestContext,
         request: ServiceRequest<'_, DeleteRepositoryRequest>,
     ) -> ServiceResult<DeleteRepositoryResponse> {
-        let repo_dir = self.repo_dir(request.namespace);
+        let service = self.service(request.namespace);
 
-        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
-        repo.remove().map_err(internal)?;
+        spawn_blocking(move || service.remove_repository())
+            .await
+            .map_err(Error::TokioTask)??;
 
         Response::ok(DeleteRepositoryResponse {
             ..Default::default()
@@ -131,18 +140,22 @@ impl GitProxyService for Server {
         _ctx: RequestContext,
         request: ServiceRequest<'_, ListBranchesRequest>,
     ) -> ServiceResult<ListBranchesResponse> {
-        let repo_dir = self.repo_dir(request.namespace);
+        let service = self.service(request.namespace);
 
-        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
-        let main = repo.primary_worktree().map_err(internal)?;
+        let branches = spawn_blocking(move || service.list_branches())
+            .await
+            .map_err(Error::TokioTask)??;
 
-        let branches = main
-            .list_branches()
-            .map_err(internal)?
+        let branches = branches
             .iter()
             .map(|b| Branch {
                 name: b.to_owned(),
-                path: repo_dir.join(b).to_str().unwrap().to_string(),
+                path: self
+                    .repo_dir(request.namespace)
+                    .join(b)
+                    .to_str()
+                    .unwrap()
+                    .to_string(),
                 ..Default::default()
             })
             .collect();
@@ -158,26 +171,22 @@ impl GitProxyService for Server {
         _ctx: RequestContext,
         request: ServiceRequest<'_, CreateBranchRequest>,
     ) -> ServiceResult<CreateBranchResponse> {
-        let repo_dir = self.repo_dir(request.namespace);
+        let req = request.to_owned_message();
+        let service = self.service(request.namespace);
 
-        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
-        let main = repo.primary_worktree().map_err(internal)?;
-
-        let branches = main.list_branches().map_err(internal)?;
-
-        if branches.iter().any(|b| b == request.branch) {
-            return Err(ConnectError::already_exists(format!(
-                "branch {} already exists",
-                request.branch
-            )));
-        }
-
-        main.new(request.branch).map_err(internal)?;
+        spawn_blocking(move || service.create_branch(req.branch))
+            .await
+            .map_err(Error::TokioTask)??;
 
         Response::ok(CreateBranchResponse {
             branch: MessageField::some(Branch {
                 name: request.branch.to_owned(),
-                path: repo_dir.join(request.branch).to_str().unwrap().to_string(),
+                path: self
+                    .repo_dir(request.namespace)
+                    .join(request.branch)
+                    .to_str()
+                    .unwrap()
+                    .to_string(),
                 ..Default::default()
             }),
             ..Default::default()
@@ -189,13 +198,12 @@ impl GitProxyService for Server {
         _ctx: RequestContext,
         request: ServiceRequest<'_, DeleteBranchRequest>,
     ) -> ServiceResult<DeleteBranchResponse> {
-        let repo_dir = self.repo_dir(request.namespace);
+        let req = request.to_owned_message();
+        let service = self.service(request.namespace);
 
-        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
-        let main = repo.primary_worktree().map_err(internal)?;
-        let branch = repo.worktree(request.branch).map_err(internal)?;
-        branch.remove().map_err(internal)?;
-        main.delete_branch(request.branch).map_err(internal)?;
+        spawn_blocking(move || service.delete_branch(req.branch))
+            .await
+            .map_err(Error::TokioTask)??;
 
         Response::ok(DeleteBranchResponse {
             ..Default::default()
@@ -207,12 +215,11 @@ impl GitProxyService for Server {
         _ctx: RequestContext,
         request: ServiceRequest<'_, ListTagsRequest>,
     ) -> ServiceResult<ListTagsResponse> {
-        let repo_dir = self.repo_dir(request.namespace);
+        let service = self.service(request.namespace);
 
-        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
-        let main = repo.primary_worktree().map_err(internal)?;
-
-        let tags = main.list_tags().map_err(internal)?;
+        let tags = spawn_blocking(move || service.list_tags())
+            .await
+            .map_err(Error::TokioTask)??;
 
         Response::ok(ListTagsResponse {
             tags,
@@ -225,24 +232,23 @@ impl GitProxyService for Server {
         _ctx: RequestContext,
         request: ServiceRequest<'_, CreateTagRequest>,
     ) -> ServiceResult<CreateTagResponse> {
-        let repo_dir = self.repo_dir(request.namespace);
+        let req = request.to_owned_message();
+        let service = self.service(request.namespace);
 
-        let author = Author {
-            name: request.author.name.to_owned(),
-            email: request.author.email.to_owned(),
-        };
-
-        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
-        let main = repo.primary_worktree().map_err(internal)?;
-
-        main.create_tag(
-            request.name,
-            &author,
-            request.message,
-            request.commit,
-            request.overwrite,
-        )
-        .map_err(internal)?;
+        spawn_blocking(move || {
+            service.create_tag(
+                req.name,
+                req.message,
+                req.commit,
+                Author {
+                    name: req.author.name.to_owned(),
+                    email: req.author.email.to_owned(),
+                },
+                req.overwrite,
+            )
+        })
+        .await
+        .map_err(Error::TokioTask)??;
 
         Response::ok(CreateTagResponse {
             ..Default::default()
@@ -254,11 +260,12 @@ impl GitProxyService for Server {
         _ctx: RequestContext,
         request: ServiceRequest<'_, DeleteTagRequest>,
     ) -> ServiceResult<DeleteTagResponse> {
-        let repo_dir = self.repo_dir(request.namespace);
+        let req = request.to_owned_message();
+        let service = self.service(request.namespace);
 
-        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
-        let main = repo.primary_worktree().map_err(internal)?;
-        main.delete_tag(request.name).map_err(internal)?;
+        spawn_blocking(move || service.delete_tag(req.name))
+            .await
+            .map_err(Error::TokioTask)??;
 
         Response::ok(DeleteTagResponse {
             ..Default::default()
@@ -270,10 +277,12 @@ impl GitProxyService for Server {
         _ctx: RequestContext,
         request: ServiceRequest<'_, CheckoutTagRequest>,
     ) -> ServiceResult<CheckoutTagResponse> {
-        let repo_dir = self.repo_dir(request.namespace);
+        let req = request.to_owned_message();
+        let service = self.service(request.namespace);
 
-        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
-        let path = repo.checkout_tag(request.name).map_err(internal)?;
+        let path = spawn_blocking(move || service.checkout_tag(req.name))
+            .await
+            .map_err(Error::TokioTask)??;
 
         Response::ok(CheckoutTagResponse {
             path: path.to_str().unwrap().to_string(),
@@ -286,21 +295,21 @@ impl GitProxyService for Server {
         _ctx: RequestContext,
         request: ServiceRequest<'_, CommitRequest>,
     ) -> ServiceResult<CommitResponse> {
-        let repo_dir = self.repo_dir(request.namespace);
+        let req = request.to_owned_message();
+        let service = self.service(request.namespace);
 
-        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
-
-        let branch = repo.worktree(request.branch).map_err(internal)?;
-
-        let commit = branch
-            .commit_all(
-                request.message,
-                &Author {
-                    name: request.author.name.to_owned(),
-                    email: request.author.email.to_owned(),
+        let commit = spawn_blocking(move || {
+            service.commit(
+                req.branch,
+                req.message,
+                Author {
+                    name: req.author.name.to_owned(),
+                    email: req.author.email.to_owned(),
                 },
             )
-            .map_err(internal)?;
+        })
+        .await
+        .map_err(Error::TokioTask)??;
 
         Response::ok(CommitResponse {
             commit: commit.to_string(),
@@ -313,17 +322,12 @@ impl GitProxyService for Server {
         _ctx: RequestContext,
         request: ServiceRequest<'_, MergeRequest>,
     ) -> ServiceResult<MergeResponse> {
-        let repo_dir = self.repo_dir(request.namespace);
+        let req = request.to_owned_message();
+        let service = self.service(request.namespace);
 
-        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
-
-        let main = repo.primary_worktree().map_err(internal)?;
-        let branch = repo.worktree(request.branch).map_err(internal)?;
-
-        let head = branch.head().map_err(internal)?;
-        let commit = main.merge(&head).map_err(internal)?;
-        branch.remove().map_err(internal)?;
-        main.delete_branch(request.branch).map_err(internal)?;
+        let commit = spawn_blocking(move || service.merge(req.branch))
+            .await
+            .map_err(Error::TokioTask)??;
 
         Response::ok(MergeResponse {
             commit: commit.to_string(),
@@ -336,18 +340,15 @@ impl GitProxyService for Server {
         _ctx: RequestContext,
         request: ServiceRequest<'_, LogRequest>,
     ) -> ServiceResult<LogResponse> {
-        let repo_dir = self.repo_dir(request.namespace);
+        let req = request.to_owned_message();
+        let service = self.service(request.namespace);
 
-        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
+        let entries = spawn_blocking(move || service.log(req.branch))
+            .await
+            .map_err(Error::TokioTask)??;
 
-        let branch = match request.branch {
-            Some(branch) => repo.worktree(branch).map_err(internal)?,
-            None => repo.primary_worktree().map_err(internal)?,
-        };
-
-        let entries = branch
-            .log()
-            .map_err(internal)?
+        let entries = entries
+            .into_iter()
             .map(|entry| Log {
                 message: entry.message,
                 author: MessageField::some(CommitAuthor {
@@ -372,15 +373,15 @@ impl GitProxyService for Server {
         _ctx: RequestContext,
         request: ServiceRequest<'_, RevertMergeRequest>,
     ) -> ServiceResult<RevertMergeResponse> {
-        let repo_dir = self.repo_dir(request.namespace);
+        let req = request.to_owned_message();
+        let service = self.service(request.namespace);
 
-        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
-
-        let main = repo.primary_worktree().map_err(internal)?;
-        let oid = main.revert(request.commit).map_err(internal)?;
+        let commit = spawn_blocking(move || service.revert_merge(req.commit))
+            .await
+            .map_err(Error::TokioTask)??;
 
         Response::ok(RevertMergeResponse {
-            commit: oid.to_string(),
+            commit: commit.to_string(),
             ..Default::default()
         })
     }
@@ -390,14 +391,12 @@ impl GitProxyService for Server {
         _ctx: RequestContext,
         request: ServiceRequest<'_, DiffRequest>,
     ) -> ServiceResult<DiffResponse> {
-        let repo_dir = self.repo_dir(request.namespace);
+        let req = request.to_owned_message();
+        let service = self.service(request.namespace);
 
-        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
-        let main = repo.primary_worktree().map_err(internal)?;
-
-        let diff = main
-            .diff(request.base_reference, request.target_reference)
-            .map_err(internal)?;
+        let diff = spawn_blocking(move || service.diff(req.base_reference, req.target_reference))
+            .await
+            .map_err(Error::TokioTask)??;
 
         Response::ok(DiffResponse {
             diff: MessageField::some(diff.into()),
@@ -410,22 +409,12 @@ impl GitProxyService for Server {
         _ctx: RequestContext,
         request: ServiceRequest<'_, StatusRequest>,
     ) -> ServiceResult<StatusResponse> {
-        let repo_dir = self.repo_dir(request.namespace);
+        let req = request.to_owned_message();
+        let service = self.service(request.namespace);
 
-        let repo = Repository::open(&repo_dir, &self.default_author).map_err(internal)?;
-
-        let clean = match request.branch {
-            Some(branch) => repo
-                .worktree(branch)
-                .map_err(internal)?
-                .clean()
-                .map_err(internal)?,
-            None => repo
-                .primary_worktree()
-                .map_err(internal)?
-                .clean()
-                .map_err(internal)?,
-        };
+        let clean = spawn_blocking(move || service.status(req.branch))
+            .await
+            .map_err(Error::TokioTask)??;
 
         Response::ok(StatusResponse {
             dirty: !clean,
