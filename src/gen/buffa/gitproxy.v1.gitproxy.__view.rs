@@ -12512,11 +12512,6 @@ pub struct ConflictDiffView<'a> {
         'a,
         super::super::__buffa::view::DiffPatchView<'a>,
     >,
-    /// Field 4: `ours_to_theirs`
-    pub ours_to_theirs: ::buffa::RepeatedView<
-        'a,
-        super::super::__buffa::view::DiffPatchView<'a>,
-    >,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for ConflictDiffView<'a> {
@@ -12583,21 +12578,6 @@ impl<'a> ::buffa::MessageView<'a> for ConflictDiffView<'a> {
                         )?,
                     );
             }
-            4u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let __sub_ctx = ctx.descend()?;
-                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
-                view.ours_to_theirs
-                    .push(
-                        <super::super::__buffa::view::DiffPatchView as ::buffa::MessageView>::decode_view_ctx(
-                            sub,
-                            __sub_ctx,
-                        )?,
-                    );
-            }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
                 let span_len = before_tag.len() - cur.len();
@@ -12631,11 +12611,6 @@ impl<'a> ::buffa::MessageView<'a> for ConflictDiffView<'a> {
                 .iter()
                 .map(|v| v.to_owned_from_source(__buffa_src))
                 .collect::<::core::result::Result<_, ::buffa::DecodeError>>()?,
-            ours_to_theirs: self
-                .ours_to_theirs
-                .iter()
-                .map(|v| v.to_owned_from_source(__buffa_src))
-                .collect::<::core::result::Result<_, ::buffa::DecodeError>>()?,
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
@@ -12666,14 +12641,6 @@ impl<'a> ::buffa::ViewEncode<'a> for ConflictDiffView<'a> {
                 += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
                     + inner_size;
         }
-        for v in &self.ours_to_theirs {
-            let __slot = __cache.reserve();
-            let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
-                    + inner_size;
-        }
         size += self.__buffa_unknown_fields.encoded_len() as u32;
         size
     }
@@ -12694,10 +12661,6 @@ impl<'a> ::buffa::ViewEncode<'a> for ConflictDiffView<'a> {
         }
         for v in &self.theirs {
             ::buffa::types::put_len_delimited_header(3u32, __cache.consume_next(), buf);
-            v.write_to(__cache, buf);
-        }
-        for v in &self.ours_to_theirs {
-            ::buffa::types::put_len_delimited_header(4u32, __cache.consume_next(), buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -12729,9 +12692,6 @@ impl<'__a> ::serde::Serialize for ConflictDiffView<'__a> {
         }
         if !self.theirs.is_empty() {
             __map.serialize_entry("theirs", &*self.theirs)?;
-        }
-        if !self.ours_to_theirs.is_empty() {
-            __map.serialize_entry("oursToTheirs", &*self.ours_to_theirs)?;
         }
         __map.end()
     }
@@ -12840,13 +12800,6 @@ impl ConflictDiffOwnedView {
         &self,
     ) -> &::buffa::RepeatedView<'_, super::super::__buffa::view::DiffPatchView<'_>> {
         &self.0.reborrow().theirs
-    }
-    /// Field 4: `ours_to_theirs`
-    #[must_use]
-    pub fn ours_to_theirs(
-        &self,
-    ) -> &::buffa::RepeatedView<'_, super::super::__buffa::view::DiffPatchView<'_>> {
-        &self.0.reborrow().ours_to_theirs
     }
 }
 impl ::core::convert::From<::buffa::OwnedView<ConflictDiffView<'static>>>

@@ -484,7 +484,6 @@ fn conflict_diffs(repo: &GitRepository, index: &Index) -> Result<Vec<ConflictDif
                 path: path.to_path_buf(),
                 ours: json_patch::diff(&ancestor, &ours),
                 theirs: json_patch::diff(&ancestor, &theirs),
-                ours_to_theirs: json_patch::diff(&ours, &theirs),
             });
         }
     }
@@ -533,5 +532,4 @@ pub struct ConflictDiff {
     pub path: PathBuf,
     pub ours: json_patch::Patch,
     pub theirs: json_patch::Patch,
-    pub ours_to_theirs: json_patch::Patch,
 }

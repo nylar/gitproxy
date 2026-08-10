@@ -395,14 +395,6 @@ async fn test_branch_merges_yields_conflicts() {
             }))),
             ..Default::default()
         }],
-        ours_to_theirs: vec![DiffPatch {
-            operation: Some(Operation::Replace(Box::new(Replace {
-                path: "/a".to_owned(),
-                value: "\"Change from my-branch\"".to_owned(),
-                ..Default::default()
-            }))),
-            ..Default::default()
-        }],
         ..Default::default()
     }];
 

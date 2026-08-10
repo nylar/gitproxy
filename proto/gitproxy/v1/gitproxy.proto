@@ -257,5 +257,4 @@ message ConflictDiff {
     string path = 1;
     repeated DiffPatch ours = 2;
     repeated DiffPatch theirs = 3;
-    repeated DiffPatch ours_to_theirs = 4;
 }

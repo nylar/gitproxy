@@ -263,13 +263,11 @@ impl From<&ConflictDiff> for v1::ConflictDiff {
     fn from(value: &ConflictDiff) -> Self {
         let ours = value.ours.0.iter().map(Into::into).collect();
         let theirs = value.theirs.0.iter().map(Into::into).collect();
-        let ours_to_theirs = value.theirs.0.iter().map(Into::into).collect();
 
         Self {
             path: value.path.display().to_string(),
             ours,
             theirs,
-            ours_to_theirs,
             ..Default::default()
         }
     }

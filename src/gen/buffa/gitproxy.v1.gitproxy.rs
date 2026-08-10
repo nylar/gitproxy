@@ -7085,14 +7085,6 @@ pub struct ConflictDiff {
         deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
     pub theirs: ::buffa::alloc::vec::Vec<DiffPatch>,
-    /// Field 4: `ours_to_theirs`
-    #[serde(
-        rename = "oursToTheirs",
-        alias = "ours_to_theirs",
-        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
-        deserialize_with = "::buffa::json_helpers::null_as_default"
-    )]
-    pub ours_to_theirs: ::buffa::alloc::vec::Vec<DiffPatch>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -7103,7 +7095,6 @@ impl ::core::fmt::Debug for ConflictDiff {
             .field("path", &self.path)
             .field("ours", &self.ours)
             .field("theirs", &self.theirs)
-            .field("ours_to_theirs", &self.ours_to_theirs)
             .finish()
     }
 }
@@ -7151,14 +7142,6 @@ impl ::buffa::Message for ConflictDiff {
                 += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
                     + inner_size;
         }
-        for v in &self.ours_to_theirs {
-            let __slot = __cache.reserve();
-            let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
-                    + inner_size;
-        }
         size += self.__buffa_unknown_fields.encoded_len() as u32;
         size
     }
@@ -7178,10 +7161,6 @@ impl ::buffa::Message for ConflictDiff {
         }
         for v in &self.theirs {
             ::buffa::types::put_len_delimited_header(3u32, __cache.consume_next(), buf);
-            v.write_to(__cache, buf);
-        }
-        for v in &self.ours_to_theirs {
-            ::buffa::types::put_len_delimited_header(4u32, __cache.consume_next(), buf);
             v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
@@ -7222,15 +7201,6 @@ impl ::buffa::Message for ConflictDiff {
                 ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
                 self.theirs.push(elem);
             }
-            4u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let mut elem = ::core::default::Default::default();
-                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                self.ours_to_theirs.push(elem);
-            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -7242,7 +7212,6 @@ impl ::buffa::Message for ConflictDiff {
         self.path.clear();
         self.ours.clear();
         self.theirs.clear();
-        self.ours_to_theirs.clear();
         self.__buffa_unknown_fields.clear();
     }
 }

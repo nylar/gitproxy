@@ -3612,36 +3612,6 @@ impl ::protovalidate_buffa::Validate for ConflictDiff {
                     );
             }
         }
-        for (idx, elem) in self.ours_to_theirs.iter().enumerate() {
-            if let Err(sub) = elem.validate() {
-                violations
-                    .extend(
-                        sub
-                            .violations
-                            .into_iter()
-                            .map(|mut v| {
-                                v.field
-                                    .elements
-                                    .insert(
-                                        0,
-                                        ::protovalidate_buffa::FieldPathElement {
-                                            field_number: Some(4i32),
-                                            field_name: Some(
-                                                ::std::borrow::Cow::Borrowed("ours_to_theirs"),
-                                            ),
-                                            field_type: Some(::protovalidate_buffa::FieldType::Message),
-                                            key_type: None,
-                                            value_type: None,
-                                            subscript: Some(
-                                                ::protovalidate_buffa::Subscript::Index(idx as u64),
-                                            ),
-                                        },
-                                    );
-                                v
-                            }),
-                    );
-            }
-        }
         let (
             rt_violation,
             violations,
