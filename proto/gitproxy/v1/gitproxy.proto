@@ -119,10 +119,12 @@ message CommitResponse {
 message MergeRequest {
     string namespace = 1 [(buf.validate.field).required = true];
     string branch = 2 [(buf.validate.field).required = true];
+    bool dry_run = 3 [(buf.validate.field).required = true];
 }
 
 message MergeResponse {
-    string commit = 1;
+    optional string commit = 1;
+    repeated ConflictDiff conflicts = 2;
 }
 
 message RevertMergeRequest {
@@ -180,14 +182,16 @@ message Repository {
     string path = 3;
 }
 
-message Diff {
-    uint64 files_changes = 1;
-    uint64 insertions = 2;
-    uint64 deletions = 3;
-    repeated DiffDelta deltas = 4;
+message Branch {
+    string name = 1;
+    string path = 2;
 }
 
-message DiffDelta {
+message Diff {
+    repeated DiffFile files = 1;
+}
+
+message DiffFile {
     enum Status {
         STATUS_UNSPECIFIED = 0;
         STATUS_UNMODIFIED = 1;
@@ -203,39 +207,55 @@ message DiffDelta {
         STATUS_CONFLICTED = 11;
     }
 
-    message File {
-        optional string path = 1;
-        uint64 size = 2;
-    }
-
-    message Line {
-        enum Origin {
-            ORIGIN_UNSPECIFIED = 0;
-            ORIGIN_CONTEXT = 1;
-            ORIGIN_ADDITION = 2;
-            ORIGIN_DELETION = 3;
-            ORIGIN_CONTEXTEOFNL = 4;
-            ORIGIN_ADDEOFNL = 5;
-            ORIGIN_DELETEEOFNL = 6;
-            ORIGIN_FILEHEADER = 7;
-            ORIGIN_HUNKHEADER = 8;
-            ORIGIN_BINARY = 9;
-        }
-        optional uint32 old_line_number = 1;
-        optional uint32 new_line_number = 2;
-        uint32 number_lines = 3;
-        int64 content_offset = 4;
-        bytes content = 5;
-        Origin origin = 6;
-    }
-
     Status status = 1;
-    File old_file = 2;
-    File new_file = 3;
-    repeated Line lines = 4;
+    optional string old_path = 2;
+    optional string new_path = 3;
+    repeated DiffPatch patches = 4;
 }
 
-message Branch {
-    string name = 1;
-    string path = 2;
+message DiffPatch {
+    message Add {
+        string path = 1;
+        string value = 2;
+    }
+
+    message Remove {
+        string path = 1;
+    }
+
+    message Replace {
+        string path = 1;
+        string value = 2;
+    }
+
+    message Move {
+        string from = 1;
+        string path = 2;
+    }
+
+    message Copy {
+        string from = 1;
+        string path = 2;
+    }
+
+    message Test {
+        string path = 1;
+        string value = 2;
+    }
+
+    oneof operation {
+        Add add = 1;
+        Remove remove = 2;
+        Replace replace = 3;
+        Move move = 4;
+        Copy copy = 5;
+        Test test = 6;
+    }
+}
+
+message ConflictDiff {
+    string path = 1;
+    repeated DiffPatch ours = 2;
+    repeated DiffPatch theirs = 3;
+    repeated DiffPatch ours_to_theirs = 4;
 }

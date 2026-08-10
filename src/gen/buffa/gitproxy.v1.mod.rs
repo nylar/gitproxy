@@ -19,6 +19,16 @@ pub mod __buffa {
         #[allow(unused_imports)]
         use super::*;
         include!("gitproxy.v1.gitproxy.__view.rs");
+        pub mod oneof {
+            #[allow(unused_imports)]
+            use super::*;
+            include!("gitproxy.v1.gitproxy.__view_oneof.rs");
+        }
+    }
+    pub mod oneof {
+        #[allow(unused_imports)]
+        use super::*;
+        include!("gitproxy.v1.gitproxy.__oneof.rs");
     }
     /// Register this package's `Any` type entries and extension entries.
     pub fn register_types(reg: &mut ::buffa::type_registry::TypeRegistry) {
@@ -57,11 +67,17 @@ pub mod __buffa {
         reg.register_json_any(super::__COMMIT_AUTHOR_JSON_ANY);
         reg.register_json_any(super::__LOG_JSON_ANY);
         reg.register_json_any(super::__REPOSITORY_JSON_ANY);
-        reg.register_json_any(super::__DIFF_JSON_ANY);
-        reg.register_json_any(super::__DIFF_DELTA_JSON_ANY);
-        reg.register_json_any(super::diff_delta::__FILE_JSON_ANY);
-        reg.register_json_any(super::diff_delta::__LINE_JSON_ANY);
         reg.register_json_any(super::__BRANCH_JSON_ANY);
+        reg.register_json_any(super::__DIFF_JSON_ANY);
+        reg.register_json_any(super::__DIFF_FILE_JSON_ANY);
+        reg.register_json_any(super::__DIFF_PATCH_JSON_ANY);
+        reg.register_json_any(super::diff_patch::__ADD_JSON_ANY);
+        reg.register_json_any(super::diff_patch::__REMOVE_JSON_ANY);
+        reg.register_json_any(super::diff_patch::__REPLACE_JSON_ANY);
+        reg.register_json_any(super::diff_patch::__MOVE_JSON_ANY);
+        reg.register_json_any(super::diff_patch::__COPY_JSON_ANY);
+        reg.register_json_any(super::diff_patch::__TEST_JSON_ANY);
+        reg.register_json_any(super::__CONFLICT_DIFF_JSON_ANY);
     }
 }
 #[doc(inline)]
@@ -205,16 +221,24 @@ pub use self::__buffa::view::RepositoryView;
 #[doc(inline)]
 pub use self::__buffa::view::RepositoryOwnedView;
 #[doc(inline)]
+pub use self::__buffa::view::BranchView;
+#[doc(inline)]
+pub use self::__buffa::view::BranchOwnedView;
+#[doc(inline)]
 pub use self::__buffa::view::DiffView;
 #[doc(inline)]
 pub use self::__buffa::view::DiffOwnedView;
 #[doc(inline)]
-pub use self::__buffa::view::DiffDeltaView;
+pub use self::__buffa::view::DiffFileView;
 #[doc(inline)]
-pub use self::__buffa::view::DiffDeltaOwnedView;
+pub use self::__buffa::view::DiffFileOwnedView;
 #[doc(inline)]
-pub use self::__buffa::view::BranchView;
+pub use self::__buffa::view::DiffPatchView;
 #[doc(inline)]
-pub use self::__buffa::view::BranchOwnedView;
+pub use self::__buffa::view::DiffPatchOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::ConflictDiffView;
+#[doc(inline)]
+pub use self::__buffa::view::ConflictDiffOwnedView;
 #[doc(inline)]
 pub use self::__buffa::register_types;

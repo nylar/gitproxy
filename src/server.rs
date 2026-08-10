@@ -14,10 +14,10 @@ use crate::{
         CommitResponse, CreateBranchRequest, CreateBranchResponse, CreateRepositoryRequest,
         CreateRepositoryResponse, CreateTagRequest, CreateTagResponse, DeleteBranchRequest,
         DeleteBranchResponse, DeleteRepositoryRequest, DeleteRepositoryResponse, DeleteTagRequest,
-        DeleteTagResponse, DiffRequest, DiffResponse, ListBranchesRequest, ListBranchesResponse,
-        ListRepositoriesRequest, ListRepositoriesResponse, ListTagsRequest, ListTagsResponse, Log,
-        LogRequest, LogResponse, MergeRequest, MergeResponse, RevertMergeRequest,
-        RevertMergeResponse, StatusRequest, StatusResponse,
+        DeleteTagResponse, Diff, DiffRequest, DiffResponse, ListBranchesRequest,
+        ListBranchesResponse, ListRepositoriesRequest, ListRepositoriesResponse, ListTagsRequest,
+        ListTagsResponse, Log, LogRequest, LogResponse, MergeRequest, MergeResponse,
+        RevertMergeRequest, RevertMergeResponse, StatusRequest, StatusResponse,
     },
     repository::Author,
     service::Service,
@@ -325,14 +325,11 @@ impl GitProxyService for Server {
         let req = request.to_owned_message();
         let service = self.service(request.namespace);
 
-        let commit = spawn_blocking(move || service.merge(req.branch))
+        let merge = spawn_blocking(move || service.merge(req.branch, req.dry_run))
             .await
             .map_err(Error::TokioTask)??;
 
-        Response::ok(MergeResponse {
-            commit: commit.to_string(),
-            ..Default::default()
-        })
+        Response::ok(merge.into())
     }
 
     async fn log(
@@ -398,8 +395,13 @@ impl GitProxyService for Server {
             .await
             .map_err(Error::TokioTask)??;
 
+        let files = diff.iter().map(Into::into).collect();
+
         Response::ok(DiffResponse {
-            diff: MessageField::some(diff.into()),
+            diff: MessageField::some(Diff {
+                files,
+                ..Default::default()
+            }),
             ..Default::default()
         })
     }

@@ -6,10 +6,11 @@ use gitproxy::{
     config::Config,
     connect::gitproxy::v1::GitProxyServiceClient,
     proto::gitproxy::v1::{
-        CommitAuthor, CommitRequest, CreateBranchRequest, CreateRepositoryRequest,
+        CommitAuthor, CommitRequest, ConflictDiff, CreateBranchRequest, CreateRepositoryRequest,
         CreateTagRequest, DeleteBranchRequest, DeleteRepositoryRequest, DeleteTagRequest,
-        ListBranchesRequest, ListRepositoriesRequest, ListTagsRequest, LogRequest, MergeRequest,
-        RevertMergeRequest,
+        DiffPatch, ListBranchesRequest, ListRepositoriesRequest, ListTagsRequest, LogRequest,
+        MergeRequest, RevertMergeRequest,
+        diff_patch::{Operation, Replace},
     },
 };
 
@@ -236,7 +237,7 @@ async fn test_branch_merges_successfully() {
 
     let last_commit_before_merge = resp.view().commit;
 
-    client
+    let resp = client
         .merge(MergeRequest {
             namespace: NAMESPACE.to_owned(),
             branch: branch.to_owned(),
@@ -244,6 +245,8 @@ async fn test_branch_merges_successfully() {
         })
         .await
         .unwrap();
+
+    assert_ne!(resp.view().commit.unwrap(), "");
 
     let log = client
         .log(LogRequest {
@@ -262,6 +265,150 @@ async fn test_branch_merges_successfully() {
             "Merge: {} into {}",
             last_commit_before_merge, main_head_commit
         )
+    );
+}
+
+#[tokio::test]
+async fn test_branch_merges_yields_conflicts() {
+    let root_dir = tempfile::tempdir().unwrap();
+    let addr = start_server(root_dir.path()).await;
+    let client = make_client(&addr);
+
+    let resp = client
+        .create_repository(CreateRepositoryRequest {
+            namespace: NAMESPACE.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let main_dir = Path::new(resp.view().repository.path).join("main");
+
+    std::fs::write(
+        main_dir.join("my_file.json"),
+        serde_json::to_vec(&serde_json::json!({
+            "a": "Initial content"
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+
+    client
+        .commit(CommitRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: "main".to_owned(),
+            message: "Initial comit".to_owned(),
+            author: MessageField::some(CommitAuthor {
+                name: "test".to_owned(),
+                email: "test@example.com".to_owned(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let branch: &str = "my-branch";
+
+    let resp = client
+        .create_branch(CreateBranchRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: branch.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let branch_dir = Path::new(resp.view().branch.path);
+    std::fs::write(
+        branch_dir.join("my_file.json"),
+        serde_json::to_vec(&serde_json::json!({
+            "a": "Change from my-branch"
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+
+    client
+        .commit(CommitRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: branch.to_owned(),
+            message: "Change in my-branch".to_owned(),
+            author: MessageField::some(CommitAuthor {
+                name: "test".to_owned(),
+                email: "test@example.com".to_owned(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    std::fs::write(
+        main_dir.join("my_file.json"),
+        serde_json::to_vec(&serde_json::json!({
+            "a": "Change from main branch"
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+
+    client
+        .commit(CommitRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: "main".to_owned(),
+            message: "Initial comit".to_owned(),
+            author: MessageField::some(CommitAuthor {
+                name: "test".to_owned(),
+                email: "test@example.com".to_owned(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let resp = client
+        .merge(MergeRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: branch.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let expected_diff = vec![ConflictDiff {
+        path: "my_file.json".to_owned(),
+        ours: vec![DiffPatch {
+            operation: Some(Operation::Replace(Box::new(Replace {
+                path: "/a".to_owned(),
+                value: "\"Change from main branch\"".to_owned(),
+                ..Default::default()
+            }))),
+            ..Default::default()
+        }],
+        theirs: vec![DiffPatch {
+            operation: Some(Operation::Replace(Box::new(Replace {
+                path: "/a".to_owned(),
+                value: "\"Change from my-branch\"".to_owned(),
+                ..Default::default()
+            }))),
+            ..Default::default()
+        }],
+        ours_to_theirs: vec![DiffPatch {
+            operation: Some(Operation::Replace(Box::new(Replace {
+                path: "/a".to_owned(),
+                value: "\"Change from my-branch\"".to_owned(),
+                ..Default::default()
+            }))),
+            ..Default::default()
+        }],
+        ..Default::default()
+    }];
+
+    assert_eq!(
+        resp.into_view().to_owned_message().unwrap().conflicts,
+        expected_diff
     );
 }
 
@@ -317,7 +464,7 @@ async fn test_merge_reverts_successfully() {
         .await
         .unwrap();
 
-    let merge_commit = resp.view().commit;
+    let merge_commit = resp.view().commit.unwrap();
 
     client
         .revert_merge(RevertMergeRequest {

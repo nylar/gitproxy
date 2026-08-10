@@ -1885,6 +1885,7 @@ impl ::protovalidate_buffa::Validate for MergeRequest {
                 });
         }
         if !self.branch.is_empty() {}
+        if self.dry_run {}
         let (
             rt_violation,
             violations,
@@ -1933,6 +1934,34 @@ impl ::protovalidate_buffa::Validate for MergeResponse {
         &self,
     ) -> ::core::result::Result<(), ::protovalidate_buffa::ValidationError> {
         let mut violations: ::std::vec::Vec<::protovalidate_buffa::Violation> = ::std::vec::Vec::new();
+        for (idx, elem) in self.conflicts.iter().enumerate() {
+            if let Err(sub) = elem.validate() {
+                violations
+                    .extend(
+                        sub
+                            .violations
+                            .into_iter()
+                            .map(|mut v| {
+                                v.field
+                                    .elements
+                                    .insert(
+                                        0,
+                                        ::protovalidate_buffa::FieldPathElement {
+                                            field_number: Some(2i32),
+                                            field_name: Some(::std::borrow::Cow::Borrowed("conflicts")),
+                                            field_type: Some(::protovalidate_buffa::FieldType::Message),
+                                            key_type: None,
+                                            value_type: None,
+                                            subscript: Some(
+                                                ::protovalidate_buffa::Subscript::Index(idx as u64),
+                                            ),
+                                        },
+                                    );
+                                v
+                            }),
+                    );
+            }
+        }
         let (
             rt_violation,
             violations,
@@ -2827,12 +2856,60 @@ impl ::protovalidate_buffa::Validate for Repository {
     unreachable_patterns,
     reason = "protovalidate-buffa generated validators — codegen emits uniform scaffolding regardless of which rules apply"
 )]
+impl ::protovalidate_buffa::Validate for Branch {
+    fn validate(
+        &self,
+    ) -> ::core::result::Result<(), ::protovalidate_buffa::ValidationError> {
+        let mut violations: ::std::vec::Vec<::protovalidate_buffa::Violation> = ::std::vec::Vec::new();
+        let (
+            rt_violation,
+            violations,
+        ): (
+            ::std::option::Option<::protovalidate_buffa::Violation>,
+            ::std::vec::Vec<::protovalidate_buffa::Violation>,
+        ) = {
+            let mut rt = None;
+            let mut rest = ::std::vec::Vec::with_capacity(violations.len());
+            for v in violations {
+                if rt.is_none() && v.rule_id == "__cel_runtime_error__" {
+                    rt = Some(v);
+                } else {
+                    rest.push(v);
+                }
+            }
+            (rt, rest)
+        };
+        if let Some(v) = rt_violation {
+            return ::core::result::Result::Err(::protovalidate_buffa::ValidationError {
+                runtime_error: ::core::option::Option::Some(v.message.into_owned()),
+                ..::core::default::Default::default()
+            });
+        }
+        if violations.is_empty() {
+            Ok(())
+        } else {
+            Err(::protovalidate_buffa::ValidationError {
+                violations,
+                ..::core::default::Default::default()
+            })
+        }
+    }
+}
+#[allow(
+    clippy::all,
+    unused_mut,
+    unused_variables,
+    unused_parens,
+    dead_code,
+    unreachable_patterns,
+    reason = "protovalidate-buffa generated validators — codegen emits uniform scaffolding regardless of which rules apply"
+)]
 impl ::protovalidate_buffa::Validate for Diff {
     fn validate(
         &self,
     ) -> ::core::result::Result<(), ::protovalidate_buffa::ValidationError> {
         let mut violations: ::std::vec::Vec<::protovalidate_buffa::Violation> = ::std::vec::Vec::new();
-        for (idx, elem) in self.deltas.iter().enumerate() {
+        for (idx, elem) in self.files.iter().enumerate() {
             if let Err(sub) = elem.validate() {
                 violations
                     .extend(
@@ -2845,8 +2922,8 @@ impl ::protovalidate_buffa::Validate for Diff {
                                     .insert(
                                         0,
                                         ::protovalidate_buffa::FieldPathElement {
-                                            field_number: Some(4i32),
-                                            field_name: Some(::std::borrow::Cow::Borrowed("deltas")),
+                                            field_number: Some(1i32),
+                                            field_name: Some(::std::borrow::Cow::Borrowed("files")),
                                             field_type: Some(::protovalidate_buffa::FieldType::Message),
                                             key_type: None,
                                             value_type: None,
@@ -2903,13 +2980,584 @@ impl ::protovalidate_buffa::Validate for Diff {
     unreachable_patterns,
     reason = "protovalidate-buffa generated validators — codegen emits uniform scaffolding regardless of which rules apply"
 )]
-impl ::protovalidate_buffa::Validate for DiffDelta {
+impl ::protovalidate_buffa::Validate for DiffFile {
     fn validate(
         &self,
     ) -> ::core::result::Result<(), ::protovalidate_buffa::ValidationError> {
         let mut violations: ::std::vec::Vec<::protovalidate_buffa::Violation> = ::std::vec::Vec::new();
-        if let Some(inner) = self.old_file.as_option() {
-            if let Err(sub) = inner.validate() {
+        for (idx, elem) in self.patches.iter().enumerate() {
+            if let Err(sub) = elem.validate() {
+                violations
+                    .extend(
+                        sub
+                            .violations
+                            .into_iter()
+                            .map(|mut v| {
+                                v.field
+                                    .elements
+                                    .insert(
+                                        0,
+                                        ::protovalidate_buffa::FieldPathElement {
+                                            field_number: Some(4i32),
+                                            field_name: Some(::std::borrow::Cow::Borrowed("patches")),
+                                            field_type: Some(::protovalidate_buffa::FieldType::Message),
+                                            key_type: None,
+                                            value_type: None,
+                                            subscript: Some(
+                                                ::protovalidate_buffa::Subscript::Index(idx as u64),
+                                            ),
+                                        },
+                                    );
+                                v
+                            }),
+                    );
+            }
+        }
+        let (
+            rt_violation,
+            violations,
+        ): (
+            ::std::option::Option<::protovalidate_buffa::Violation>,
+            ::std::vec::Vec<::protovalidate_buffa::Violation>,
+        ) = {
+            let mut rt = None;
+            let mut rest = ::std::vec::Vec::with_capacity(violations.len());
+            for v in violations {
+                if rt.is_none() && v.rule_id == "__cel_runtime_error__" {
+                    rt = Some(v);
+                } else {
+                    rest.push(v);
+                }
+            }
+            (rt, rest)
+        };
+        if let Some(v) = rt_violation {
+            return ::core::result::Result::Err(::protovalidate_buffa::ValidationError {
+                runtime_error: ::core::option::Option::Some(v.message.into_owned()),
+                ..::core::default::Default::default()
+            });
+        }
+        if violations.is_empty() {
+            Ok(())
+        } else {
+            Err(::protovalidate_buffa::ValidationError {
+                violations,
+                ..::core::default::Default::default()
+            })
+        }
+    }
+}
+#[allow(
+    clippy::all,
+    unused_mut,
+    unused_variables,
+    unused_parens,
+    dead_code,
+    unreachable_patterns,
+    reason = "protovalidate-buffa generated validators — codegen emits uniform scaffolding regardless of which rules apply"
+)]
+impl ::protovalidate_buffa::Validate for DiffPatch {
+    fn validate(
+        &self,
+    ) -> ::core::result::Result<(), ::protovalidate_buffa::ValidationError> {
+        let mut violations: ::std::vec::Vec<::protovalidate_buffa::Violation> = ::std::vec::Vec::new();
+        match &self.operation {
+            Some(__buffa::oneof::diff_patch::Operation::Add(v)) => {
+                if let Err(sub) = v.validate() {
+                    violations
+                        .extend(
+                            sub
+                                .violations
+                                .into_iter()
+                                .map(|mut v| {
+                                    v.field
+                                        .elements
+                                        .insert(
+                                            0,
+                                            ::protovalidate_buffa::FieldPathElement {
+                                                field_number: Some(1i32),
+                                                field_name: Some(::std::borrow::Cow::Borrowed("add")),
+                                                field_type: Some(::protovalidate_buffa::FieldType::Message),
+                                                key_type: None,
+                                                value_type: None,
+                                                subscript: None,
+                                            },
+                                        );
+                                    v
+                                }),
+                        );
+                }
+            }
+            Some(__buffa::oneof::diff_patch::Operation::Remove(v)) => {
+                if let Err(sub) = v.validate() {
+                    violations
+                        .extend(
+                            sub
+                                .violations
+                                .into_iter()
+                                .map(|mut v| {
+                                    v.field
+                                        .elements
+                                        .insert(
+                                            0,
+                                            ::protovalidate_buffa::FieldPathElement {
+                                                field_number: Some(2i32),
+                                                field_name: Some(::std::borrow::Cow::Borrowed("remove")),
+                                                field_type: Some(::protovalidate_buffa::FieldType::Message),
+                                                key_type: None,
+                                                value_type: None,
+                                                subscript: None,
+                                            },
+                                        );
+                                    v
+                                }),
+                        );
+                }
+            }
+            Some(__buffa::oneof::diff_patch::Operation::Replace(v)) => {
+                if let Err(sub) = v.validate() {
+                    violations
+                        .extend(
+                            sub
+                                .violations
+                                .into_iter()
+                                .map(|mut v| {
+                                    v.field
+                                        .elements
+                                        .insert(
+                                            0,
+                                            ::protovalidate_buffa::FieldPathElement {
+                                                field_number: Some(3i32),
+                                                field_name: Some(::std::borrow::Cow::Borrowed("replace")),
+                                                field_type: Some(::protovalidate_buffa::FieldType::Message),
+                                                key_type: None,
+                                                value_type: None,
+                                                subscript: None,
+                                            },
+                                        );
+                                    v
+                                }),
+                        );
+                }
+            }
+            Some(__buffa::oneof::diff_patch::Operation::Move(v)) => {
+                if let Err(sub) = v.validate() {
+                    violations
+                        .extend(
+                            sub
+                                .violations
+                                .into_iter()
+                                .map(|mut v| {
+                                    v.field
+                                        .elements
+                                        .insert(
+                                            0,
+                                            ::protovalidate_buffa::FieldPathElement {
+                                                field_number: Some(4i32),
+                                                field_name: Some(::std::borrow::Cow::Borrowed("move")),
+                                                field_type: Some(::protovalidate_buffa::FieldType::Message),
+                                                key_type: None,
+                                                value_type: None,
+                                                subscript: None,
+                                            },
+                                        );
+                                    v
+                                }),
+                        );
+                }
+            }
+            Some(__buffa::oneof::diff_patch::Operation::Copy(v)) => {
+                if let Err(sub) = v.validate() {
+                    violations
+                        .extend(
+                            sub
+                                .violations
+                                .into_iter()
+                                .map(|mut v| {
+                                    v.field
+                                        .elements
+                                        .insert(
+                                            0,
+                                            ::protovalidate_buffa::FieldPathElement {
+                                                field_number: Some(5i32),
+                                                field_name: Some(::std::borrow::Cow::Borrowed("copy")),
+                                                field_type: Some(::protovalidate_buffa::FieldType::Message),
+                                                key_type: None,
+                                                value_type: None,
+                                                subscript: None,
+                                            },
+                                        );
+                                    v
+                                }),
+                        );
+                }
+            }
+            Some(__buffa::oneof::diff_patch::Operation::Test(v)) => {
+                if let Err(sub) = v.validate() {
+                    violations
+                        .extend(
+                            sub
+                                .violations
+                                .into_iter()
+                                .map(|mut v| {
+                                    v.field
+                                        .elements
+                                        .insert(
+                                            0,
+                                            ::protovalidate_buffa::FieldPathElement {
+                                                field_number: Some(6i32),
+                                                field_name: Some(::std::borrow::Cow::Borrowed("test")),
+                                                field_type: Some(::protovalidate_buffa::FieldType::Message),
+                                                key_type: None,
+                                                value_type: None,
+                                                subscript: None,
+                                            },
+                                        );
+                                    v
+                                }),
+                        );
+                }
+            }
+            None => {}
+        }
+        let (
+            rt_violation,
+            violations,
+        ): (
+            ::std::option::Option<::protovalidate_buffa::Violation>,
+            ::std::vec::Vec<::protovalidate_buffa::Violation>,
+        ) = {
+            let mut rt = None;
+            let mut rest = ::std::vec::Vec::with_capacity(violations.len());
+            for v in violations {
+                if rt.is_none() && v.rule_id == "__cel_runtime_error__" {
+                    rt = Some(v);
+                } else {
+                    rest.push(v);
+                }
+            }
+            (rt, rest)
+        };
+        if let Some(v) = rt_violation {
+            return ::core::result::Result::Err(::protovalidate_buffa::ValidationError {
+                runtime_error: ::core::option::Option::Some(v.message.into_owned()),
+                ..::core::default::Default::default()
+            });
+        }
+        if violations.is_empty() {
+            Ok(())
+        } else {
+            Err(::protovalidate_buffa::ValidationError {
+                violations,
+                ..::core::default::Default::default()
+            })
+        }
+    }
+}
+#[allow(
+    clippy::all,
+    unused_mut,
+    unused_variables,
+    unused_parens,
+    dead_code,
+    unreachable_patterns,
+    reason = "protovalidate-buffa generated validators — codegen emits uniform scaffolding regardless of which rules apply"
+)]
+impl ::protovalidate_buffa::Validate for diff_patch::Add {
+    fn validate(
+        &self,
+    ) -> ::core::result::Result<(), ::protovalidate_buffa::ValidationError> {
+        let mut violations: ::std::vec::Vec<::protovalidate_buffa::Violation> = ::std::vec::Vec::new();
+        let (
+            rt_violation,
+            violations,
+        ): (
+            ::std::option::Option<::protovalidate_buffa::Violation>,
+            ::std::vec::Vec<::protovalidate_buffa::Violation>,
+        ) = {
+            let mut rt = None;
+            let mut rest = ::std::vec::Vec::with_capacity(violations.len());
+            for v in violations {
+                if rt.is_none() && v.rule_id == "__cel_runtime_error__" {
+                    rt = Some(v);
+                } else {
+                    rest.push(v);
+                }
+            }
+            (rt, rest)
+        };
+        if let Some(v) = rt_violation {
+            return ::core::result::Result::Err(::protovalidate_buffa::ValidationError {
+                runtime_error: ::core::option::Option::Some(v.message.into_owned()),
+                ..::core::default::Default::default()
+            });
+        }
+        if violations.is_empty() {
+            Ok(())
+        } else {
+            Err(::protovalidate_buffa::ValidationError {
+                violations,
+                ..::core::default::Default::default()
+            })
+        }
+    }
+}
+#[allow(
+    clippy::all,
+    unused_mut,
+    unused_variables,
+    unused_parens,
+    dead_code,
+    unreachable_patterns,
+    reason = "protovalidate-buffa generated validators — codegen emits uniform scaffolding regardless of which rules apply"
+)]
+impl ::protovalidate_buffa::Validate for diff_patch::Remove {
+    fn validate(
+        &self,
+    ) -> ::core::result::Result<(), ::protovalidate_buffa::ValidationError> {
+        let mut violations: ::std::vec::Vec<::protovalidate_buffa::Violation> = ::std::vec::Vec::new();
+        let (
+            rt_violation,
+            violations,
+        ): (
+            ::std::option::Option<::protovalidate_buffa::Violation>,
+            ::std::vec::Vec<::protovalidate_buffa::Violation>,
+        ) = {
+            let mut rt = None;
+            let mut rest = ::std::vec::Vec::with_capacity(violations.len());
+            for v in violations {
+                if rt.is_none() && v.rule_id == "__cel_runtime_error__" {
+                    rt = Some(v);
+                } else {
+                    rest.push(v);
+                }
+            }
+            (rt, rest)
+        };
+        if let Some(v) = rt_violation {
+            return ::core::result::Result::Err(::protovalidate_buffa::ValidationError {
+                runtime_error: ::core::option::Option::Some(v.message.into_owned()),
+                ..::core::default::Default::default()
+            });
+        }
+        if violations.is_empty() {
+            Ok(())
+        } else {
+            Err(::protovalidate_buffa::ValidationError {
+                violations,
+                ..::core::default::Default::default()
+            })
+        }
+    }
+}
+#[allow(
+    clippy::all,
+    unused_mut,
+    unused_variables,
+    unused_parens,
+    dead_code,
+    unreachable_patterns,
+    reason = "protovalidate-buffa generated validators — codegen emits uniform scaffolding regardless of which rules apply"
+)]
+impl ::protovalidate_buffa::Validate for diff_patch::Replace {
+    fn validate(
+        &self,
+    ) -> ::core::result::Result<(), ::protovalidate_buffa::ValidationError> {
+        let mut violations: ::std::vec::Vec<::protovalidate_buffa::Violation> = ::std::vec::Vec::new();
+        let (
+            rt_violation,
+            violations,
+        ): (
+            ::std::option::Option<::protovalidate_buffa::Violation>,
+            ::std::vec::Vec<::protovalidate_buffa::Violation>,
+        ) = {
+            let mut rt = None;
+            let mut rest = ::std::vec::Vec::with_capacity(violations.len());
+            for v in violations {
+                if rt.is_none() && v.rule_id == "__cel_runtime_error__" {
+                    rt = Some(v);
+                } else {
+                    rest.push(v);
+                }
+            }
+            (rt, rest)
+        };
+        if let Some(v) = rt_violation {
+            return ::core::result::Result::Err(::protovalidate_buffa::ValidationError {
+                runtime_error: ::core::option::Option::Some(v.message.into_owned()),
+                ..::core::default::Default::default()
+            });
+        }
+        if violations.is_empty() {
+            Ok(())
+        } else {
+            Err(::protovalidate_buffa::ValidationError {
+                violations,
+                ..::core::default::Default::default()
+            })
+        }
+    }
+}
+#[allow(
+    clippy::all,
+    unused_mut,
+    unused_variables,
+    unused_parens,
+    dead_code,
+    unreachable_patterns,
+    reason = "protovalidate-buffa generated validators — codegen emits uniform scaffolding regardless of which rules apply"
+)]
+impl ::protovalidate_buffa::Validate for diff_patch::Move {
+    fn validate(
+        &self,
+    ) -> ::core::result::Result<(), ::protovalidate_buffa::ValidationError> {
+        let mut violations: ::std::vec::Vec<::protovalidate_buffa::Violation> = ::std::vec::Vec::new();
+        let (
+            rt_violation,
+            violations,
+        ): (
+            ::std::option::Option<::protovalidate_buffa::Violation>,
+            ::std::vec::Vec<::protovalidate_buffa::Violation>,
+        ) = {
+            let mut rt = None;
+            let mut rest = ::std::vec::Vec::with_capacity(violations.len());
+            for v in violations {
+                if rt.is_none() && v.rule_id == "__cel_runtime_error__" {
+                    rt = Some(v);
+                } else {
+                    rest.push(v);
+                }
+            }
+            (rt, rest)
+        };
+        if let Some(v) = rt_violation {
+            return ::core::result::Result::Err(::protovalidate_buffa::ValidationError {
+                runtime_error: ::core::option::Option::Some(v.message.into_owned()),
+                ..::core::default::Default::default()
+            });
+        }
+        if violations.is_empty() {
+            Ok(())
+        } else {
+            Err(::protovalidate_buffa::ValidationError {
+                violations,
+                ..::core::default::Default::default()
+            })
+        }
+    }
+}
+#[allow(
+    clippy::all,
+    unused_mut,
+    unused_variables,
+    unused_parens,
+    dead_code,
+    unreachable_patterns,
+    reason = "protovalidate-buffa generated validators — codegen emits uniform scaffolding regardless of which rules apply"
+)]
+impl ::protovalidate_buffa::Validate for diff_patch::Copy {
+    fn validate(
+        &self,
+    ) -> ::core::result::Result<(), ::protovalidate_buffa::ValidationError> {
+        let mut violations: ::std::vec::Vec<::protovalidate_buffa::Violation> = ::std::vec::Vec::new();
+        let (
+            rt_violation,
+            violations,
+        ): (
+            ::std::option::Option<::protovalidate_buffa::Violation>,
+            ::std::vec::Vec<::protovalidate_buffa::Violation>,
+        ) = {
+            let mut rt = None;
+            let mut rest = ::std::vec::Vec::with_capacity(violations.len());
+            for v in violations {
+                if rt.is_none() && v.rule_id == "__cel_runtime_error__" {
+                    rt = Some(v);
+                } else {
+                    rest.push(v);
+                }
+            }
+            (rt, rest)
+        };
+        if let Some(v) = rt_violation {
+            return ::core::result::Result::Err(::protovalidate_buffa::ValidationError {
+                runtime_error: ::core::option::Option::Some(v.message.into_owned()),
+                ..::core::default::Default::default()
+            });
+        }
+        if violations.is_empty() {
+            Ok(())
+        } else {
+            Err(::protovalidate_buffa::ValidationError {
+                violations,
+                ..::core::default::Default::default()
+            })
+        }
+    }
+}
+#[allow(
+    clippy::all,
+    unused_mut,
+    unused_variables,
+    unused_parens,
+    dead_code,
+    unreachable_patterns,
+    reason = "protovalidate-buffa generated validators — codegen emits uniform scaffolding regardless of which rules apply"
+)]
+impl ::protovalidate_buffa::Validate for diff_patch::Test {
+    fn validate(
+        &self,
+    ) -> ::core::result::Result<(), ::protovalidate_buffa::ValidationError> {
+        let mut violations: ::std::vec::Vec<::protovalidate_buffa::Violation> = ::std::vec::Vec::new();
+        let (
+            rt_violation,
+            violations,
+        ): (
+            ::std::option::Option<::protovalidate_buffa::Violation>,
+            ::std::vec::Vec<::protovalidate_buffa::Violation>,
+        ) = {
+            let mut rt = None;
+            let mut rest = ::std::vec::Vec::with_capacity(violations.len());
+            for v in violations {
+                if rt.is_none() && v.rule_id == "__cel_runtime_error__" {
+                    rt = Some(v);
+                } else {
+                    rest.push(v);
+                }
+            }
+            (rt, rest)
+        };
+        if let Some(v) = rt_violation {
+            return ::core::result::Result::Err(::protovalidate_buffa::ValidationError {
+                runtime_error: ::core::option::Option::Some(v.message.into_owned()),
+                ..::core::default::Default::default()
+            });
+        }
+        if violations.is_empty() {
+            Ok(())
+        } else {
+            Err(::protovalidate_buffa::ValidationError {
+                violations,
+                ..::core::default::Default::default()
+            })
+        }
+    }
+}
+#[allow(
+    clippy::all,
+    unused_mut,
+    unused_variables,
+    unused_parens,
+    dead_code,
+    unreachable_patterns,
+    reason = "protovalidate-buffa generated validators — codegen emits uniform scaffolding regardless of which rules apply"
+)]
+impl ::protovalidate_buffa::Validate for ConflictDiff {
+    fn validate(
+        &self,
+    ) -> ::core::result::Result<(), ::protovalidate_buffa::ValidationError> {
+        let mut violations: ::std::vec::Vec<::protovalidate_buffa::Violation> = ::std::vec::Vec::new();
+        for (idx, elem) in self.ours.iter().enumerate() {
+            if let Err(sub) = elem.validate() {
                 violations
                     .extend(
                         sub
@@ -2922,59 +3570,7 @@ impl ::protovalidate_buffa::Validate for DiffDelta {
                                         0,
                                         ::protovalidate_buffa::FieldPathElement {
                                             field_number: Some(2i32),
-                                            field_name: Some(::std::borrow::Cow::Borrowed("old_file")),
-                                            field_type: Some(::protovalidate_buffa::FieldType::Message),
-                                            key_type: None,
-                                            value_type: None,
-                                            subscript: None,
-                                        },
-                                    );
-                                v
-                            }),
-                    );
-            }
-        }
-        if let Some(inner) = self.new_file.as_option() {
-            if let Err(sub) = inner.validate() {
-                violations
-                    .extend(
-                        sub
-                            .violations
-                            .into_iter()
-                            .map(|mut v| {
-                                v.field
-                                    .elements
-                                    .insert(
-                                        0,
-                                        ::protovalidate_buffa::FieldPathElement {
-                                            field_number: Some(3i32),
-                                            field_name: Some(::std::borrow::Cow::Borrowed("new_file")),
-                                            field_type: Some(::protovalidate_buffa::FieldType::Message),
-                                            key_type: None,
-                                            value_type: None,
-                                            subscript: None,
-                                        },
-                                    );
-                                v
-                            }),
-                    );
-            }
-        }
-        for (idx, elem) in self.lines.iter().enumerate() {
-            if let Err(sub) = elem.validate() {
-                violations
-                    .extend(
-                        sub
-                            .violations
-                            .into_iter()
-                            .map(|mut v| {
-                                v.field
-                                    .elements
-                                    .insert(
-                                        0,
-                                        ::protovalidate_buffa::FieldPathElement {
-                                            field_number: Some(4i32),
-                                            field_name: Some(::std::borrow::Cow::Borrowed("lines")),
+                                            field_name: Some(::std::borrow::Cow::Borrowed("ours")),
                                             field_type: Some(::protovalidate_buffa::FieldType::Message),
                                             key_type: None,
                                             value_type: None,
@@ -2988,150 +3584,64 @@ impl ::protovalidate_buffa::Validate for DiffDelta {
                     );
             }
         }
-        let (
-            rt_violation,
-            violations,
-        ): (
-            ::std::option::Option<::protovalidate_buffa::Violation>,
-            ::std::vec::Vec<::protovalidate_buffa::Violation>,
-        ) = {
-            let mut rt = None;
-            let mut rest = ::std::vec::Vec::with_capacity(violations.len());
-            for v in violations {
-                if rt.is_none() && v.rule_id == "__cel_runtime_error__" {
-                    rt = Some(v);
-                } else {
-                    rest.push(v);
-                }
+        for (idx, elem) in self.theirs.iter().enumerate() {
+            if let Err(sub) = elem.validate() {
+                violations
+                    .extend(
+                        sub
+                            .violations
+                            .into_iter()
+                            .map(|mut v| {
+                                v.field
+                                    .elements
+                                    .insert(
+                                        0,
+                                        ::protovalidate_buffa::FieldPathElement {
+                                            field_number: Some(3i32),
+                                            field_name: Some(::std::borrow::Cow::Borrowed("theirs")),
+                                            field_type: Some(::protovalidate_buffa::FieldType::Message),
+                                            key_type: None,
+                                            value_type: None,
+                                            subscript: Some(
+                                                ::protovalidate_buffa::Subscript::Index(idx as u64),
+                                            ),
+                                        },
+                                    );
+                                v
+                            }),
+                    );
             }
-            (rt, rest)
-        };
-        if let Some(v) = rt_violation {
-            return ::core::result::Result::Err(::protovalidate_buffa::ValidationError {
-                runtime_error: ::core::option::Option::Some(v.message.into_owned()),
-                ..::core::default::Default::default()
-            });
         }
-        if violations.is_empty() {
-            Ok(())
-        } else {
-            Err(::protovalidate_buffa::ValidationError {
-                violations,
-                ..::core::default::Default::default()
-            })
-        }
-    }
-}
-#[allow(
-    clippy::all,
-    unused_mut,
-    unused_variables,
-    unused_parens,
-    dead_code,
-    unreachable_patterns,
-    reason = "protovalidate-buffa generated validators — codegen emits uniform scaffolding regardless of which rules apply"
-)]
-impl ::protovalidate_buffa::Validate for diff_delta::File {
-    fn validate(
-        &self,
-    ) -> ::core::result::Result<(), ::protovalidate_buffa::ValidationError> {
-        let mut violations: ::std::vec::Vec<::protovalidate_buffa::Violation> = ::std::vec::Vec::new();
-        let (
-            rt_violation,
-            violations,
-        ): (
-            ::std::option::Option<::protovalidate_buffa::Violation>,
-            ::std::vec::Vec<::protovalidate_buffa::Violation>,
-        ) = {
-            let mut rt = None;
-            let mut rest = ::std::vec::Vec::with_capacity(violations.len());
-            for v in violations {
-                if rt.is_none() && v.rule_id == "__cel_runtime_error__" {
-                    rt = Some(v);
-                } else {
-                    rest.push(v);
-                }
+        for (idx, elem) in self.ours_to_theirs.iter().enumerate() {
+            if let Err(sub) = elem.validate() {
+                violations
+                    .extend(
+                        sub
+                            .violations
+                            .into_iter()
+                            .map(|mut v| {
+                                v.field
+                                    .elements
+                                    .insert(
+                                        0,
+                                        ::protovalidate_buffa::FieldPathElement {
+                                            field_number: Some(4i32),
+                                            field_name: Some(
+                                                ::std::borrow::Cow::Borrowed("ours_to_theirs"),
+                                            ),
+                                            field_type: Some(::protovalidate_buffa::FieldType::Message),
+                                            key_type: None,
+                                            value_type: None,
+                                            subscript: Some(
+                                                ::protovalidate_buffa::Subscript::Index(idx as u64),
+                                            ),
+                                        },
+                                    );
+                                v
+                            }),
+                    );
             }
-            (rt, rest)
-        };
-        if let Some(v) = rt_violation {
-            return ::core::result::Result::Err(::protovalidate_buffa::ValidationError {
-                runtime_error: ::core::option::Option::Some(v.message.into_owned()),
-                ..::core::default::Default::default()
-            });
         }
-        if violations.is_empty() {
-            Ok(())
-        } else {
-            Err(::protovalidate_buffa::ValidationError {
-                violations,
-                ..::core::default::Default::default()
-            })
-        }
-    }
-}
-#[allow(
-    clippy::all,
-    unused_mut,
-    unused_variables,
-    unused_parens,
-    dead_code,
-    unreachable_patterns,
-    reason = "protovalidate-buffa generated validators — codegen emits uniform scaffolding regardless of which rules apply"
-)]
-impl ::protovalidate_buffa::Validate for diff_delta::Line {
-    fn validate(
-        &self,
-    ) -> ::core::result::Result<(), ::protovalidate_buffa::ValidationError> {
-        let mut violations: ::std::vec::Vec<::protovalidate_buffa::Violation> = ::std::vec::Vec::new();
-        let (
-            rt_violation,
-            violations,
-        ): (
-            ::std::option::Option<::protovalidate_buffa::Violation>,
-            ::std::vec::Vec<::protovalidate_buffa::Violation>,
-        ) = {
-            let mut rt = None;
-            let mut rest = ::std::vec::Vec::with_capacity(violations.len());
-            for v in violations {
-                if rt.is_none() && v.rule_id == "__cel_runtime_error__" {
-                    rt = Some(v);
-                } else {
-                    rest.push(v);
-                }
-            }
-            (rt, rest)
-        };
-        if let Some(v) = rt_violation {
-            return ::core::result::Result::Err(::protovalidate_buffa::ValidationError {
-                runtime_error: ::core::option::Option::Some(v.message.into_owned()),
-                ..::core::default::Default::default()
-            });
-        }
-        if violations.is_empty() {
-            Ok(())
-        } else {
-            Err(::protovalidate_buffa::ValidationError {
-                violations,
-                ..::core::default::Default::default()
-            })
-        }
-    }
-}
-#[allow(
-    clippy::all,
-    unused_mut,
-    unused_variables,
-    unused_parens,
-    dead_code,
-    unreachable_patterns,
-    reason = "protovalidate-buffa generated validators — codegen emits uniform scaffolding regardless of which rules apply"
-)]
-impl ::protovalidate_buffa::Validate for Branch {
-    fn validate(
-        &self,
-    ) -> ::core::result::Result<(), ::protovalidate_buffa::ValidationError> {
-        let mut violations: ::std::vec::Vec<::protovalidate_buffa::Violation> = ::std::vec::Vec::new();
         let (
             rt_violation,
             violations,

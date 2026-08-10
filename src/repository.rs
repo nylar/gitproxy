@@ -1,14 +1,12 @@
-use std::{
-    cell::RefCell,
-    path::{Path, PathBuf},
-};
+use std::path::{Path, PathBuf};
 
-use buffa::{EnumValue, MessageField};
 use chrono::{DateTime, Utc};
 use git2::{
-    DiffFindOptions, DiffOptions, Oid, Repository as GitRepository, Signature, Sort, Tree,
-    WorktreeAddOptions, WorktreePruneOptions, build::CheckoutBuilder,
+    Delta, DiffFindOptions, DiffOptions, Index, IndexEntry, Oid, Repository as GitRepository,
+    Signature, Sort, Tree, WorktreeAddOptions, WorktreePruneOptions, build::CheckoutBuilder,
 };
+use json_patch::Patch;
+use serde_json::Value;
 
 use crate::error::{Error, Result};
 
@@ -192,7 +190,7 @@ impl Worktree {
         Ok(oid)
     }
 
-    pub fn merge(&self, reference: &git2::Reference<'_>) -> Result<Oid> {
+    pub fn merge(&self, reference: &git2::Reference<'_>, dry_run: bool) -> Result<Merge> {
         let remote_commit = self
             .repo
             .find_annotated_commit(reference.peel_to_commit()?.id())?;
@@ -201,7 +199,7 @@ impl Worktree {
             .repo
             .reference_to_annotated_commit(&self.repo.head()?)?;
 
-        self.normal_merge(&local_commit, &remote_commit)
+        self.normal_merge(&local_commit, &remote_commit, dry_run)
     }
 
     pub fn commit_all(&self, message: &str, author: &Author) -> Result<Oid> {
@@ -304,7 +302,7 @@ impl Worktree {
         Ok(())
     }
 
-    pub fn diff(&self, base_reference: &str, target_reference: &str) -> Result<Diff> {
+    pub fn diff(&self, base_reference: &str, target_reference: &str) -> Result<Vec<PatchDiff>> {
         let mut opts = DiffOptions::new();
         opts.force_text(true);
 
@@ -317,68 +315,42 @@ impl Worktree {
 
         let mut opts = DiffFindOptions::new();
         opts.renames(true);
-
         diff.find_similar(Some(&mut opts))?;
-        let stats = diff.stats()?;
 
-        let diff_report = RefCell::new(DiffReport {
-            diff: Diff {
-                files_changes: stats.files_changed(),
-                insertions: stats.insertions(),
-                deletions: stats.deletions(),
-                deltas: vec![],
-            },
-            delta_index: -1,
-        });
+        let mut results = Vec::new();
 
         diff.foreach(
-            &mut |diff_delta, _| {
-                let new_file = diff_delta.new_file();
-                let old_file = diff_delta.old_file();
+            &mut |delta, _| {
+                let status = delta.status();
 
-                let mut diff_report = diff_report.borrow_mut();
+                if matches!(
+                    status,
+                    Delta::Added | Delta::Deleted | Delta::Modified | Delta::Renamed
+                ) {
+                    let file_path = match status {
+                        Delta::Deleted => delta.old_file().path(),
+                        _ => delta.new_file().path(),
+                    };
 
-                diff_report.diff.deltas.push(Delta {
-                    status: DeltaStatus::from(diff_delta.status()),
-                    old_file: DeltaFile {
-                        path: old_file.path().map(|p| p.to_path_buf()),
-                        size: old_file.size() as usize,
-                    },
-                    new_file: DeltaFile {
-                        path: new_file.path().map(|p| p.to_path_buf()),
-                        size: new_file.size() as usize,
-                    },
-                    lines: Vec::new(),
-                });
-                diff_report.delta_index += 1;
-
+                    if file_path.is_some()
+                        && let Ok(patch) = diff_to_patch(&self.repo, &delta)
+                    {
+                        results.push(PatchDiff {
+                            status,
+                            old_path: delta.old_file().path().map(|p| p.to_path_buf()),
+                            new_path: delta.new_file().path().map(|p| p.to_path_buf()),
+                            patch,
+                        });
+                    }
+                }
                 true
             },
             None,
             None,
-            Some(&mut |_, _, diff_line| {
-                let mut diff_report = diff_report.borrow_mut();
-                if diff_report.delta_index < 0 {
-                    return false;
-                }
-                let index = diff_report.delta_index as usize;
-
-                if let Some(delta) = diff_report.diff.deltas.get_mut(index) {
-                    delta.lines.push(DeltaLine {
-                        new_line_number: diff_line.new_lineno(),
-                        old_line_number: diff_line.old_lineno(),
-                        number_lines: diff_line.num_lines(),
-                        content_offset: diff_line.content_offset(),
-                        content: diff_line.content().to_vec(),
-                        origin: DeltaOrigin::from(diff_line.origin_value()),
-                    })
-                }
-
-                true
-            }),
+            None,
         )?;
 
-        Ok(diff_report.into_inner().diff)
+        Ok(results)
     }
 
     pub fn clean(&self) -> Result<bool> {
@@ -412,7 +384,8 @@ impl Worktree {
         &self,
         local: &git2::AnnotatedCommit,
         remote: &git2::AnnotatedCommit,
-    ) -> Result<Oid> {
+        dry_run: bool,
+    ) -> Result<Merge> {
         let local_tree = self.repo.find_commit(local.id())?.tree()?;
         let remote_tree = self.repo.find_commit(remote.id())?.tree()?;
         let ancestor = self
@@ -424,9 +397,14 @@ impl Worktree {
             .merge_trees(&ancestor, &local_tree, &remote_tree, None)?;
 
         if idx.has_conflicts() {
-            self.repo.checkout_index(Some(&mut idx), None)?;
-            todo!("Merge conflicts detected...");
+            let conflicts = conflict_diffs(&self.repo, &idx)?;
+            return Ok(Merge::Conflicts(conflicts));
         }
+
+        if dry_run {
+            return Ok(Merge::Ok(None));
+        }
+
         let result_tree = self.repo.find_tree(idx.write_tree_to(&self.repo)?)?;
         let msg = format!("Merge: {} into {}", remote.id(), local.id());
         let sig = Signature::now(&self.default_author.name, &self.default_author.email)?;
@@ -443,7 +421,7 @@ impl Worktree {
         self.repo
             .checkout_head(Some(git2::build::CheckoutBuilder::default().force()))?;
 
-        Ok(merge_commit)
+        Ok(Merge::Ok(Some(merge_commit)))
     }
 }
 
@@ -455,190 +433,6 @@ pub struct LogEntry {
     pub time: DateTime<Utc>,
 }
 
-#[derive(Debug)]
-struct DiffReport {
-    diff: Diff,
-    delta_index: isize,
-}
-
-#[derive(Debug)]
-pub struct Diff {
-    pub files_changes: usize,
-    pub insertions: usize,
-    pub deletions: usize,
-    pub deltas: Vec<Delta>,
-}
-
-impl From<Diff> for crate::proto::gitproxy::v1::Diff {
-    fn from(value: Diff) -> Self {
-        Self {
-            files_changes: value.files_changes as u64,
-            insertions: value.insertions as u64,
-            deletions: value.deletions as u64,
-            deltas: value.deltas.into_iter().map(From::from).collect(),
-            ..Default::default()
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct Delta {
-    pub status: DeltaStatus,
-    pub old_file: DeltaFile,
-    pub new_file: DeltaFile,
-    pub lines: Vec<DeltaLine>,
-}
-
-impl From<Delta> for crate::proto::gitproxy::v1::DiffDelta {
-    fn from(value: Delta) -> Self {
-        Self {
-            status: EnumValue::Known(value.status.into()),
-            old_file: MessageField::some(value.old_file.into()),
-            new_file: MessageField::some(value.new_file.into()),
-            lines: value.lines.into_iter().map(From::from).collect(),
-            ..Default::default()
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum DeltaStatus {
-    Unmodified,
-    Added,
-    Deleted,
-    Modified,
-    Renamed,
-    Copied,
-    Ignored,
-    Untracked,
-    Typechange,
-    Unreadable,
-    Conflicted,
-}
-
-impl From<DeltaStatus> for crate::proto::gitproxy::v1::diff_delta::Status {
-    fn from(value: DeltaStatus) -> Self {
-        match value {
-            DeltaStatus::Unmodified => Self::Unmodified,
-            DeltaStatus::Added => Self::Added,
-            DeltaStatus::Deleted => Self::Deleted,
-            DeltaStatus::Modified => Self::Modified,
-            DeltaStatus::Renamed => Self::Renamed,
-            DeltaStatus::Copied => Self::Copied,
-            DeltaStatus::Ignored => Self::Ignored,
-            DeltaStatus::Untracked => Self::Untracked,
-            DeltaStatus::Typechange => Self::Typechange,
-            DeltaStatus::Unreadable => Self::Unreadable,
-            DeltaStatus::Conflicted => Self::Conflicted,
-        }
-    }
-}
-
-impl From<git2::Delta> for DeltaStatus {
-    fn from(value: git2::Delta) -> Self {
-        match value {
-            git2::Delta::Unmodified => Self::Unmodified,
-            git2::Delta::Added => Self::Added,
-            git2::Delta::Deleted => Self::Deleted,
-            git2::Delta::Modified => Self::Modified,
-            git2::Delta::Renamed => Self::Renamed,
-            git2::Delta::Copied => Self::Copied,
-            git2::Delta::Ignored => Self::Ignored,
-            git2::Delta::Untracked => Self::Untracked,
-            git2::Delta::Typechange => Self::Typechange,
-            git2::Delta::Unreadable => Self::Unreadable,
-            git2::Delta::Conflicted => Self::Conflicted,
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct DeltaFile {
-    pub path: Option<PathBuf>,
-    pub size: usize,
-}
-
-impl From<DeltaFile> for crate::proto::gitproxy::v1::diff_delta::File {
-    fn from(value: DeltaFile) -> Self {
-        Self {
-            path: value
-                .path
-                .map(|p| p.as_os_str().to_str().unwrap().to_owned()),
-            size: value.size as u64,
-            ..Default::default()
-        }
-    }
-}
-
-#[derive(Debug)]
-pub struct DeltaLine {
-    pub old_line_number: Option<u32>,
-    pub new_line_number: Option<u32>,
-    pub number_lines: u32,
-    pub content_offset: i64,
-    pub content: Vec<u8>,
-    pub origin: DeltaOrigin,
-}
-
-impl From<DeltaLine> for crate::proto::gitproxy::v1::diff_delta::Line {
-    fn from(value: DeltaLine) -> Self {
-        Self {
-            old_line_number: value.old_line_number,
-            new_line_number: value.new_line_number,
-            number_lines: value.number_lines,
-            content_offset: value.content_offset,
-            content: value.content,
-            origin: EnumValue::Known(value.origin.into()),
-            ..Default::default()
-        }
-    }
-}
-
-#[derive(Debug)]
-pub enum DeltaOrigin {
-    Context,
-    Addition,
-    Deletion,
-    ContextEOFNL,
-    AddEOFNL,
-    DeleteEOFNL,
-    FileHeader,
-    HunkHeader,
-    Binary,
-}
-
-impl From<git2::DiffLineType> for DeltaOrigin {
-    fn from(value: git2::DiffLineType) -> Self {
-        match value {
-            git2::DiffLineType::Context => Self::Context,
-            git2::DiffLineType::Addition => Self::Addition,
-            git2::DiffLineType::Deletion => Self::Deletion,
-            git2::DiffLineType::ContextEOFNL => Self::ContextEOFNL,
-            git2::DiffLineType::AddEOFNL => Self::AddEOFNL,
-            git2::DiffLineType::DeleteEOFNL => Self::DeleteEOFNL,
-            git2::DiffLineType::FileHeader => Self::FileHeader,
-            git2::DiffLineType::HunkHeader => Self::HunkHeader,
-            git2::DiffLineType::Binary => Self::Binary,
-        }
-    }
-}
-
-impl From<DeltaOrigin> for crate::proto::gitproxy::v1::diff_delta::line::Origin {
-    fn from(value: DeltaOrigin) -> Self {
-        match value {
-            DeltaOrigin::Context => Self::Context,
-            DeltaOrigin::Addition => Self::Addition,
-            DeltaOrigin::Deletion => Self::Deletion,
-            DeltaOrigin::ContextEOFNL => Self::Contexteofnl,
-            DeltaOrigin::AddEOFNL => Self::Addeofnl,
-            DeltaOrigin::DeleteEOFNL => Self::Deleteeofnl,
-            DeltaOrigin::FileHeader => Self::Fileheader,
-            DeltaOrigin::HunkHeader => Self::Hunkheader,
-            DeltaOrigin::Binary => Self::Binary,
-        }
-    }
-}
-
 fn resolve_to_tree<'a>(repo: &'a GitRepository, reference: &str) -> Result<Tree<'a>> {
     let object = repo.revparse_single(reference)?;
     let commit = object
@@ -646,4 +440,98 @@ fn resolve_to_tree<'a>(repo: &'a GitRepository, reference: &str) -> Result<Tree<
         .map_err(|_| Error::InvalidCommit(reference.to_owned()))?;
     let tree = commit.tree()?;
     Ok(tree)
+}
+
+fn diff_to_patch(repo: &GitRepository, delta: &git2::DiffDelta) -> Result<Patch> {
+    let status = delta.status();
+
+    let old_json = if status == Delta::Added {
+        Value::Object(serde_json::Map::new())
+    } else {
+        let old_blob = repo.find_blob(delta.old_file().id())?;
+        serde_json::from_slice(old_blob.content())?
+    };
+
+    let new_json = if status == Delta::Deleted {
+        Value::Object(serde_json::Map::new())
+    } else {
+        let new_blob = repo.find_blob(delta.new_file().id())?;
+        serde_json::from_slice(new_blob.content())?
+    };
+
+    Ok(json_patch::diff(&old_json, &new_json))
+}
+
+fn conflict_diffs(repo: &GitRepository, index: &Index) -> Result<Vec<ConflictDiff>> {
+    let mut diffs = Vec::new();
+
+    for conflict in index.conflicts()? {
+        let conflict = conflict?;
+        let entry = conflict
+            .ancestor
+            .as_ref()
+            .or(conflict.our.as_ref())
+            .or(conflict.their.as_ref());
+
+        if let Some(entry) = entry {
+            let path = bytes2path(&entry.path);
+
+            let ancestor = object_to_json(repo, &conflict.ancestor)?;
+            let ours = object_to_json(repo, &conflict.our)?;
+            let theirs = object_to_json(repo, &conflict.their)?;
+
+            diffs.push(ConflictDiff {
+                path: path.to_path_buf(),
+                ours: json_patch::diff(&ancestor, &ours),
+                theirs: json_patch::diff(&ancestor, &theirs),
+                ours_to_theirs: json_patch::diff(&ours, &theirs),
+            });
+        }
+    }
+
+    Ok(diffs)
+}
+
+fn object_to_json(repo: &GitRepository, index_entry: &Option<IndexEntry>) -> Result<Value> {
+    match index_entry {
+        Some(entry) => {
+            let blob = repo.find_blob(entry.id)?;
+            let json = serde_json::from_slice(blob.content())?;
+            Ok(json)
+        }
+        None => Ok(serde_json::json!({})),
+    }
+}
+
+#[cfg(unix)]
+pub fn bytes2path(b: &[u8]) -> &Path {
+    use std::os::unix::ffi::OsStrExt;
+    Path::new(std::ffi::OsStr::from_bytes(b))
+}
+
+#[cfg(windows)]
+pub fn bytes2path(b: &[u8]) -> &Path {
+    Path::new(str::from_utf8(b).unwrap())
+}
+
+#[derive(Debug)]
+pub struct PatchDiff {
+    pub status: git2::Delta,
+    pub old_path: Option<PathBuf>,
+    pub new_path: Option<PathBuf>,
+    pub patch: json_patch::Patch,
+}
+
+#[derive(Debug)]
+pub enum Merge {
+    Ok(Option<Oid>),
+    Conflicts(Vec<ConflictDiff>),
+}
+
+#[derive(Debug)]
+pub struct ConflictDiff {
+    pub path: PathBuf,
+    pub ours: json_patch::Patch,
+    pub theirs: json_patch::Patch,
+    pub ours_to_theirs: json_patch::Patch,
 }

@@ -10,7 +10,7 @@ use gitproxy::{
         CheckoutTagRequest, CommitAuthor, CommitRequest, CreateBranchRequest,
         CreateRepositoryRequest, CreateTagRequest, DeleteBranchRequest, DeleteRepositoryRequest,
         DiffRequest, DiffView, LogRequest, LogView, MergeRequest, RevertMergeRequest,
-        StatusRequest,
+        StatusRequest, diff_patch::OperationView,
     },
 };
 use yansi::Paint;
@@ -54,8 +54,20 @@ async fn main() {
     write_files(
         branch_path.view().branch.path,
         vec![
-            (&Path::new("my-dir/foo.txt"), "foo".as_bytes()),
-            (&Path::new("my-dir/bar.txt"), "bar".as_bytes()),
+            (
+                &Path::new("my-dir/foo.json"),
+                &serde_json::to_vec(&serde_json::json!({
+                    "a": "foo"
+                }))
+                .unwrap(),
+            ),
+            (
+                &Path::new("my-dir/bar.json"),
+                &serde_json::to_vec(&serde_json::json!({
+                    "b": "bar"
+                }))
+                .unwrap(),
+            ),
         ],
     )
     .unwrap();
@@ -90,7 +102,13 @@ async fn main() {
 
     write_files(
         branch_path.view().branch.path,
-        vec![(&Path::new("my-dir/foo.txt"), "foo2".as_bytes())],
+        vec![(
+            &Path::new("my-dir/foo.json"),
+            &serde_json::to_vec(&serde_json::json!({
+                "a": "baz"
+            }))
+            .unwrap(),
+        )],
     )
     .unwrap();
 
@@ -130,7 +148,7 @@ async fn main() {
         })
         .await
         .unwrap();
-    println!("Branch {} merged: {}", branch1, resp.view().commit);
+    println!("Branch {} merged: {}", branch1, resp.view().commit.unwrap());
 
     let branch2 = "branch-2";
     let branch_path = client
@@ -145,7 +163,13 @@ async fn main() {
 
     write_files(
         branch_path.view().branch.path,
-        vec![(&Path::new("my-dir/foo.txt"), "foo3".as_bytes())],
+        vec![(
+            &Path::new("my-dir/foo.json"),
+            &serde_json::to_vec(&serde_json::json!({
+                "a": "quux"
+            }))
+            .unwrap(),
+        )],
     )
     .unwrap();
 
@@ -189,9 +213,9 @@ async fn main() {
         })
         .await
         .unwrap();
-    println!("Branch {} merged: {}", branch2, resp.view().commit);
+    println!("Branch {} merged: {}", branch2, resp.view().commit.unwrap());
 
-    let head = resp.view().commit.to_owned();
+    let head = resp.view().commit.unwrap().to_owned();
 
     let resp = client
         .log(LogRequest {
@@ -290,33 +314,41 @@ fn write_files(root_path: &str, files: Vec<(&Path, &[u8])>) -> Result<()> {
 }
 
 fn print_diff(diff: &MessageFieldView<DiffView<'_>>) {
-    use gitproxy::proto::gitproxy::v1::diff_delta::line::Origin;
-
     println!("--- DIFF ---");
-    println!(
-        "Files Changed: {}. Insertions: {}. Deletions: {}",
-        diff.files_changes,
-        diff.insertions.green(),
-        diff.deletions.red()
-    );
-    for delta in &diff.deltas {
-        println!("--- {}", delta.old_file.path.unwrap_or_default().bold());
-        println!("+++ {}", delta.new_file.path.unwrap_or_default().bold());
-        for line in &delta.lines {
-            match line.origin.as_known() {
-                Some(Origin::Addition) => println!(
-                    "{}{}",
-                    "+".green(),
-                    String::from_utf8_lossy(line.content).green()
-                ),
-                Some(Origin::Deletion) => println!(
-                    "{}{}",
-                    "-".red(),
-                    String::from_utf8_lossy(line.content).red()
-                ),
-                Some(Origin::Context) => println!(" {}", String::from_utf8_lossy(line.content)),
-                _ => (),
-            };
+    for delta in &diff.files {
+        println!(
+            "{}",
+            delta.old_path.or(delta.new_path).unwrap_or_default().bold()
+        );
+        for patch in &delta.patches {
+            if let Some(operation) = &patch.operation {
+                match operation {
+                    OperationView::Add(patch) => {
+                        println!(
+                            "{}",
+                            format!("ADD path={} value={}", patch.path, patch.value,).green()
+                        )
+                    }
+                    OperationView::Remove(patch) => {
+                        println!("{}", format!("REMOVE path={}", patch.path,).red())
+                    }
+                    OperationView::Replace(patch) => {
+                        println!(
+                            "{}",
+                            format!("REPLACE path={} value={}", patch.path, patch.value,).yellow()
+                        )
+                    }
+                    OperationView::Move(patch) => {
+                        println!("MOVE from={} path={}", patch.from, patch.path)
+                    }
+                    OperationView::Copy(patch) => {
+                        println!("COPY from={} path={}", patch.from, patch.path)
+                    }
+                    OperationView::Test(patch) => {
+                        println!("TEST path={} value={}", patch.path, patch.value,)
+                    }
+                }
+            }
         }
     }
     println!("--- DIFF ---");

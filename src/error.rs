@@ -18,6 +18,10 @@ pub enum Error {
     BranchExists(String),
     #[error("Tokio task error {0}")]
     TokioTask(#[from] tokio::task::JoinError),
+    #[error("JSON error {0}")]
+    Json(#[from] serde_json::Error),
+    #[error("Buffa decode error {0}")]
+    BuffaDecode(#[from] buffa::DecodeError),
 }
 
 impl From<Error> for ConnectError {
@@ -31,6 +35,8 @@ impl From<Error> for ConnectError {
             Error::InvalidCommit(error) => ConnectError::invalid_argument(error),
             Error::BranchExists(error) => ConnectError::already_exists(error),
             Error::TokioTask(error) => ConnectError::internal(error.to_string()),
+            Error::Json(error) => ConnectError::internal(error.to_string()),
+            Error::BuffaDecode(error) => ConnectError::internal(error.to_string()),
         }
     }
 }
