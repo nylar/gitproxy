@@ -111,8 +111,12 @@ impl Service {
 
         let head = worktree.head()?;
         let merge = main.merge(&head, dry_run)?;
-        worktree.remove()?;
-        main.delete_branch(&branch)?;
+
+        // Only clear out old branch if we are able to successfully merge
+        if let Merge::Ok(Some(_)) = merge {
+            worktree.remove()?;
+            main.delete_branch(&branch)?;
+        }
         Ok(merge)
     }
 

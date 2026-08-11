@@ -26,5 +26,7 @@ tracing-subscriber = { version = "0.3.23", features = ["env-filter", "json"] }
 
 [dev-dependencies]
 assertables = "10.1.0"
+cliclack = "0.5.6"
+console = "0.16.4"
 tempfile = "3.27.0"
 yansi = "1.0.1"
