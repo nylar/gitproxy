@@ -36,6 +36,9 @@ const (
 	// GitProxyServiceListRepositoriesProcedure is the fully-qualified name of the GitProxyService's
 	// ListRepositories RPC.
 	GitProxyServiceListRepositoriesProcedure = "/gitproxy.v1.GitProxyService/ListRepositories"
+	// GitProxyServiceGetRepositoryProcedure is the fully-qualified name of the GitProxyService's
+	// GetRepository RPC.
+	GitProxyServiceGetRepositoryProcedure = "/gitproxy.v1.GitProxyService/GetRepository"
 	// GitProxyServiceCreateRepositoryProcedure is the fully-qualified name of the GitProxyService's
 	// CreateRepository RPC.
 	GitProxyServiceCreateRepositoryProcedure = "/gitproxy.v1.GitProxyService/CreateRepository"
@@ -81,6 +84,7 @@ const (
 // GitProxyServiceClient is a client for the gitproxy.v1.GitProxyService service.
 type GitProxyServiceClient interface {
 	ListRepositories(context.Context, *connect.Request[v1.ListRepositoriesRequest]) (*connect.Response[v1.ListRepositoriesResponse], error)
+	GetRepository(context.Context, *connect.Request[v1.GetRepositoryRequest]) (*connect.Response[v1.GetRepositoryResponse], error)
 	CreateRepository(context.Context, *connect.Request[v1.CreateRepositoryRequest]) (*connect.Response[v1.CreateRepositoryResponse], error)
 	DeleteRepository(context.Context, *connect.Request[v1.DeleteRepositoryRequest]) (*connect.Response[v1.DeleteRepositoryResponse], error)
 	ListBranches(context.Context, *connect.Request[v1.ListBranchesRequest]) (*connect.Response[v1.ListBranchesResponse], error)
@@ -113,6 +117,12 @@ func NewGitProxyServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			httpClient,
 			baseURL+GitProxyServiceListRepositoriesProcedure,
 			connect.WithSchema(gitProxyServiceMethods.ByName("ListRepositories")),
+			connect.WithClientOptions(opts...),
+		),
+		getRepository: connect.NewClient[v1.GetRepositoryRequest, v1.GetRepositoryResponse](
+			httpClient,
+			baseURL+GitProxyServiceGetRepositoryProcedure,
+			connect.WithSchema(gitProxyServiceMethods.ByName("GetRepository")),
 			connect.WithClientOptions(opts...),
 		),
 		createRepository: connect.NewClient[v1.CreateRepositoryRequest, v1.CreateRepositoryResponse](
@@ -211,6 +221,7 @@ func NewGitProxyServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 // gitProxyServiceClient implements GitProxyServiceClient.
 type gitProxyServiceClient struct {
 	listRepositories *connect.Client[v1.ListRepositoriesRequest, v1.ListRepositoriesResponse]
+	getRepository    *connect.Client[v1.GetRepositoryRequest, v1.GetRepositoryResponse]
 	createRepository *connect.Client[v1.CreateRepositoryRequest, v1.CreateRepositoryResponse]
 	deleteRepository *connect.Client[v1.DeleteRepositoryRequest, v1.DeleteRepositoryResponse]
 	listBranches     *connect.Client[v1.ListBranchesRequest, v1.ListBranchesResponse]
@@ -231,6 +242,11 @@ type gitProxyServiceClient struct {
 // ListRepositories calls gitproxy.v1.GitProxyService.ListRepositories.
 func (c *gitProxyServiceClient) ListRepositories(ctx context.Context, req *connect.Request[v1.ListRepositoriesRequest]) (*connect.Response[v1.ListRepositoriesResponse], error) {
 	return c.listRepositories.CallUnary(ctx, req)
+}
+
+// GetRepository calls gitproxy.v1.GitProxyService.GetRepository.
+func (c *gitProxyServiceClient) GetRepository(ctx context.Context, req *connect.Request[v1.GetRepositoryRequest]) (*connect.Response[v1.GetRepositoryResponse], error) {
+	return c.getRepository.CallUnary(ctx, req)
 }
 
 // CreateRepository calls gitproxy.v1.GitProxyService.CreateRepository.
@@ -311,6 +327,7 @@ func (c *gitProxyServiceClient) Status(ctx context.Context, req *connect.Request
 // GitProxyServiceHandler is an implementation of the gitproxy.v1.GitProxyService service.
 type GitProxyServiceHandler interface {
 	ListRepositories(context.Context, *connect.Request[v1.ListRepositoriesRequest]) (*connect.Response[v1.ListRepositoriesResponse], error)
+	GetRepository(context.Context, *connect.Request[v1.GetRepositoryRequest]) (*connect.Response[v1.GetRepositoryResponse], error)
 	CreateRepository(context.Context, *connect.Request[v1.CreateRepositoryRequest]) (*connect.Response[v1.CreateRepositoryResponse], error)
 	DeleteRepository(context.Context, *connect.Request[v1.DeleteRepositoryRequest]) (*connect.Response[v1.DeleteRepositoryResponse], error)
 	ListBranches(context.Context, *connect.Request[v1.ListBranchesRequest]) (*connect.Response[v1.ListBranchesResponse], error)
@@ -339,6 +356,12 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 		GitProxyServiceListRepositoriesProcedure,
 		svc.ListRepositories,
 		connect.WithSchema(gitProxyServiceMethods.ByName("ListRepositories")),
+		connect.WithHandlerOptions(opts...),
+	)
+	gitProxyServiceGetRepositoryHandler := connect.NewUnaryHandler(
+		GitProxyServiceGetRepositoryProcedure,
+		svc.GetRepository,
+		connect.WithSchema(gitProxyServiceMethods.ByName("GetRepository")),
 		connect.WithHandlerOptions(opts...),
 	)
 	gitProxyServiceCreateRepositoryHandler := connect.NewUnaryHandler(
@@ -435,6 +458,8 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 		switch r.URL.Path {
 		case GitProxyServiceListRepositoriesProcedure:
 			gitProxyServiceListRepositoriesHandler.ServeHTTP(w, r)
+		case GitProxyServiceGetRepositoryProcedure:
+			gitProxyServiceGetRepositoryHandler.ServeHTTP(w, r)
 		case GitProxyServiceCreateRepositoryProcedure:
 			gitProxyServiceCreateRepositoryHandler.ServeHTTP(w, r)
 		case GitProxyServiceDeleteRepositoryProcedure:
@@ -476,6 +501,10 @@ type UnimplementedGitProxyServiceHandler struct{}
 
 func (UnimplementedGitProxyServiceHandler) ListRepositories(context.Context, *connect.Request[v1.ListRepositoriesRequest]) (*connect.Response[v1.ListRepositoriesResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.ListRepositories is not implemented"))
+}
+
+func (UnimplementedGitProxyServiceHandler) GetRepository(context.Context, *connect.Request[v1.GetRepositoryRequest]) (*connect.Response[v1.GetRepositoryResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.GetRepository is not implemented"))
 }
 
 func (UnimplementedGitProxyServiceHandler) CreateRepository(context.Context, *connect.Request[v1.CreateRepositoryRequest]) (*connect.Response[v1.CreateRepositoryResponse], error) {

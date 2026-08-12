@@ -14,10 +14,11 @@ use crate::{
         CommitResponse, CreateBranchRequest, CreateBranchResponse, CreateRepositoryRequest,
         CreateRepositoryResponse, CreateTagRequest, CreateTagResponse, DeleteBranchRequest,
         DeleteBranchResponse, DeleteRepositoryRequest, DeleteRepositoryResponse, DeleteTagRequest,
-        DeleteTagResponse, Diff, DiffRequest, DiffResponse, ListBranchesRequest,
-        ListBranchesResponse, ListRepositoriesRequest, ListRepositoriesResponse, ListTagsRequest,
-        ListTagsResponse, Log, LogRequest, LogResponse, MergeRequest, MergeResponse,
-        RevertMergeRequest, RevertMergeResponse, StatusRequest, StatusResponse,
+        DeleteTagResponse, Diff, DiffRequest, DiffResponse, GetRepositoryRequest,
+        GetRepositoryResponse, ListBranchesRequest, ListBranchesResponse, ListRepositoriesRequest,
+        ListRepositoriesResponse, ListTagsRequest, ListTagsResponse, Log, LogRequest, LogResponse,
+        MergeRequest, MergeResponse, Repository, RevertMergeRequest, RevertMergeResponse,
+        StatusRequest, StatusResponse,
     },
     repository::Author,
     service::Service,
@@ -81,6 +82,28 @@ impl GitProxyService for Server {
 
         Response::ok(ListRepositoriesResponse {
             repositories,
+            ..Default::default()
+        })
+    }
+
+    async fn get_repository(
+        &self,
+        _ctx: RequestContext,
+        request: ServiceRequest<'_, GetRepositoryRequest>,
+    ) -> ServiceResult<GetRepositoryResponse> {
+        let service = self.service(request.namespace);
+
+        let head = spawn_blocking(move || service.fetch_repository_head_commit())
+            .await
+            .map_err(Error::TokioTask)??;
+
+        Response::ok(GetRepositoryResponse {
+            repository: MessageField::some(Repository {
+                namespace: request.namespace.to_string(),
+                head_commit: head.to_string(),
+                path: self.repo_dir(request.namespace).display().to_string(),
+                ..Default::default()
+            }),
             ..Default::default()
         })
     }

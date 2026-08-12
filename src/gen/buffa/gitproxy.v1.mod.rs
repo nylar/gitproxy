@@ -34,6 +34,8 @@ pub mod __buffa {
     pub fn register_types(reg: &mut ::buffa::type_registry::TypeRegistry) {
         reg.register_json_any(super::__LIST_REPOSITORIES_REQUEST_JSON_ANY);
         reg.register_json_any(super::__LIST_REPOSITORIES_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__GET_REPOSITORY_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__GET_REPOSITORY_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__CREATE_REPOSITORY_REQUEST_JSON_ANY);
         reg.register_json_any(super::__CREATE_REPOSITORY_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__DELETE_REPOSITORY_REQUEST_JSON_ANY);
@@ -88,6 +90,14 @@ pub use self::__buffa::view::ListRepositoriesRequestOwnedView;
 pub use self::__buffa::view::ListRepositoriesResponseView;
 #[doc(inline)]
 pub use self::__buffa::view::ListRepositoriesResponseOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::GetRepositoryRequestView;
+#[doc(inline)]
+pub use self::__buffa::view::GetRepositoryRequestOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::GetRepositoryResponseView;
+#[doc(inline)]
+pub use self::__buffa::view::GetRepositoryResponseOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::CreateRepositoryRequestView;
 #[doc(inline)]

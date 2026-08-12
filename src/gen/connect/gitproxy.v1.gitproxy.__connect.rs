@@ -6,6 +6,14 @@ pub type OwnedListRepositoriesRequestView = ::buffa::view::OwnedView<
 pub type OwnedListRepositoriesResponseView = ::buffa::view::OwnedView<
     crate::proto::gitproxy::v1::__buffa::view::ListRepositoriesResponseView<'static>,
 >;
+///Shorthand for `OwnedView<GetRepositoryRequestView<'static>>`.
+pub type OwnedGetRepositoryRequestView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::GetRepositoryRequestView<'static>,
+>;
+///Shorthand for `OwnedView<GetRepositoryResponseView<'static>>`.
+pub type OwnedGetRepositoryResponseView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::GetRepositoryResponseView<'static>,
+>;
 ///Shorthand for `OwnedView<CreateRepositoryRequestView<'static>>`.
 pub type OwnedCreateRepositoryRequestView = ::buffa::view::OwnedView<
     crate::proto::gitproxy::v1::__buffa::view::CreateRepositoryRequestView<'static>,
@@ -138,6 +146,26 @@ for crate::proto::gitproxy::v1::__buffa::view::ListRepositoriesResponseView<'_> 
 impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::ListRepositoriesResponse>
 for ::buffa::view::OwnedView<
     crate::proto::gitproxy::v1::__buffa::view::ListRepositoriesResponseView<'static>,
+> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::GetRepositoryResponse>
+for crate::proto::gitproxy::v1::__buffa::view::GetRepositoryResponseView<'_> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self, codec)
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::GetRepositoryResponse>
+for ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::GetRepositoryResponseView<'static>,
 > {
     fn encode(
         &self,
@@ -457,6 +485,15 @@ pub const GIT_PROXY_SERVICE_LIST_REPOSITORIES_SPEC: ::connectrpc::Spec = ::conne
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
+/// Static [`Spec`](::connectrpc::Spec) for the server-side `GetRepository` RPC.
+///
+/// The dispatcher surfaces this on
+/// [`RequestContext::spec`](::connectrpc::RequestContext::spec).
+pub const GIT_PROXY_SERVICE_GET_REPOSITORY_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
+        "/gitproxy.v1.GitProxyService/GetRepository",
+        ::connectrpc::StreamType::Unary,
+    )
+    .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
 /// Static [`Spec`](::connectrpc::Spec) for the server-side `CreateRepository` RPC.
 ///
 /// The dispatcher surfaces this on
@@ -663,6 +700,29 @@ pub trait GitProxyService: Send + Sync + 'static {
         Output = ::connectrpc::ServiceResult<
             impl ::connectrpc::Encodable<
                 crate::proto::gitproxy::v1::ListRepositoriesResponse,
+            > + Send + use<'a, Self>,
+        >,
+    > + Send;
+    /// Handle the GetRepository RPC.
+    ///
+    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
+    ///
+    /// `request` is borrowed from the request body and is valid for the
+    /// duration of the call; message fields are read directly on it
+    /// (zero-copy). The response cannot borrow from `request` — use
+    /// `.to_owned_message()` (or copy the specific fields) for anything
+    /// returned, stored, or moved into `tokio::spawn`.
+    fn get_repository<'a>(
+        &'a self,
+        ctx: ::connectrpc::RequestContext,
+        request: ::connectrpc::ServiceRequest<
+            '_,
+            crate::proto::gitproxy::v1::GetRepositoryRequest,
+        >,
+    ) -> impl ::std::future::Future<
+        Output = ::connectrpc::ServiceResult<
+            impl ::connectrpc::Encodable<
+                crate::proto::gitproxy::v1::GetRepositoryResponse,
             > + Send + use<'a, Self>,
         >,
     > + Send;
@@ -1069,6 +1129,35 @@ impl<S: GitProxyService> GitProxyServiceExt for S {
                 },
             )
             .with_spec(GIT_PROXY_SERVICE_LIST_REPOSITORIES_SPEC)
+            .route_view(
+                GIT_PROXY_SERVICE_SERVICE_NAME,
+                "GetRepository",
+                {
+                    let svc = ::std::sync::Arc::clone(&self);
+                    ::connectrpc::view_handler_fn(move |
+                        ctx,
+                        req: ::buffa::view::OwnedView<
+                            crate::proto::gitproxy::v1::__buffa::view::GetRepositoryRequestView<
+                                'static,
+                            >,
+                        >,
+                        format|
+                    {
+                        let svc = ::std::sync::Arc::clone(&svc);
+                        async move {
+                            let sreq = ::connectrpc::ServiceRequest::<
+                                crate::proto::gitproxy::v1::GetRepositoryRequest,
+                            >::from_parts(req.reborrow(), req.bytes());
+                            svc.get_repository(ctx, sreq)
+                                .await?
+                                .encode::<
+                                    crate::proto::gitproxy::v1::GetRepositoryResponse,
+                                >(format)
+                        }
+                    })
+                },
+            )
+            .with_spec(GIT_PROXY_SERVICE_GET_REPOSITORY_SPEC)
             .route_view(
                 GIT_PROXY_SERVICE_SERVICE_NAME,
                 "CreateRepository",
@@ -1558,6 +1647,12 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                         .with_spec(GIT_PROXY_SERVICE_LIST_REPOSITORIES_SPEC),
                 )
             }
+            "GetRepository" => {
+                Some(
+                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
+                        .with_spec(GIT_PROXY_SERVICE_GET_REPOSITORY_SPEC),
+                )
+            }
             "CreateRepository" => {
                 Some(
                     ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
@@ -1681,6 +1776,27 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                         .await?
                         .encode::<
                             crate::proto::gitproxy::v1::ListRepositoriesResponse,
+                        >(format)
+                })
+            }
+            "GetRepository" => {
+                let svc = ::std::sync::Arc::clone(&self.inner);
+                Box::pin(async move {
+                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
+                        crate::proto::gitproxy::v1::GetRepositoryRequest,
+                    >(request.encoded()?, format)?;
+                    let req: crate::proto::gitproxy::v1::__buffa::view::GetRepositoryRequestView<
+                        '_,
+                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
+                        &body,
+                    )?;
+                    let req = ::connectrpc::ServiceRequest::<
+                        crate::proto::gitproxy::v1::GetRepositoryRequest,
+                    >::from_parts(&req, &body);
+                    svc.get_repository(ctx, req)
+                        .await?
+                        .encode::<
+                            crate::proto::gitproxy::v1::GetRepositoryResponse,
                         >(format)
                 })
             }
@@ -2151,6 +2267,51 @@ where
                 &self.config,
                 GIT_PROXY_SERVICE_SERVICE_NAME,
                 "ListRepositories",
+                request,
+                options,
+            )
+            .await
+    }
+    /// Call the GetRepository RPC. Sends a request to /gitproxy.v1.GitProxyService/GetRepository.
+    pub async fn get_repository(
+        &self,
+        request: crate::proto::gitproxy::v1::GetRepositoryRequest,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::gitproxy::v1::__buffa::view::GetRepositoryResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        self.get_repository_with_options(
+                request,
+                ::connectrpc::client::CallOptions::default(),
+            )
+            .await
+    }
+    /// Call the GetRepository RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
+    pub async fn get_repository_with_options(
+        &self,
+        request: crate::proto::gitproxy::v1::GetRepositoryRequest,
+        options: ::connectrpc::client::CallOptions,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::gitproxy::v1::__buffa::view::GetRepositoryResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        ::connectrpc::client::call_unary(
+                &self.transport,
+                &self.config,
+                GIT_PROXY_SERVICE_SERVICE_NAME,
+                "GetRepository",
                 request,
                 options,
             )

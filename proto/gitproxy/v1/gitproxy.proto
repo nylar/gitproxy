@@ -8,6 +8,7 @@ option go_package = "github.com/nylar/gitproxy/go/gen/gitproxy/v1;gitproxy";
 
 service GitProxyService {
     rpc ListRepositories(ListRepositoriesRequest) returns (ListRepositoriesResponse) {}
+    rpc GetRepository(GetRepositoryRequest) returns (GetRepositoryResponse) {}
     rpc CreateRepository(CreateRepositoryRequest) returns (CreateRepositoryResponse) {}
     rpc DeleteRepository(DeleteRepositoryRequest) returns (DeleteRepositoryResponse) {}
     rpc ListBranches(ListBranchesRequest) returns (ListBranchesResponse) {}
@@ -30,6 +31,14 @@ message ListRepositoriesRequest {
 
 message ListRepositoriesResponse {
     repeated Repository repositories = 1;
+}
+
+message GetRepositoryRequest {
+    string namespace = 1 [(buf.validate.field).required = true];
+}
+
+message GetRepositoryResponse {
+    Repository repository = 1;
 }
 
 message CreateRepositoryRequest {
