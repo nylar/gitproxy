@@ -9,7 +9,7 @@ use gitproxy::{
         CommitAuthor, CommitRequest, ConflictDiff, CreateBranchRequest, CreateRepositoryRequest,
         CreateTagRequest, DeleteBranchRequest, DeleteRepositoryRequest, DeleteTagRequest,
         DiffPatch, ListBranchesRequest, ListRepositoriesRequest, ListTagsRequest, LogRequest,
-        MergeRequest, RevertMergeRequest,
+        MergeRequest, RevertCommitRequest, RevertMergeRequest,
         diff_patch::{Operation, Replace},
     },
 };
@@ -482,6 +482,100 @@ async fn test_merge_reverts_successfully() {
         most_recent_commit.message,
         &format!("Reverted {}", merge_commit)
     );
+}
+
+#[tokio::test]
+async fn test_commit_reverts_successfully() {
+    let root_dir = tempfile::tempdir().unwrap();
+    let addr = start_server(root_dir.path()).await;
+    let client = make_client(&addr);
+
+    client
+        .create_repository(CreateRepositoryRequest {
+            namespace: NAMESPACE.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let branch: &str = "my-branch";
+
+    let resp = client
+        .create_branch(CreateBranchRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: branch.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let branch_dir = Path::new(resp.view().branch.path);
+    std::fs::write(branch_dir.join("my_file.txt"), "before".as_bytes()).unwrap();
+
+    client
+        .commit(CommitRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: branch.to_owned(),
+            message: "Added my_file".to_owned(),
+            author: MessageField::some(CommitAuthor {
+                name: "test".to_owned(),
+                email: "test@example.com".to_owned(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    std::fs::write(branch_dir.join("my_file.txt"), "after".as_bytes()).unwrap();
+
+    let resp = client
+        .commit(CommitRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: branch.to_owned(),
+            message: "Updated my_file".to_owned(),
+            author: MessageField::some(CommitAuthor {
+                name: "test".to_owned(),
+                email: "test@example.com".to_owned(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let bad_commit = resp.view().commit;
+
+    client
+        .revert_commit(RevertCommitRequest {
+            namespace: NAMESPACE.to_owned(),
+            commit: bad_commit.to_owned(),
+            branch: Some(branch.to_owned()),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let log = client
+        .log(LogRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: Some(branch.to_owned()),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let most_recent_commit = log.view().logs.first().unwrap();
+
+    assert_eq!(
+        most_recent_commit.message,
+        &format!("Reverted {}", bad_commit)
+    );
+
+    assert_eq!(
+        &std::fs::read_to_string(branch_dir.join("my_file.txt")).unwrap(),
+        "before"
+    )
 }
 
 async fn start_server(root_dir: &Path) -> SocketAddr {

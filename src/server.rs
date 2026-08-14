@@ -17,8 +17,8 @@ use crate::{
         DeleteTagResponse, Diff, DiffRequest, DiffResponse, GetRepositoryRequest,
         GetRepositoryResponse, ListBranchesRequest, ListBranchesResponse, ListRepositoriesRequest,
         ListRepositoriesResponse, ListTagsRequest, ListTagsResponse, Log, LogRequest, LogResponse,
-        MergeRequest, MergeResponse, Repository, RevertMergeRequest, RevertMergeResponse,
-        StatusRequest, StatusResponse,
+        MergeRequest, MergeResponse, Repository, RevertCommitRequest, RevertCommitResponse,
+        RevertMergeRequest, RevertMergeResponse, StatusRequest, StatusResponse,
     },
     repository::Author,
     service::Service,
@@ -443,6 +443,24 @@ impl GitProxyService for Server {
 
         Response::ok(StatusResponse {
             dirty: !clean,
+            ..Default::default()
+        })
+    }
+
+    async fn revert_commit(
+        &self,
+        _ctx: RequestContext,
+        request: ServiceRequest<'_, RevertCommitRequest>,
+    ) -> ServiceResult<RevertCommitResponse> {
+        let req = request.to_owned_message();
+        let service = self.service(request.namespace);
+
+        let commit = spawn_blocking(move || service.revert_commit(req.branch, req.commit))
+            .await
+            .map_err(Error::TokioTask)??;
+
+        Response::ok(RevertCommitResponse {
+            commit: commit.to_string(),
             ..Default::default()
         })
     }

@@ -134,6 +134,14 @@ pub type OwnedStatusRequestView = ::buffa::view::OwnedView<
 pub type OwnedStatusResponseView = ::buffa::view::OwnedView<
     crate::proto::gitproxy::v1::__buffa::view::StatusResponseView<'static>,
 >;
+///Shorthand for `OwnedView<RevertCommitRequestView<'static>>`.
+pub type OwnedRevertCommitRequestView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::RevertCommitRequestView<'static>,
+>;
+///Shorthand for `OwnedView<RevertCommitResponseView<'static>>`.
+pub type OwnedRevertCommitResponseView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::RevertCommitResponseView<'static>,
+>;
 impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::ListRepositoriesResponse>
 for crate::proto::gitproxy::v1::__buffa::view::ListRepositoriesResponseView<'_> {
     fn encode(
@@ -474,6 +482,26 @@ for ::buffa::view::OwnedView<
         ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
     }
 }
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::RevertCommitResponse>
+for crate::proto::gitproxy::v1::__buffa::view::RevertCommitResponseView<'_> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self, codec)
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::RevertCommitResponse>
+for ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::RevertCommitResponseView<'static>,
+> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
+    }
+}
 /// Full service name for this service.
 pub const GIT_PROXY_SERVICE_SERVICE_NAME: &str = "gitproxy.v1.GitProxyService";
 /// Static [`Spec`](::connectrpc::Spec) for the server-side `ListRepositories` RPC.
@@ -626,6 +654,15 @@ pub const GIT_PROXY_SERVICE_DIFF_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::
 /// [`RequestContext::spec`](::connectrpc::RequestContext::spec).
 pub const GIT_PROXY_SERVICE_STATUS_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
         "/gitproxy.v1.GitProxyService/Status",
+        ::connectrpc::StreamType::Unary,
+    )
+    .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
+/// Static [`Spec`](::connectrpc::Spec) for the server-side `RevertCommit` RPC.
+///
+/// The dispatcher surfaces this on
+/// [`RequestContext::spec`](::connectrpc::RequestContext::spec).
+pub const GIT_PROXY_SERVICE_REVERT_COMMIT_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
+        "/gitproxy.v1.GitProxyService/RevertCommit",
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
@@ -1065,6 +1102,29 @@ pub trait GitProxyService: Send + Sync + 'static {
         Output = ::connectrpc::ServiceResult<
             impl ::connectrpc::Encodable<
                 crate::proto::gitproxy::v1::StatusResponse,
+            > + Send + use<'a, Self>,
+        >,
+    > + Send;
+    /// Handle the RevertCommit RPC.
+    ///
+    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
+    ///
+    /// `request` is borrowed from the request body and is valid for the
+    /// duration of the call; message fields are read directly on it
+    /// (zero-copy). The response cannot borrow from `request` — use
+    /// `.to_owned_message()` (or copy the specific fields) for anything
+    /// returned, stored, or moved into `tokio::spawn`.
+    fn revert_commit<'a>(
+        &'a self,
+        ctx: ::connectrpc::RequestContext,
+        request: ::connectrpc::ServiceRequest<
+            '_,
+            crate::proto::gitproxy::v1::RevertCommitRequest,
+        >,
+    ) -> impl ::std::future::Future<
+        Output = ::connectrpc::ServiceResult<
+            impl ::connectrpc::Encodable<
+                crate::proto::gitproxy::v1::RevertCommitResponse,
             > + Send + use<'a, Self>,
         >,
     > + Send;
@@ -1587,6 +1647,35 @@ impl<S: GitProxyService> GitProxyServiceExt for S {
                 },
             )
             .with_spec(GIT_PROXY_SERVICE_STATUS_SPEC)
+            .route_view(
+                GIT_PROXY_SERVICE_SERVICE_NAME,
+                "RevertCommit",
+                {
+                    let svc = ::std::sync::Arc::clone(&self);
+                    ::connectrpc::view_handler_fn(move |
+                        ctx,
+                        req: ::buffa::view::OwnedView<
+                            crate::proto::gitproxy::v1::__buffa::view::RevertCommitRequestView<
+                                'static,
+                            >,
+                        >,
+                        format|
+                    {
+                        let svc = ::std::sync::Arc::clone(&svc);
+                        async move {
+                            let sreq = ::connectrpc::ServiceRequest::<
+                                crate::proto::gitproxy::v1::RevertCommitRequest,
+                            >::from_parts(req.reborrow(), req.bytes());
+                            svc.revert_commit(ctx, sreq)
+                                .await?
+                                .encode::<
+                                    crate::proto::gitproxy::v1::RevertCommitResponse,
+                                >(format)
+                        }
+                    })
+                },
+            )
+            .with_spec(GIT_PROXY_SERVICE_REVERT_COMMIT_SPEC)
     }
 }
 /// Type-inference marker used by [`Router::add_service`](::connectrpc::Router::add_service).
@@ -1741,6 +1830,12 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                 Some(
                     ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
                         .with_spec(GIT_PROXY_SERVICE_STATUS_SPEC),
+                )
+            }
+            "RevertCommit" => {
+                Some(
+                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
+                        .with_spec(GIT_PROXY_SERVICE_REVERT_COMMIT_SPEC),
                 )
             }
             _ => None,
@@ -2097,6 +2192,27 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                     svc.status(ctx, req)
                         .await?
                         .encode::<crate::proto::gitproxy::v1::StatusResponse>(format)
+                })
+            }
+            "RevertCommit" => {
+                let svc = ::std::sync::Arc::clone(&self.inner);
+                Box::pin(async move {
+                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
+                        crate::proto::gitproxy::v1::RevertCommitRequest,
+                    >(request.encoded()?, format)?;
+                    let req: crate::proto::gitproxy::v1::__buffa::view::RevertCommitRequestView<
+                        '_,
+                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
+                        &body,
+                    )?;
+                    let req = ::connectrpc::ServiceRequest::<
+                        crate::proto::gitproxy::v1::RevertCommitRequest,
+                    >::from_parts(&req, &body);
+                    svc.revert_commit(ctx, req)
+                        .await?
+                        .encode::<
+                            crate::proto::gitproxy::v1::RevertCommitResponse,
+                        >(format)
                 })
             }
             _ => ::connectrpc::dispatcher::codegen::unimplemented_unary(path),
@@ -2940,6 +3056,51 @@ where
                 &self.config,
                 GIT_PROXY_SERVICE_SERVICE_NAME,
                 "Status",
+                request,
+                options,
+            )
+            .await
+    }
+    /// Call the RevertCommit RPC. Sends a request to /gitproxy.v1.GitProxyService/RevertCommit.
+    pub async fn revert_commit(
+        &self,
+        request: crate::proto::gitproxy::v1::RevertCommitRequest,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::gitproxy::v1::__buffa::view::RevertCommitResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        self.revert_commit_with_options(
+                request,
+                ::connectrpc::client::CallOptions::default(),
+            )
+            .await
+    }
+    /// Call the RevertCommit RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
+    pub async fn revert_commit_with_options(
+        &self,
+        request: crate::proto::gitproxy::v1::RevertCommitRequest,
+        options: ::connectrpc::client::CallOptions,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::gitproxy::v1::__buffa::view::RevertCommitResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        ::connectrpc::client::call_unary(
+                &self.transport,
+                &self.config,
+                GIT_PROXY_SERVICE_SERVICE_NAME,
+                "RevertCommit",
                 request,
                 options,
             )

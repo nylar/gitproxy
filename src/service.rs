@@ -154,6 +154,18 @@ impl Service {
         let clean = worktree.clean()?;
         Ok(clean)
     }
+
+    pub fn revert_commit(&self, branch: Option<String>, commit: String) -> Result<Oid> {
+        let repo = Repository::open(&self.repo_dir, &self.author)?;
+
+        let worktree = match branch {
+            Some(branch) => repo.worktree(&branch),
+            None => repo.primary_worktree(),
+        }?;
+
+        let commit = worktree.revert(&commit)?;
+        Ok(commit)
+    }
 }
 
 impl From<&PatchDiff> for v1::DiffFile {

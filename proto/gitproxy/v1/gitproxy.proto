@@ -24,6 +24,7 @@ service GitProxyService {
     rpc RevertMerge(RevertMergeRequest) returns (RevertMergeResponse) {}
     rpc Diff(DiffRequest) returns (DiffResponse) {}
     rpc Status(StatusRequest) returns (StatusResponse) {}
+    rpc RevertCommit(RevertCommitRequest) returns (RevertCommitResponse) {}
 }
 
 message ListRepositoriesRequest {
@@ -171,6 +172,16 @@ message StatusRequest {
 
 message StatusResponse {
     bool dirty = 1;
+}
+
+message RevertCommitRequest {
+    string namespace = 1 [(buf.validate.field).required = true];
+    string commit = 2 [(buf.validate.field).required = true];
+    optional string branch = 3 [(buf.validate.field).required = true];
+}
+
+message RevertCommitResponse {
+    string commit = 1;
 }
 
 message CommitAuthor {

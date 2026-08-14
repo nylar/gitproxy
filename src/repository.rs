@@ -174,7 +174,9 @@ impl Worktree {
         checkout.allow_conflicts(true).conflict_style_merge(true);
 
         let mut opts = git2::RevertOptions::new();
-        opts.mainline(1);
+        if commit.parent_count() > 1 {
+            opts.mainline(1);
+        }
         opts.checkout_builder(checkout);
         self.repo.revert(&commit, Some(&mut opts))?;
 
