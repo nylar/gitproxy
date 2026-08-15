@@ -1,10 +1,10 @@
 use std::path::{Path, PathBuf};
 
-use chrono::{DateTime, Utc};
 use git2::{
     Delta, DiffFindOptions, DiffOptions, Index, IndexEntry, Oid, Repository as GitRepository,
     Signature, Sort, Tree, WorktreeAddOptions, WorktreePruneOptions, build::CheckoutBuilder,
 };
+use jiff::Timestamp;
 use json_patch::Patch;
 use serde_json::Value;
 
@@ -236,7 +236,7 @@ impl Worktree {
             .map(|commit| {
                 let author = commit.author();
 
-                let time = DateTime::from_timestamp_secs(commit.time().seconds()).unwrap();
+                let time = Timestamp::from_second(commit.time().seconds()).unwrap_or_default();
 
                 LogEntry {
                     message: commit.message().unwrap().to_owned(),
@@ -432,7 +432,7 @@ pub struct LogEntry {
     pub message: String,
     pub author: Author,
     pub commit: String,
-    pub time: DateTime<Utc>,
+    pub time: Timestamp,
 }
 
 fn resolve_to_tree<'a>(repo: &'a GitRepository, reference: &str) -> Result<Tree<'a>> {

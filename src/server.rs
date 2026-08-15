@@ -377,7 +377,7 @@ impl GitProxyService for Server {
                     ..Default::default()
                 }),
                 commit: entry.commit,
-                time: MessageField::some(Timestamp::from_unix_secs(entry.time.timestamp())),
+                time: MessageField::some(Timestamp::from_unix_secs(entry.time.as_second())),
                 ..Default::default()
             })
             .collect();

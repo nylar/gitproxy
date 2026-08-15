@@ -1,7 +1,6 @@
 use std::path::Path;
 
 use buffa::{MessageField, MessageFieldView};
-use chrono::DateTime;
 use connectrpc::client::{ClientConfig, HttpClient};
 use gitproxy::{
     connect::gitproxy::v1::GitProxyServiceClient,
@@ -13,6 +12,7 @@ use gitproxy::{
         StatusRequest, diff_patch::OperationView,
     },
 };
+use jiff::Timestamp;
 use yansi::Paint;
 
 const NAMESPACE: &str = "example";
@@ -293,7 +293,7 @@ async fn main() {
 }
 
 fn print_log(log: &LogView<'_>) {
-    let time = DateTime::from_timestamp_secs(log.time.seconds).unwrap();
+    let time = Timestamp::from_second(log.time.seconds).unwrap_or_default();
     println!(
         "commit {}\nAuthor: {} <{}>\nDate: {}\n\n\t{}\n",
         log.commit, log.author.name, log.author.email, time, log.message

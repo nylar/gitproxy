@@ -9,11 +9,11 @@ readme = "README.md"
 axum = { version = "0.8.9", features = ["tokio", "http1"] }
 buffa = { version = "0.8", features = ["json"] }
 buffa-types = { version = "0.8", features = ["json"] }
-chrono = "0.4.45"
 connectrpc = { version = "0.8", features = ["axum", "client"] }
 envy = "0.4.2"
 git2 = { version = "0.21.0", features = ["vendored-libgit2"] }
 http = "1.5.0"
+jiff = "0.2.35"
 json-patch = "4.2.0"
 protovalidate-buffa = "0.6.0"
 serde = { version = "1", features = ["derive"] }
