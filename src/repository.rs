@@ -225,9 +225,27 @@ impl Worktree {
         Ok(oid)
     }
 
-    pub fn log(&self) -> Result<impl Iterator<Item = LogEntry>> {
+    pub fn log(
+        &self,
+        sort_order: LogOrder,
+        parent_branch: Option<&str>,
+    ) -> Result<impl Iterator<Item = LogEntry>> {
         let mut revwalk = self.repo.revwalk()?;
         revwalk.push_head()?;
+
+        if let Some(branch) = parent_branch {
+            let branch_commit = self
+                .repo
+                .resolve_reference_from_short_name(branch)?
+                .peel_to_commit()?;
+            revwalk.hide(branch_commit.id())?;
+        }
+
+        match sort_order {
+            LogOrder::Normal => revwalk.set_sorting(Sort::TOPOLOGICAL)?,
+            LogOrder::Reverse => revwalk.set_sorting(Sort::TOPOLOGICAL | Sort::REVERSE)?,
+        }
+
         revwalk.set_sorting(Sort::TOPOLOGICAL)?;
 
         Ok(revwalk
@@ -534,4 +552,11 @@ pub struct ConflictDiff {
     pub path: PathBuf,
     pub ours: json_patch::Patch,
     pub theirs: json_patch::Patch,
+}
+
+#[derive(Clone, Copy, Default)]
+pub enum LogOrder {
+    #[default]
+    Normal,
+    Reverse,
 }

@@ -18,9 +18,9 @@ use crate::{
         GetRepositoryResponse, ListBranchesRequest, ListBranchesResponse, ListRepositoriesRequest,
         ListRepositoriesResponse, ListTagsRequest, ListTagsResponse, Log, LogRequest, LogResponse,
         MergeRequest, MergeResponse, Repository, RevertCommitRequest, RevertCommitResponse,
-        RevertMergeRequest, RevertMergeResponse, StatusRequest, StatusResponse,
+        RevertMergeRequest, RevertMergeResponse, StatusRequest, StatusResponse, log_request::Order,
     },
-    repository::Author,
+    repository::{Author, LogOrder},
     service::Service,
 };
 
@@ -363,7 +363,12 @@ impl GitProxyService for Server {
         let req = request.to_owned_message();
         let service = self.service(request.namespace);
 
-        let entries = spawn_blocking(move || service.log(req.branch))
+        let order = match request.order.as_known() {
+            Some(Order::ORDER_REVERSE) => LogOrder::Reverse,
+            _ => LogOrder::Normal,
+        };
+
+        let entries = spawn_blocking(move || service.log(req.branch, order, req.parent_branch))
             .await
             .map_err(Error::TokioTask)??;
 

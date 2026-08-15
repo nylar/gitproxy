@@ -578,6 +578,69 @@ async fn test_commit_reverts_successfully() {
     )
 }
 
+#[tokio::test]
+async fn test_log_with_parent_includes_only_branch_changes() {
+    let root_dir = tempfile::tempdir().unwrap();
+    let addr = start_server(root_dir.path()).await;
+    let client = make_client(&addr);
+
+    client
+        .create_repository(CreateRepositoryRequest {
+            namespace: NAMESPACE.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let branch: &str = "my-branch";
+
+    let resp = client
+        .create_branch(CreateBranchRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: branch.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let branch_dir = Path::new(resp.view().branch.path);
+    std::fs::write(branch_dir.join("my_file.txt"), "before".as_bytes()).unwrap();
+
+    client
+        .commit(CommitRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: branch.to_owned(),
+            message: "Added my_file".to_owned(),
+            author: MessageField::some(CommitAuthor {
+                name: "test".to_owned(),
+                email: "test@example.com".to_owned(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let log = client
+        .log(LogRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: Some(branch.to_owned()),
+            parent_branch: Some("main".to_owned()),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    assert_eq!(
+        &log.view()
+            .logs
+            .iter()
+            .map(|e| e.message.to_owned())
+            .collect::<Vec<_>>(),
+        &["Added my_file".to_owned()]
+    );
+}
+
 async fn start_server(root_dir: &Path) -> SocketAddr {
     let app = gitproxy::app(&config(root_dir));
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();

@@ -3802,6 +3802,20 @@ pub struct LogRequest {
     /// Field 2: `branch`
     #[serde(rename = "branch", skip_serializing_if = "::core::option::Option::is_none")]
     pub branch: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 3: `order`
+    #[serde(
+        rename = "order",
+        with = "::buffa::json_helpers::proto_enum",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_default_enum_value"
+    )]
+    pub order: ::buffa::EnumValue<log_request::Order>,
+    /// Field 4: `parent_branch`
+    #[serde(
+        rename = "parentBranch",
+        alias = "parent_branch",
+        skip_serializing_if = "::core::option::Option::is_none"
+    )]
+    pub parent_branch: ::core::option::Option<::buffa::alloc::string::String>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -3811,6 +3825,8 @@ impl ::core::fmt::Debug for LogRequest {
         f.debug_struct("LogRequest")
             .field("namespace", &self.namespace)
             .field("branch", &self.branch)
+            .field("order", &self.order)
+            .field("parent_branch", &self.parent_branch)
             .finish()
     }
 }
@@ -3830,6 +3846,16 @@ impl LogRequest {
         value: impl Into<::buffa::alloc::string::String>,
     ) -> Self {
         self.branch = Some(value.into());
+        self
+    }
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::parent_branch`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_parent_branch(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.parent_branch = Some(value.into());
         self
     }
 }
@@ -3857,6 +3883,15 @@ impl ::buffa::Message for LogRequest {
         if let Some(ref v) = self.branch {
             size += 1u32 + ::buffa::types::string_encoded_len(v) as u32;
         }
+        {
+            let val = self.order.to_i32();
+            if val != 0 {
+                size += 1u32 + ::buffa::types::int32_encoded_len(val) as u32;
+            }
+        }
+        if let Some(ref v) = self.parent_branch {
+            size += 1u32 + ::buffa::types::string_encoded_len(v) as u32;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u32;
         size
     }
@@ -3872,6 +3907,15 @@ impl ::buffa::Message for LogRequest {
         }
         if let Some(ref v) = self.branch {
             ::buffa::types::put_string_field(2u32, v, buf);
+        }
+        {
+            let val = self.order.to_i32();
+            if val != 0 {
+                ::buffa::types::put_int32_field(3u32, val, buf);
+            }
+        }
+        if let Some(ref v) = self.parent_branch {
+            ::buffa::types::put_string_field(4u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -3903,6 +3947,27 @@ impl ::buffa::Message for LogRequest {
                     buf,
                 )?;
             }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                self.order = ::buffa::EnumValue::from(
+                    ::buffa::types::decode_int32(buf)?,
+                );
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(
+                    self
+                        .parent_branch
+                        .get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -3913,6 +3978,8 @@ impl ::buffa::Message for LogRequest {
     fn clear(&mut self) {
         self.namespace.clear();
         self.branch = ::core::option::Option::None;
+        self.order = ::buffa::EnumValue::from(0);
+        self.parent_branch = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -3945,6 +4012,152 @@ pub const __LOG_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa
     from_json: ::buffa::type_registry::any_from_json::<LogRequest>,
     is_wkt: false,
 };
+pub mod log_request {
+    #[allow(unused_imports)]
+    use super::*;
+    #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug)]
+    #[repr(i32)]
+    pub enum Order {
+        ORDER_UNSPECIFIED = 0i32,
+        ORDER_NORMAL = 1i32,
+        ORDER_REVERSE = 2i32,
+    }
+    impl Order {
+        ///Idiomatic alias for [`Self::ORDER_UNSPECIFIED`]; `Debug` prints the variant name.
+        #[allow(non_upper_case_globals)]
+        pub const Unspecified: Self = Self::ORDER_UNSPECIFIED;
+        ///Idiomatic alias for [`Self::ORDER_NORMAL`]; `Debug` prints the variant name.
+        #[allow(non_upper_case_globals)]
+        pub const Normal: Self = Self::ORDER_NORMAL;
+        ///Idiomatic alias for [`Self::ORDER_REVERSE`]; `Debug` prints the variant name.
+        #[allow(non_upper_case_globals)]
+        pub const Reverse: Self = Self::ORDER_REVERSE;
+    }
+    impl ::core::default::Default for Order {
+        fn default() -> Self {
+            Self::ORDER_UNSPECIFIED
+        }
+    }
+    impl ::serde::Serialize for Order {
+        fn serialize<S: ::serde::Serializer>(
+            &self,
+            s: S,
+        ) -> ::core::result::Result<S::Ok, S::Error> {
+            s.serialize_str(::buffa::Enumeration::proto_name(self))
+        }
+    }
+    impl<'de> ::serde::Deserialize<'de> for Order {
+        fn deserialize<D: ::serde::Deserializer<'de>>(
+            d: D,
+        ) -> ::core::result::Result<Self, D::Error> {
+            struct _V;
+            impl ::serde::de::Visitor<'_> for _V {
+                type Value = Order;
+                fn expecting(
+                    &self,
+                    f: &mut ::core::fmt::Formatter<'_>,
+                ) -> ::core::fmt::Result {
+                    f.write_str(
+                        concat!("a string, integer, or null for ", stringify!(Order)),
+                    )
+                }
+                fn visit_str<E: ::serde::de::Error>(
+                    self,
+                    v: &str,
+                ) -> ::core::result::Result<Order, E> {
+                    <Order as ::buffa::Enumeration>::from_proto_name(v)
+                        .ok_or_else(|| { ::serde::de::Error::unknown_variant(v, &[]) })
+                }
+                fn visit_i64<E: ::serde::de::Error>(
+                    self,
+                    v: i64,
+                ) -> ::core::result::Result<Order, E> {
+                    let v32 = i32::try_from(v)
+                        .map_err(|_| {
+                            ::serde::de::Error::custom(
+                                ::buffa::alloc::format!("enum value {v} out of i32 range"),
+                            )
+                        })?;
+                    <Order as ::buffa::Enumeration>::from_i32(v32)
+                        .ok_or_else(|| {
+                            ::serde::de::Error::custom(
+                                ::buffa::alloc::format!("unknown enum value {v32}"),
+                            )
+                        })
+                }
+                fn visit_u64<E: ::serde::de::Error>(
+                    self,
+                    v: u64,
+                ) -> ::core::result::Result<Order, E> {
+                    let v32 = i32::try_from(v)
+                        .map_err(|_| {
+                            ::serde::de::Error::custom(
+                                ::buffa::alloc::format!("enum value {v} out of i32 range"),
+                            )
+                        })?;
+                    <Order as ::buffa::Enumeration>::from_i32(v32)
+                        .ok_or_else(|| {
+                            ::serde::de::Error::custom(
+                                ::buffa::alloc::format!("unknown enum value {v32}"),
+                            )
+                        })
+                }
+                fn visit_unit<E: ::serde::de::Error>(
+                    self,
+                ) -> ::core::result::Result<Order, E> {
+                    ::core::result::Result::Ok(::core::default::Default::default())
+                }
+            }
+            d.deserialize_any(_V)
+        }
+    }
+    impl ::buffa::json_helpers::ProtoElemJson for Order {
+        fn serialize_proto_json<S: ::serde::Serializer>(
+            v: &Self,
+            s: S,
+        ) -> ::core::result::Result<S::Ok, S::Error> {
+            ::serde::Serialize::serialize(v, s)
+        }
+        fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+            d: D,
+        ) -> ::core::result::Result<Self, D::Error> {
+            <Self as ::serde::Deserialize>::deserialize(d)
+        }
+    }
+    impl ::buffa::Enumeration for Order {
+        fn from_i32(value: i32) -> ::core::option::Option<Self> {
+            match value {
+                0i32 => ::core::option::Option::Some(Self::ORDER_UNSPECIFIED),
+                1i32 => ::core::option::Option::Some(Self::ORDER_NORMAL),
+                2i32 => ::core::option::Option::Some(Self::ORDER_REVERSE),
+                _ => ::core::option::Option::None,
+            }
+        }
+        fn to_i32(&self) -> i32 {
+            *self as i32
+        }
+        fn proto_name(&self) -> &'static str {
+            match self {
+                Self::ORDER_UNSPECIFIED => "ORDER_UNSPECIFIED",
+                Self::ORDER_NORMAL => "ORDER_NORMAL",
+                Self::ORDER_REVERSE => "ORDER_REVERSE",
+            }
+        }
+        fn from_proto_name(name: &str) -> ::core::option::Option<Self> {
+            match name {
+                "ORDER_UNSPECIFIED" => {
+                    ::core::option::Option::Some(Self::ORDER_UNSPECIFIED)
+                }
+                "ORDER_NORMAL" => ::core::option::Option::Some(Self::ORDER_NORMAL),
+                "ORDER_REVERSE" => ::core::option::Option::Some(Self::ORDER_REVERSE),
+                _ => ::core::option::Option::None,
+            }
+        }
+        fn values() -> &'static [Self] {
+            &[Self::ORDER_UNSPECIFIED, Self::ORDER_NORMAL, Self::ORDER_REVERSE]
+        }
+    }
+}
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]

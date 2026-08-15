@@ -6,7 +6,7 @@ use git2::Oid;
 use crate::{
     error::{Error, Result},
     proto::gitproxy::v1,
-    repository::{Author, ConflictDiff, LogEntry, Merge, PatchDiff, Repository},
+    repository::{Author, ConflictDiff, LogEntry, LogOrder, Merge, PatchDiff, Repository},
 };
 
 pub struct Service {
@@ -120,13 +120,19 @@ impl Service {
         Ok(merge)
     }
 
-    pub fn log(&self, branch: Option<String>) -> Result<Vec<LogEntry>> {
+    pub fn log(
+        &self,
+        branch: Option<String>,
+        order: LogOrder,
+        parent_branch: Option<String>,
+    ) -> Result<Vec<LogEntry>> {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
         let worktree = match branch {
             Some(branch) => repo.worktree(&branch),
             None => repo.primary_worktree(),
         }?;
-        Ok(worktree.log()?.collect())
+
+        Ok(worktree.log(order, parent_branch.as_deref())?.collect())
     }
 
     pub fn revert_merge(&self, commit: String) -> Result<Oid> {

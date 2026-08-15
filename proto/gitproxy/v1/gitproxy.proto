@@ -147,8 +147,16 @@ message RevertMergeResponse {
 }
 
 message LogRequest {
+    enum Order {
+        ORDER_UNSPECIFIED = 0;
+        ORDER_NORMAL = 1;
+        ORDER_REVERSE = 2;
+    }
+
     string namespace = 1 [(buf.validate.field).required = true];
     optional string branch = 2;
+    Order order = 3;
+    optional string parent_branch = 4;
 }
 
 message LogResponse {

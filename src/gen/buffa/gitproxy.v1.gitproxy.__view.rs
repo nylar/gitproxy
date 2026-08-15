@@ -7454,6 +7454,10 @@ pub struct LogRequestView<'a> {
     pub namespace: &'a str,
     /// Field 2: `branch`
     pub branch: ::core::option::Option<&'a str>,
+    /// Field 3: `order`
+    pub order: ::buffa::EnumValue<super::super::log_request::Order>,
+    /// Field 4: `parent_branch`
+    pub parent_branch: ::core::option::Option<&'a str>,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for LogRequestView<'a> {
@@ -7497,6 +7501,22 @@ impl<'a> ::buffa::MessageView<'a> for LogRequestView<'a> {
                 )?;
                 view.branch = Some(::buffa::types::borrow_str(&mut cur)?);
             }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::Varint,
+                )?;
+                view.order = ::buffa::EnumValue::from(
+                    ::buffa::types::decode_int32(&mut cur)?,
+                );
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                view.parent_branch = Some(::buffa::types::borrow_str(&mut cur)?);
+            }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
                 let span_len = before_tag.len() - cur.len();
@@ -7521,6 +7541,8 @@ impl<'a> ::buffa::MessageView<'a> for LogRequestView<'a> {
         ::core::result::Result::Ok(super::super::LogRequest {
             namespace: self.namespace.to_string(),
             branch: self.branch.map(|s| s.to_string()),
+            order: self.order,
+            parent_branch: self.parent_branch.map(|s| s.to_string()),
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
@@ -7536,6 +7558,15 @@ impl<'a> ::buffa::ViewEncode<'a> for LogRequestView<'a> {
             size += 1u32 + ::buffa::types::string_encoded_len(&self.namespace) as u32;
         }
         if let Some(ref v) = self.branch {
+            size += 1u32 + ::buffa::types::string_encoded_len(v) as u32;
+        }
+        {
+            let val = self.order.to_i32();
+            if val != 0 {
+                size += 1u32 + ::buffa::types::int32_encoded_len(val) as u32;
+            }
+        }
+        if let Some(ref v) = self.parent_branch {
             size += 1u32 + ::buffa::types::string_encoded_len(v) as u32;
         }
         size += self.__buffa_unknown_fields.encoded_len() as u32;
@@ -7554,6 +7585,15 @@ impl<'a> ::buffa::ViewEncode<'a> for LogRequestView<'a> {
         }
         if let Some(ref v) = self.branch {
             ::buffa::types::put_string_field(2u32, v, buf);
+        }
+        {
+            let val = self.order.to_i32();
+            if val != 0 {
+                ::buffa::types::put_int32_field(3u32, val, buf);
+            }
+        }
+        if let Some(ref v) = self.parent_branch {
+            ::buffa::types::put_string_field(4u32, v, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -7581,6 +7621,12 @@ impl<'__a> ::serde::Serialize for LogRequestView<'__a> {
         }
         if let ::core::option::Option::Some(__v) = self.branch {
             __map.serialize_entry("branch", __v)?;
+        }
+        if !::buffa::json_helpers::skip_if::is_default_enum_value(&self.order) {
+            __map.serialize_entry("order", &self.order)?;
+        }
+        if let ::core::option::Option::Some(__v) = self.parent_branch {
+            __map.serialize_entry("parentBranch", __v)?;
         }
         __map.end()
     }
@@ -7680,6 +7726,16 @@ impl LogRequestOwnedView {
     #[must_use]
     pub fn branch(&self) -> ::core::option::Option<&'_ str> {
         self.0.reborrow().branch
+    }
+    /// Field 3: `order`
+    #[must_use]
+    pub fn order(&self) -> ::buffa::EnumValue<super::super::log_request::Order> {
+        self.0.reborrow().order
+    }
+    /// Field 4: `parent_branch`
+    #[must_use]
+    pub fn parent_branch(&self) -> ::core::option::Option<&'_ str> {
+        self.0.reborrow().parent_branch
     }
 }
 impl ::core::convert::From<::buffa::OwnedView<LogRequestView<'static>>>
