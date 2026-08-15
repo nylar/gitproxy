@@ -38,6 +38,14 @@ pub type OwnedListBranchesRequestView = ::buffa::view::OwnedView<
 pub type OwnedListBranchesResponseView = ::buffa::view::OwnedView<
     crate::proto::gitproxy::v1::__buffa::view::ListBranchesResponseView<'static>,
 >;
+///Shorthand for `OwnedView<GetBranchRequestView<'static>>`.
+pub type OwnedGetBranchRequestView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::GetBranchRequestView<'static>,
+>;
+///Shorthand for `OwnedView<GetBranchResponseView<'static>>`.
+pub type OwnedGetBranchResponseView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::GetBranchResponseView<'static>,
+>;
 ///Shorthand for `OwnedView<CreateBranchRequestView<'static>>`.
 pub type OwnedCreateBranchRequestView = ::buffa::view::OwnedView<
     crate::proto::gitproxy::v1::__buffa::view::CreateBranchRequestView<'static>,
@@ -234,6 +242,26 @@ for crate::proto::gitproxy::v1::__buffa::view::ListBranchesResponseView<'_> {
 impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::ListBranchesResponse>
 for ::buffa::view::OwnedView<
     crate::proto::gitproxy::v1::__buffa::view::ListBranchesResponseView<'static>,
+> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::GetBranchResponse>
+for crate::proto::gitproxy::v1::__buffa::view::GetBranchResponseView<'_> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self, codec)
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::GetBranchResponse>
+for ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::GetBranchResponseView<'static>,
 > {
     fn encode(
         &self,
@@ -549,6 +577,15 @@ pub const GIT_PROXY_SERVICE_LIST_BRANCHES_SPEC: ::connectrpc::Spec = ::connectrp
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
+/// Static [`Spec`](::connectrpc::Spec) for the server-side `GetBranch` RPC.
+///
+/// The dispatcher surfaces this on
+/// [`RequestContext::spec`](::connectrpc::RequestContext::spec).
+pub const GIT_PROXY_SERVICE_GET_BRANCH_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
+        "/gitproxy.v1.GitProxyService/GetBranch",
+        ::connectrpc::StreamType::Unary,
+    )
+    .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
 /// Static [`Spec`](::connectrpc::Spec) for the server-side `CreateBranch` RPC.
 ///
 /// The dispatcher surfaces this on
@@ -829,6 +866,29 @@ pub trait GitProxyService: Send + Sync + 'static {
         Output = ::connectrpc::ServiceResult<
             impl ::connectrpc::Encodable<
                 crate::proto::gitproxy::v1::ListBranchesResponse,
+            > + Send + use<'a, Self>,
+        >,
+    > + Send;
+    /// Handle the GetBranch RPC.
+    ///
+    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
+    ///
+    /// `request` is borrowed from the request body and is valid for the
+    /// duration of the call; message fields are read directly on it
+    /// (zero-copy). The response cannot borrow from `request` — use
+    /// `.to_owned_message()` (or copy the specific fields) for anything
+    /// returned, stored, or moved into `tokio::spawn`.
+    fn get_branch<'a>(
+        &'a self,
+        ctx: ::connectrpc::RequestContext,
+        request: ::connectrpc::ServiceRequest<
+            '_,
+            crate::proto::gitproxy::v1::GetBranchRequest,
+        >,
+    ) -> impl ::std::future::Future<
+        Output = ::connectrpc::ServiceResult<
+            impl ::connectrpc::Encodable<
+                crate::proto::gitproxy::v1::GetBranchResponse,
             > + Send + use<'a, Self>,
         >,
     > + Send;
@@ -1307,6 +1367,35 @@ impl<S: GitProxyService> GitProxyServiceExt for S {
             .with_spec(GIT_PROXY_SERVICE_LIST_BRANCHES_SPEC)
             .route_view(
                 GIT_PROXY_SERVICE_SERVICE_NAME,
+                "GetBranch",
+                {
+                    let svc = ::std::sync::Arc::clone(&self);
+                    ::connectrpc::view_handler_fn(move |
+                        ctx,
+                        req: ::buffa::view::OwnedView<
+                            crate::proto::gitproxy::v1::__buffa::view::GetBranchRequestView<
+                                'static,
+                            >,
+                        >,
+                        format|
+                    {
+                        let svc = ::std::sync::Arc::clone(&svc);
+                        async move {
+                            let sreq = ::connectrpc::ServiceRequest::<
+                                crate::proto::gitproxy::v1::GetBranchRequest,
+                            >::from_parts(req.reborrow(), req.bytes());
+                            svc.get_branch(ctx, sreq)
+                                .await?
+                                .encode::<
+                                    crate::proto::gitproxy::v1::GetBranchResponse,
+                                >(format)
+                        }
+                    })
+                },
+            )
+            .with_spec(GIT_PROXY_SERVICE_GET_BRANCH_SPEC)
+            .route_view(
+                GIT_PROXY_SERVICE_SERVICE_NAME,
                 "CreateBranch",
                 {
                     let svc = ::std::sync::Arc::clone(&self);
@@ -1760,6 +1849,12 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                         .with_spec(GIT_PROXY_SERVICE_LIST_BRANCHES_SPEC),
                 )
             }
+            "GetBranch" => {
+                Some(
+                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
+                        .with_spec(GIT_PROXY_SERVICE_GET_BRANCH_SPEC),
+                )
+            }
             "CreateBranch" => {
                 Some(
                     ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
@@ -1956,6 +2051,25 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                         .encode::<
                             crate::proto::gitproxy::v1::ListBranchesResponse,
                         >(format)
+                })
+            }
+            "GetBranch" => {
+                let svc = ::std::sync::Arc::clone(&self.inner);
+                Box::pin(async move {
+                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
+                        crate::proto::gitproxy::v1::GetBranchRequest,
+                    >(request.encoded()?, format)?;
+                    let req: crate::proto::gitproxy::v1::__buffa::view::GetBranchRequestView<
+                        '_,
+                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
+                        &body,
+                    )?;
+                    let req = ::connectrpc::ServiceRequest::<
+                        crate::proto::gitproxy::v1::GetBranchRequest,
+                    >::from_parts(&req, &body);
+                    svc.get_branch(ctx, req)
+                        .await?
+                        .encode::<crate::proto::gitproxy::v1::GetBranchResponse>(format)
                 })
             }
             "CreateBranch" => {
@@ -2563,6 +2677,47 @@ where
                 &self.config,
                 GIT_PROXY_SERVICE_SERVICE_NAME,
                 "ListBranches",
+                request,
+                options,
+            )
+            .await
+    }
+    /// Call the GetBranch RPC. Sends a request to /gitproxy.v1.GitProxyService/GetBranch.
+    pub async fn get_branch(
+        &self,
+        request: crate::proto::gitproxy::v1::GetBranchRequest,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::gitproxy::v1::__buffa::view::GetBranchResponseView<'static>,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        self.get_branch_with_options(
+                request,
+                ::connectrpc::client::CallOptions::default(),
+            )
+            .await
+    }
+    /// Call the GetBranch RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
+    pub async fn get_branch_with_options(
+        &self,
+        request: crate::proto::gitproxy::v1::GetBranchRequest,
+        options: ::connectrpc::client::CallOptions,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::gitproxy::v1::__buffa::view::GetBranchResponseView<'static>,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        ::connectrpc::client::call_unary(
+                &self.transport,
+                &self.config,
+                GIT_PROXY_SERVICE_SERVICE_NAME,
+                "GetBranch",
                 request,
                 options,
             )

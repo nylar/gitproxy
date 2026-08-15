@@ -48,6 +48,9 @@ const (
 	// GitProxyServiceListBranchesProcedure is the fully-qualified name of the GitProxyService's
 	// ListBranches RPC.
 	GitProxyServiceListBranchesProcedure = "/gitproxy.v1.GitProxyService/ListBranches"
+	// GitProxyServiceGetBranchProcedure is the fully-qualified name of the GitProxyService's GetBranch
+	// RPC.
+	GitProxyServiceGetBranchProcedure = "/gitproxy.v1.GitProxyService/GetBranch"
 	// GitProxyServiceCreateBranchProcedure is the fully-qualified name of the GitProxyService's
 	// CreateBranch RPC.
 	GitProxyServiceCreateBranchProcedure = "/gitproxy.v1.GitProxyService/CreateBranch"
@@ -91,6 +94,7 @@ type GitProxyServiceClient interface {
 	CreateRepository(context.Context, *connect.Request[v1.CreateRepositoryRequest]) (*connect.Response[v1.CreateRepositoryResponse], error)
 	DeleteRepository(context.Context, *connect.Request[v1.DeleteRepositoryRequest]) (*connect.Response[v1.DeleteRepositoryResponse], error)
 	ListBranches(context.Context, *connect.Request[v1.ListBranchesRequest]) (*connect.Response[v1.ListBranchesResponse], error)
+	GetBranch(context.Context, *connect.Request[v1.GetBranchRequest]) (*connect.Response[v1.GetBranchResponse], error)
 	CreateBranch(context.Context, *connect.Request[v1.CreateBranchRequest]) (*connect.Response[v1.CreateBranchResponse], error)
 	DeleteBranch(context.Context, *connect.Request[v1.DeleteBranchRequest]) (*connect.Response[v1.DeleteBranchResponse], error)
 	ListTags(context.Context, *connect.Request[v1.ListTagsRequest]) (*connect.Response[v1.ListTagsResponse], error)
@@ -145,6 +149,12 @@ func NewGitProxyServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			httpClient,
 			baseURL+GitProxyServiceListBranchesProcedure,
 			connect.WithSchema(gitProxyServiceMethods.ByName("ListBranches")),
+			connect.WithClientOptions(opts...),
+		),
+		getBranch: connect.NewClient[v1.GetBranchRequest, v1.GetBranchResponse](
+			httpClient,
+			baseURL+GitProxyServiceGetBranchProcedure,
+			connect.WithSchema(gitProxyServiceMethods.ByName("GetBranch")),
 			connect.WithClientOptions(opts...),
 		),
 		createBranch: connect.NewClient[v1.CreateBranchRequest, v1.CreateBranchResponse](
@@ -235,6 +245,7 @@ type gitProxyServiceClient struct {
 	createRepository *connect.Client[v1.CreateRepositoryRequest, v1.CreateRepositoryResponse]
 	deleteRepository *connect.Client[v1.DeleteRepositoryRequest, v1.DeleteRepositoryResponse]
 	listBranches     *connect.Client[v1.ListBranchesRequest, v1.ListBranchesResponse]
+	getBranch        *connect.Client[v1.GetBranchRequest, v1.GetBranchResponse]
 	createBranch     *connect.Client[v1.CreateBranchRequest, v1.CreateBranchResponse]
 	deleteBranch     *connect.Client[v1.DeleteBranchRequest, v1.DeleteBranchResponse]
 	listTags         *connect.Client[v1.ListTagsRequest, v1.ListTagsResponse]
@@ -273,6 +284,11 @@ func (c *gitProxyServiceClient) DeleteRepository(ctx context.Context, req *conne
 // ListBranches calls gitproxy.v1.GitProxyService.ListBranches.
 func (c *gitProxyServiceClient) ListBranches(ctx context.Context, req *connect.Request[v1.ListBranchesRequest]) (*connect.Response[v1.ListBranchesResponse], error) {
 	return c.listBranches.CallUnary(ctx, req)
+}
+
+// GetBranch calls gitproxy.v1.GitProxyService.GetBranch.
+func (c *gitProxyServiceClient) GetBranch(ctx context.Context, req *connect.Request[v1.GetBranchRequest]) (*connect.Response[v1.GetBranchResponse], error) {
+	return c.getBranch.CallUnary(ctx, req)
 }
 
 // CreateBranch calls gitproxy.v1.GitProxyService.CreateBranch.
@@ -347,6 +363,7 @@ type GitProxyServiceHandler interface {
 	CreateRepository(context.Context, *connect.Request[v1.CreateRepositoryRequest]) (*connect.Response[v1.CreateRepositoryResponse], error)
 	DeleteRepository(context.Context, *connect.Request[v1.DeleteRepositoryRequest]) (*connect.Response[v1.DeleteRepositoryResponse], error)
 	ListBranches(context.Context, *connect.Request[v1.ListBranchesRequest]) (*connect.Response[v1.ListBranchesResponse], error)
+	GetBranch(context.Context, *connect.Request[v1.GetBranchRequest]) (*connect.Response[v1.GetBranchResponse], error)
 	CreateBranch(context.Context, *connect.Request[v1.CreateBranchRequest]) (*connect.Response[v1.CreateBranchResponse], error)
 	DeleteBranch(context.Context, *connect.Request[v1.DeleteBranchRequest]) (*connect.Response[v1.DeleteBranchResponse], error)
 	ListTags(context.Context, *connect.Request[v1.ListTagsRequest]) (*connect.Response[v1.ListTagsResponse], error)
@@ -397,6 +414,12 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 		GitProxyServiceListBranchesProcedure,
 		svc.ListBranches,
 		connect.WithSchema(gitProxyServiceMethods.ByName("ListBranches")),
+		connect.WithHandlerOptions(opts...),
+	)
+	gitProxyServiceGetBranchHandler := connect.NewUnaryHandler(
+		GitProxyServiceGetBranchProcedure,
+		svc.GetBranch,
+		connect.WithSchema(gitProxyServiceMethods.ByName("GetBranch")),
 		connect.WithHandlerOptions(opts...),
 	)
 	gitProxyServiceCreateBranchHandler := connect.NewUnaryHandler(
@@ -489,6 +512,8 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 			gitProxyServiceDeleteRepositoryHandler.ServeHTTP(w, r)
 		case GitProxyServiceListBranchesProcedure:
 			gitProxyServiceListBranchesHandler.ServeHTTP(w, r)
+		case GitProxyServiceGetBranchProcedure:
+			gitProxyServiceGetBranchHandler.ServeHTTP(w, r)
 		case GitProxyServiceCreateBranchProcedure:
 			gitProxyServiceCreateBranchHandler.ServeHTTP(w, r)
 		case GitProxyServiceDeleteBranchProcedure:
@@ -542,6 +567,10 @@ func (UnimplementedGitProxyServiceHandler) DeleteRepository(context.Context, *co
 
 func (UnimplementedGitProxyServiceHandler) ListBranches(context.Context, *connect.Request[v1.ListBranchesRequest]) (*connect.Response[v1.ListBranchesResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.ListBranches is not implemented"))
+}
+
+func (UnimplementedGitProxyServiceHandler) GetBranch(context.Context, *connect.Request[v1.GetBranchRequest]) (*connect.Response[v1.GetBranchResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.GetBranch is not implemented"))
 }
 
 func (UnimplementedGitProxyServiceHandler) CreateBranch(context.Context, *connect.Request[v1.CreateBranchRequest]) (*connect.Response[v1.CreateBranchResponse], error) {

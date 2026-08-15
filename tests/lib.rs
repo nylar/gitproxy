@@ -8,8 +8,8 @@ use gitproxy::{
     proto::gitproxy::v1::{
         CommitAuthor, CommitRequest, ConflictDiff, CreateBranchRequest, CreateRepositoryRequest,
         CreateTagRequest, DeleteBranchRequest, DeleteRepositoryRequest, DeleteTagRequest,
-        DiffPatch, ListBranchesRequest, ListRepositoriesRequest, ListTagsRequest, LogRequest,
-        MergeRequest, RevertCommitRequest, RevertMergeRequest,
+        DiffPatch, GetBranchRequest, ListBranchesRequest, ListRepositoriesRequest, ListTagsRequest,
+        LogRequest, MergeRequest, RevertCommitRequest, RevertMergeRequest,
         diff_patch::{Operation, Replace},
     },
 };
@@ -108,6 +108,17 @@ async fn test_branches() {
 
     let resp = client
         .create_branch(CreateBranchRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: branch.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    assert_eq!(resp.view().branch.name, branch);
+
+    let resp = client
+        .get_branch(GetBranchRequest {
             namespace: NAMESPACE.to_owned(),
             branch: branch.to_owned(),
             ..Default::default()

@@ -12,6 +12,7 @@ service GitProxyService {
     rpc CreateRepository(CreateRepositoryRequest) returns (CreateRepositoryResponse) {}
     rpc DeleteRepository(DeleteRepositoryRequest) returns (DeleteRepositoryResponse) {}
     rpc ListBranches(ListBranchesRequest) returns (ListBranchesResponse) {}
+    rpc GetBranch(GetBranchRequest) returns (GetBranchResponse) {}
     rpc CreateBranch(CreateBranchRequest) returns (CreateBranchResponse) {}
     rpc DeleteBranch(DeleteBranchRequest) returns (DeleteBranchResponse) {}
     rpc ListTags(ListTagsRequest) returns (ListTagsResponse) {}
@@ -62,6 +63,15 @@ message ListBranchesRequest {
 
 message ListBranchesResponse {
     repeated Branch branches = 1;
+}
+
+message GetBranchRequest {
+    string namespace = 1 [(buf.validate.field).required = true];
+    string branch = 2 [(buf.validate.field).required = true];
+}
+
+message GetBranchResponse {
+    Branch branch = 1;
 }
 
 message CreateBranchRequest {

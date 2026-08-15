@@ -14,11 +14,12 @@ use crate::{
         CommitResponse, CreateBranchRequest, CreateBranchResponse, CreateRepositoryRequest,
         CreateRepositoryResponse, CreateTagRequest, CreateTagResponse, DeleteBranchRequest,
         DeleteBranchResponse, DeleteRepositoryRequest, DeleteRepositoryResponse, DeleteTagRequest,
-        DeleteTagResponse, Diff, DiffRequest, DiffResponse, GetRepositoryRequest,
-        GetRepositoryResponse, ListBranchesRequest, ListBranchesResponse, ListRepositoriesRequest,
-        ListRepositoriesResponse, ListTagsRequest, ListTagsResponse, Log, LogRequest, LogResponse,
-        MergeRequest, MergeResponse, Repository, RevertCommitRequest, RevertCommitResponse,
-        RevertMergeRequest, RevertMergeResponse, StatusRequest, StatusResponse, log_request::Order,
+        DeleteTagResponse, Diff, DiffRequest, DiffResponse, GetBranchRequest, GetBranchResponse,
+        GetRepositoryRequest, GetRepositoryResponse, ListBranchesRequest, ListBranchesResponse,
+        ListRepositoriesRequest, ListRepositoriesResponse, ListTagsRequest, ListTagsResponse, Log,
+        LogRequest, LogResponse, MergeRequest, MergeResponse, Repository, RevertCommitRequest,
+        RevertCommitResponse, RevertMergeRequest, RevertMergeResponse, StatusRequest,
+        StatusResponse, log_request::Order,
     },
     repository::{Author, LogOrder},
     service::Service,
@@ -185,6 +186,39 @@ impl GitProxyService for Server {
 
         Response::ok(ListBranchesResponse {
             branches,
+            ..Default::default()
+        })
+    }
+
+    async fn get_branch(
+        &self,
+        _ctx: RequestContext,
+        request: ServiceRequest<'_, GetBranchRequest>,
+    ) -> ServiceResult<GetBranchResponse> {
+        let service = self.service(request.namespace);
+
+        let branches = spawn_blocking(move || service.list_branches())
+            .await
+            .map_err(Error::TokioTask)??;
+
+        if !branches.iter().any(|b| b == request.branch) {
+            return Err(ConnectError::not_found(format!(
+                "{} was not found",
+                request.branch
+            )));
+        }
+
+        Response::ok(GetBranchResponse {
+            branch: MessageField::some(Branch {
+                name: request.branch.to_owned(),
+                path: self
+                    .repo_dir(request.namespace)
+                    .join(request.branch)
+                    .to_str()
+                    .unwrap()
+                    .to_string(),
+                ..Default::default()
+            }),
             ..Default::default()
         })
     }

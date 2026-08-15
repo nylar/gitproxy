@@ -42,6 +42,8 @@ pub mod __buffa {
         reg.register_json_any(super::__DELETE_REPOSITORY_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__LIST_BRANCHES_REQUEST_JSON_ANY);
         reg.register_json_any(super::__LIST_BRANCHES_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__GET_BRANCH_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__GET_BRANCH_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__CREATE_BRANCH_REQUEST_JSON_ANY);
         reg.register_json_any(super::__CREATE_BRANCH_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__DELETE_BRANCH_REQUEST_JSON_ANY);
@@ -124,6 +126,14 @@ pub use self::__buffa::view::ListBranchesRequestOwnedView;
 pub use self::__buffa::view::ListBranchesResponseView;
 #[doc(inline)]
 pub use self::__buffa::view::ListBranchesResponseOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::GetBranchRequestView;
+#[doc(inline)]
+pub use self::__buffa::view::GetBranchRequestOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::GetBranchResponseView;
+#[doc(inline)]
+pub use self::__buffa::view::GetBranchResponseOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::CreateBranchRequestView;
 #[doc(inline)]
