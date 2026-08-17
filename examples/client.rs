@@ -295,7 +295,7 @@ async fn main() {
 fn print_log(log: &LogView<'_>) {
     let time = Timestamp::from_second(log.time.seconds).unwrap_or_default();
     println!(
-        "commit {}\nAuthor: {} <{}>\nDate: {}\n\n\t{}\n",
+        "commit {}\nAuthor: {} <{}>\nDate: {}\n\n{}\n",
         log.commit, log.author.name, log.author.email, time, log.message
     );
 }

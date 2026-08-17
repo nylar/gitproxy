@@ -1,8 +1,9 @@
 use std::path::{Path, PathBuf};
 
 use git2::{
-    Delta, DiffFindOptions, DiffOptions, Index, IndexEntry, Oid, Repository as GitRepository,
-    Signature, Sort, Tree, WorktreeAddOptions, WorktreePruneOptions, build::CheckoutBuilder,
+    Delta, DiffFindOptions, DiffOptions, Index, IndexEntry, MergeOptions, Oid,
+    Repository as GitRepository, Signature, Sort, Tree, WorktreeAddOptions, WorktreePruneOptions,
+    build::CheckoutBuilder,
 };
 use jiff::Timestamp;
 use json_patch::Patch;
@@ -192,16 +193,8 @@ impl Worktree {
         Ok(oid)
     }
 
-    pub fn merge(&self, reference: &git2::Reference<'_>, dry_run: bool) -> Result<Merge> {
-        let remote_commit = self
-            .repo
-            .find_annotated_commit(reference.peel_to_commit()?.id())?;
-
-        let local_commit = self
-            .repo
-            .reference_to_annotated_commit(&self.repo.head()?)?;
-
-        self.normal_merge(&local_commit, &remote_commit, dry_run)
+    pub fn merge(&self, remote_reference: &git2::Reference<'_>, dry_run: bool) -> Result<Merge> {
+        self.squash_merge(remote_reference, dry_run)
     }
 
     pub fn commit_all(&self, message: &str, author: &Author) -> Result<Oid> {
@@ -400,21 +393,16 @@ impl Worktree {
         Ok(oid)
     }
 
-    fn normal_merge(
-        &self,
-        local: &git2::AnnotatedCommit,
-        remote: &git2::AnnotatedCommit,
-        dry_run: bool,
-    ) -> Result<Merge> {
-        let local_tree = self.repo.find_commit(local.id())?.tree()?;
-        let remote_tree = self.repo.find_commit(remote.id())?.tree()?;
-        let ancestor = self
-            .repo
-            .find_commit(self.repo.merge_base(local.id(), remote.id())?)?
-            .tree()?;
+    fn squash_merge(&self, remote_reference: &git2::Reference<'_>, dry_run: bool) -> Result<Merge> {
+        let local_reference = self.repo.head()?;
+
+        let remote_commit = remote_reference.peel_to_commit()?;
+        let local_commit = local_reference.peel_to_commit()?;
+
+        let opts = MergeOptions::new();
         let mut idx = self
             .repo
-            .merge_trees(&ancestor, &local_tree, &remote_tree, None)?;
+            .merge_commits(&local_commit, &remote_commit, Some(&opts))?;
 
         if idx.has_conflicts() {
             let conflicts = conflict_diffs(&self.repo, &idx)?;
@@ -426,22 +414,46 @@ impl Worktree {
         }
 
         let result_tree = self.repo.find_tree(idx.write_tree_to(&self.repo)?)?;
-        let msg = format!("Merge: {} into {}", remote.id(), local.id());
+        let msg = self.build_squash_merge(&local_reference, remote_reference)?;
         let sig = Signature::now(&self.default_author.name, &self.default_author.email)?;
-        let local_commit = self.repo.find_commit(local.id())?;
-        let remote_commit = self.repo.find_commit(remote.id())?;
+        let local_commit = self.repo.find_commit(local_commit.id())?;
         let merge_commit = self.repo.commit(
             Some("HEAD"),
             &sig,
             &sig,
             &msg,
             &result_tree,
-            &[&local_commit, &remote_commit],
+            &[&local_commit],
         )?;
         self.repo
             .checkout_head(Some(git2::build::CheckoutBuilder::default().force()))?;
 
         Ok(Merge::Ok(Some(merge_commit)))
+    }
+
+    fn build_squash_merge(
+        &self,
+        local: &git2::Reference<'_>,
+        remote: &git2::Reference<'_>,
+    ) -> Result<String> {
+        let local_branch = local.shorthand()?;
+        let remote_branch = remote.shorthand()?;
+
+        let mut revwalk = self.repo.revwalk()?;
+        revwalk.push(remote.peel_to_commit()?.id())?;
+        revwalk.hide(local.peel_to_commit()?.id())?;
+
+        let mut message = format!("Merged branch {} into {}\n", remote_branch, local_branch,);
+        for oid in revwalk {
+            let oid = oid?;
+            if let Ok(commit) = self.repo.find_commit(oid)
+                && let Some(summary) = commit.summary()?
+            {
+                message.push_str(&format!("- {}\n", summary));
+            }
+        }
+
+        Ok(message)
     }
 }
 

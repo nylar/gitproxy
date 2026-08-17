@@ -207,15 +207,13 @@ async fn test_branch_merges_successfully() {
     let addr = start_server(root_dir.path()).await;
     let client = make_client(&addr);
 
-    let resp = client
+    client
         .create_repository(CreateRepositoryRequest {
             namespace: NAMESPACE.to_owned(),
             ..Default::default()
         })
         .await
         .unwrap();
-
-    let main_head_commit = resp.view().repository.head_commit;
 
     let branch: &str = "my-branch";
 
@@ -231,7 +229,7 @@ async fn test_branch_merges_successfully() {
     let branch_dir = Path::new(resp.view().branch.path);
     std::fs::write(branch_dir.join("my_file.txt"), "foo\nbar\nbaz\n".as_bytes()).unwrap();
 
-    let resp = client
+    client
         .commit(CommitRequest {
             namespace: NAMESPACE.to_owned(),
             branch: branch.to_owned(),
@@ -245,8 +243,6 @@ async fn test_branch_merges_successfully() {
         })
         .await
         .unwrap();
-
-    let last_commit_before_merge = resp.view().commit;
 
     let resp = client
         .merge(MergeRequest {
@@ -272,9 +268,9 @@ async fn test_branch_merges_successfully() {
 
     assert_eq!(
         most_recent_commit.message,
-        &format!(
-            "Merge: {} into {}",
-            last_commit_before_merge, main_head_commit
+        format!(
+            "Merged branch {} into {}\n- Added my_file\n",
+            branch, "main"
         )
     );
 }
