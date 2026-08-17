@@ -86,14 +86,6 @@ pub type OwnedDeleteTagRequestView = ::buffa::view::OwnedView<
 pub type OwnedDeleteTagResponseView = ::buffa::view::OwnedView<
     crate::proto::gitproxy::v1::__buffa::view::DeleteTagResponseView<'static>,
 >;
-///Shorthand for `OwnedView<CheckoutTagRequestView<'static>>`.
-pub type OwnedCheckoutTagRequestView = ::buffa::view::OwnedView<
-    crate::proto::gitproxy::v1::__buffa::view::CheckoutTagRequestView<'static>,
->;
-///Shorthand for `OwnedView<CheckoutTagResponseView<'static>>`.
-pub type OwnedCheckoutTagResponseView = ::buffa::view::OwnedView<
-    crate::proto::gitproxy::v1::__buffa::view::CheckoutTagResponseView<'static>,
->;
 ///Shorthand for `OwnedView<CommitRequestView<'static>>`.
 pub type OwnedCommitRequestView = ::buffa::view::OwnedView<
     crate::proto::gitproxy::v1::__buffa::view::CommitRequestView<'static>,
@@ -118,13 +110,13 @@ pub type OwnedLogRequestView = ::buffa::view::OwnedView<
 pub type OwnedLogResponseView = ::buffa::view::OwnedView<
     crate::proto::gitproxy::v1::__buffa::view::LogResponseView<'static>,
 >;
-///Shorthand for `OwnedView<RevertMergeRequestView<'static>>`.
-pub type OwnedRevertMergeRequestView = ::buffa::view::OwnedView<
-    crate::proto::gitproxy::v1::__buffa::view::RevertMergeRequestView<'static>,
+///Shorthand for `OwnedView<RevertRequestView<'static>>`.
+pub type OwnedRevertRequestView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::RevertRequestView<'static>,
 >;
-///Shorthand for `OwnedView<RevertMergeResponseView<'static>>`.
-pub type OwnedRevertMergeResponseView = ::buffa::view::OwnedView<
-    crate::proto::gitproxy::v1::__buffa::view::RevertMergeResponseView<'static>,
+///Shorthand for `OwnedView<RevertResponseView<'static>>`.
+pub type OwnedRevertResponseView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::RevertResponseView<'static>,
 >;
 ///Shorthand for `OwnedView<DiffRequestView<'static>>`.
 pub type OwnedDiffRequestView = ::buffa::view::OwnedView<
@@ -142,13 +134,21 @@ pub type OwnedStatusRequestView = ::buffa::view::OwnedView<
 pub type OwnedStatusResponseView = ::buffa::view::OwnedView<
     crate::proto::gitproxy::v1::__buffa::view::StatusResponseView<'static>,
 >;
-///Shorthand for `OwnedView<RevertCommitRequestView<'static>>`.
-pub type OwnedRevertCommitRequestView = ::buffa::view::OwnedView<
-    crate::proto::gitproxy::v1::__buffa::view::RevertCommitRequestView<'static>,
+///Shorthand for `OwnedView<GetBlobRequestView<'static>>`.
+pub type OwnedGetBlobRequestView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::GetBlobRequestView<'static>,
 >;
-///Shorthand for `OwnedView<RevertCommitResponseView<'static>>`.
-pub type OwnedRevertCommitResponseView = ::buffa::view::OwnedView<
-    crate::proto::gitproxy::v1::__buffa::view::RevertCommitResponseView<'static>,
+///Shorthand for `OwnedView<GetBlobResponseView<'static>>`.
+pub type OwnedGetBlobResponseView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::GetBlobResponseView<'static>,
+>;
+///Shorthand for `OwnedView<ListBlobsRequestView<'static>>`.
+pub type OwnedListBlobsRequestView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::ListBlobsRequestView<'static>,
+>;
+///Shorthand for `OwnedView<ListBlobsResponseView<'static>>`.
+pub type OwnedListBlobsResponseView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::ListBlobsResponseView<'static>,
 >;
 impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::ListRepositoriesResponse>
 for crate::proto::gitproxy::v1::__buffa::view::ListRepositoriesResponseView<'_> {
@@ -370,26 +370,6 @@ for ::buffa::view::OwnedView<
         ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
     }
 }
-impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::CheckoutTagResponse>
-for crate::proto::gitproxy::v1::__buffa::view::CheckoutTagResponseView<'_> {
-    fn encode(
-        &self,
-        codec: ::connectrpc::CodecFormat,
-    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
-        ::connectrpc::__codegen::encode_view_body(self, codec)
-    }
-}
-impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::CheckoutTagResponse>
-for ::buffa::view::OwnedView<
-    crate::proto::gitproxy::v1::__buffa::view::CheckoutTagResponseView<'static>,
-> {
-    fn encode(
-        &self,
-        codec: ::connectrpc::CodecFormat,
-    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
-        ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
-    }
-}
 impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::CommitResponse>
 for crate::proto::gitproxy::v1::__buffa::view::CommitResponseView<'_> {
     fn encode(
@@ -450,8 +430,8 @@ for ::buffa::view::OwnedView<
         ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
     }
 }
-impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::RevertMergeResponse>
-for crate::proto::gitproxy::v1::__buffa::view::RevertMergeResponseView<'_> {
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::RevertResponse>
+for crate::proto::gitproxy::v1::__buffa::view::RevertResponseView<'_> {
     fn encode(
         &self,
         codec: ::connectrpc::CodecFormat,
@@ -459,9 +439,9 @@ for crate::proto::gitproxy::v1::__buffa::view::RevertMergeResponseView<'_> {
         ::connectrpc::__codegen::encode_view_body(self, codec)
     }
 }
-impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::RevertMergeResponse>
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::RevertResponse>
 for ::buffa::view::OwnedView<
-    crate::proto::gitproxy::v1::__buffa::view::RevertMergeResponseView<'static>,
+    crate::proto::gitproxy::v1::__buffa::view::RevertResponseView<'static>,
 > {
     fn encode(
         &self,
@@ -510,8 +490,8 @@ for ::buffa::view::OwnedView<
         ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
     }
 }
-impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::RevertCommitResponse>
-for crate::proto::gitproxy::v1::__buffa::view::RevertCommitResponseView<'_> {
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::GetBlobResponse>
+for crate::proto::gitproxy::v1::__buffa::view::GetBlobResponseView<'_> {
     fn encode(
         &self,
         codec: ::connectrpc::CodecFormat,
@@ -519,9 +499,29 @@ for crate::proto::gitproxy::v1::__buffa::view::RevertCommitResponseView<'_> {
         ::connectrpc::__codegen::encode_view_body(self, codec)
     }
 }
-impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::RevertCommitResponse>
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::GetBlobResponse>
 for ::buffa::view::OwnedView<
-    crate::proto::gitproxy::v1::__buffa::view::RevertCommitResponseView<'static>,
+    crate::proto::gitproxy::v1::__buffa::view::GetBlobResponseView<'static>,
+> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::ListBlobsResponse>
+for crate::proto::gitproxy::v1::__buffa::view::ListBlobsResponseView<'_> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self, codec)
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::ListBlobsResponse>
+for ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::ListBlobsResponseView<'static>,
 > {
     fn encode(
         &self,
@@ -631,15 +631,6 @@ pub const GIT_PROXY_SERVICE_DELETE_TAG_SPEC: ::connectrpc::Spec = ::connectrpc::
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
-/// Static [`Spec`](::connectrpc::Spec) for the server-side `CheckoutTag` RPC.
-///
-/// The dispatcher surfaces this on
-/// [`RequestContext::spec`](::connectrpc::RequestContext::spec).
-pub const GIT_PROXY_SERVICE_CHECKOUT_TAG_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
-        "/gitproxy.v1.GitProxyService/CheckoutTag",
-        ::connectrpc::StreamType::Unary,
-    )
-    .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
 /// Static [`Spec`](::connectrpc::Spec) for the server-side `Commit` RPC.
 ///
 /// The dispatcher surfaces this on
@@ -667,12 +658,12 @@ pub const GIT_PROXY_SERVICE_LOG_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::s
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
-/// Static [`Spec`](::connectrpc::Spec) for the server-side `RevertMerge` RPC.
+/// Static [`Spec`](::connectrpc::Spec) for the server-side `Revert` RPC.
 ///
 /// The dispatcher surfaces this on
 /// [`RequestContext::spec`](::connectrpc::RequestContext::spec).
-pub const GIT_PROXY_SERVICE_REVERT_MERGE_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
-        "/gitproxy.v1.GitProxyService/RevertMerge",
+pub const GIT_PROXY_SERVICE_REVERT_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
+        "/gitproxy.v1.GitProxyService/Revert",
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
@@ -694,12 +685,21 @@ pub const GIT_PROXY_SERVICE_STATUS_SPEC: ::connectrpc::Spec = ::connectrpc::Spec
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
-/// Static [`Spec`](::connectrpc::Spec) for the server-side `RevertCommit` RPC.
+/// Static [`Spec`](::connectrpc::Spec) for the server-side `GetBlob` RPC.
 ///
 /// The dispatcher surfaces this on
 /// [`RequestContext::spec`](::connectrpc::RequestContext::spec).
-pub const GIT_PROXY_SERVICE_REVERT_COMMIT_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
-        "/gitproxy.v1.GitProxyService/RevertCommit",
+pub const GIT_PROXY_SERVICE_GET_BLOB_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
+        "/gitproxy.v1.GitProxyService/GetBlob",
+        ::connectrpc::StreamType::Unary,
+    )
+    .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
+/// Static [`Spec`](::connectrpc::Spec) for the server-side `ListBlobs` RPC.
+///
+/// The dispatcher surfaces this on
+/// [`RequestContext::spec`](::connectrpc::RequestContext::spec).
+pub const GIT_PROXY_SERVICE_LIST_BLOBS_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
+        "/gitproxy.v1.GitProxyService/ListBlobs",
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
@@ -1007,29 +1007,6 @@ pub trait GitProxyService: Send + Sync + 'static {
             > + Send + use<'a, Self>,
         >,
     > + Send;
-    /// Handle the CheckoutTag RPC.
-    ///
-    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
-    ///
-    /// `request` is borrowed from the request body and is valid for the
-    /// duration of the call; message fields are read directly on it
-    /// (zero-copy). The response cannot borrow from `request` — use
-    /// `.to_owned_message()` (or copy the specific fields) for anything
-    /// returned, stored, or moved into `tokio::spawn`.
-    fn checkout_tag<'a>(
-        &'a self,
-        ctx: ::connectrpc::RequestContext,
-        request: ::connectrpc::ServiceRequest<
-            '_,
-            crate::proto::gitproxy::v1::CheckoutTagRequest,
-        >,
-    ) -> impl ::std::future::Future<
-        Output = ::connectrpc::ServiceResult<
-            impl ::connectrpc::Encodable<
-                crate::proto::gitproxy::v1::CheckoutTagResponse,
-            > + Send + use<'a, Self>,
-        >,
-    > + Send;
     /// Handle the Commit RPC.
     ///
     /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
@@ -1096,7 +1073,7 @@ pub trait GitProxyService: Send + Sync + 'static {
             > + Send + use<'a, Self>,
         >,
     > + Send;
-    /// Handle the RevertMerge RPC.
+    /// Handle the Revert RPC.
     ///
     /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
     ///
@@ -1105,17 +1082,17 @@ pub trait GitProxyService: Send + Sync + 'static {
     /// (zero-copy). The response cannot borrow from `request` — use
     /// `.to_owned_message()` (or copy the specific fields) for anything
     /// returned, stored, or moved into `tokio::spawn`.
-    fn revert_merge<'a>(
+    fn revert<'a>(
         &'a self,
         ctx: ::connectrpc::RequestContext,
         request: ::connectrpc::ServiceRequest<
             '_,
-            crate::proto::gitproxy::v1::RevertMergeRequest,
+            crate::proto::gitproxy::v1::RevertRequest,
         >,
     ) -> impl ::std::future::Future<
         Output = ::connectrpc::ServiceResult<
             impl ::connectrpc::Encodable<
-                crate::proto::gitproxy::v1::RevertMergeResponse,
+                crate::proto::gitproxy::v1::RevertResponse,
             > + Send + use<'a, Self>,
         >,
     > + Send;
@@ -1165,7 +1142,7 @@ pub trait GitProxyService: Send + Sync + 'static {
             > + Send + use<'a, Self>,
         >,
     > + Send;
-    /// Handle the RevertCommit RPC.
+    /// Handle the GetBlob RPC.
     ///
     /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
     ///
@@ -1174,17 +1151,40 @@ pub trait GitProxyService: Send + Sync + 'static {
     /// (zero-copy). The response cannot borrow from `request` — use
     /// `.to_owned_message()` (or copy the specific fields) for anything
     /// returned, stored, or moved into `tokio::spawn`.
-    fn revert_commit<'a>(
+    fn get_blob<'a>(
         &'a self,
         ctx: ::connectrpc::RequestContext,
         request: ::connectrpc::ServiceRequest<
             '_,
-            crate::proto::gitproxy::v1::RevertCommitRequest,
+            crate::proto::gitproxy::v1::GetBlobRequest,
         >,
     ) -> impl ::std::future::Future<
         Output = ::connectrpc::ServiceResult<
             impl ::connectrpc::Encodable<
-                crate::proto::gitproxy::v1::RevertCommitResponse,
+                crate::proto::gitproxy::v1::GetBlobResponse,
+            > + Send + use<'a, Self>,
+        >,
+    > + Send;
+    /// Handle the ListBlobs RPC.
+    ///
+    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
+    ///
+    /// `request` is borrowed from the request body and is valid for the
+    /// duration of the call; message fields are read directly on it
+    /// (zero-copy). The response cannot borrow from `request` — use
+    /// `.to_owned_message()` (or copy the specific fields) for anything
+    /// returned, stored, or moved into `tokio::spawn`.
+    fn list_blobs<'a>(
+        &'a self,
+        ctx: ::connectrpc::RequestContext,
+        request: ::connectrpc::ServiceRequest<
+            '_,
+            crate::proto::gitproxy::v1::ListBlobsRequest,
+        >,
+    ) -> impl ::std::future::Future<
+        Output = ::connectrpc::ServiceResult<
+            impl ::connectrpc::Encodable<
+                crate::proto::gitproxy::v1::ListBlobsResponse,
             > + Send + use<'a, Self>,
         >,
     > + Send;
@@ -1541,35 +1541,6 @@ impl<S: GitProxyService> GitProxyServiceExt for S {
             .with_spec(GIT_PROXY_SERVICE_DELETE_TAG_SPEC)
             .route_view(
                 GIT_PROXY_SERVICE_SERVICE_NAME,
-                "CheckoutTag",
-                {
-                    let svc = ::std::sync::Arc::clone(&self);
-                    ::connectrpc::view_handler_fn(move |
-                        ctx,
-                        req: ::buffa::view::OwnedView<
-                            crate::proto::gitproxy::v1::__buffa::view::CheckoutTagRequestView<
-                                'static,
-                            >,
-                        >,
-                        format|
-                    {
-                        let svc = ::std::sync::Arc::clone(&svc);
-                        async move {
-                            let sreq = ::connectrpc::ServiceRequest::<
-                                crate::proto::gitproxy::v1::CheckoutTagRequest,
-                            >::from_parts(req.reborrow(), req.bytes());
-                            svc.checkout_tag(ctx, sreq)
-                                .await?
-                                .encode::<
-                                    crate::proto::gitproxy::v1::CheckoutTagResponse,
-                                >(format)
-                        }
-                    })
-                },
-            )
-            .with_spec(GIT_PROXY_SERVICE_CHECKOUT_TAG_SPEC)
-            .route_view(
-                GIT_PROXY_SERVICE_SERVICE_NAME,
                 "Commit",
                 {
                     let svc = ::std::sync::Arc::clone(&self);
@@ -1653,13 +1624,13 @@ impl<S: GitProxyService> GitProxyServiceExt for S {
             .with_spec(GIT_PROXY_SERVICE_LOG_SPEC)
             .route_view(
                 GIT_PROXY_SERVICE_SERVICE_NAME,
-                "RevertMerge",
+                "Revert",
                 {
                     let svc = ::std::sync::Arc::clone(&self);
                     ::connectrpc::view_handler_fn(move |
                         ctx,
                         req: ::buffa::view::OwnedView<
-                            crate::proto::gitproxy::v1::__buffa::view::RevertMergeRequestView<
+                            crate::proto::gitproxy::v1::__buffa::view::RevertRequestView<
                                 'static,
                             >,
                         >,
@@ -1668,18 +1639,18 @@ impl<S: GitProxyService> GitProxyServiceExt for S {
                         let svc = ::std::sync::Arc::clone(&svc);
                         async move {
                             let sreq = ::connectrpc::ServiceRequest::<
-                                crate::proto::gitproxy::v1::RevertMergeRequest,
+                                crate::proto::gitproxy::v1::RevertRequest,
                             >::from_parts(req.reborrow(), req.bytes());
-                            svc.revert_merge(ctx, sreq)
+                            svc.revert(ctx, sreq)
                                 .await?
                                 .encode::<
-                                    crate::proto::gitproxy::v1::RevertMergeResponse,
+                                    crate::proto::gitproxy::v1::RevertResponse,
                                 >(format)
                         }
                     })
                 },
             )
-            .with_spec(GIT_PROXY_SERVICE_REVERT_MERGE_SPEC)
+            .with_spec(GIT_PROXY_SERVICE_REVERT_SPEC)
             .route_view(
                 GIT_PROXY_SERVICE_SERVICE_NAME,
                 "Diff",
@@ -1738,13 +1709,13 @@ impl<S: GitProxyService> GitProxyServiceExt for S {
             .with_spec(GIT_PROXY_SERVICE_STATUS_SPEC)
             .route_view(
                 GIT_PROXY_SERVICE_SERVICE_NAME,
-                "RevertCommit",
+                "GetBlob",
                 {
                     let svc = ::std::sync::Arc::clone(&self);
                     ::connectrpc::view_handler_fn(move |
                         ctx,
                         req: ::buffa::view::OwnedView<
-                            crate::proto::gitproxy::v1::__buffa::view::RevertCommitRequestView<
+                            crate::proto::gitproxy::v1::__buffa::view::GetBlobRequestView<
                                 'static,
                             >,
                         >,
@@ -1753,18 +1724,47 @@ impl<S: GitProxyService> GitProxyServiceExt for S {
                         let svc = ::std::sync::Arc::clone(&svc);
                         async move {
                             let sreq = ::connectrpc::ServiceRequest::<
-                                crate::proto::gitproxy::v1::RevertCommitRequest,
+                                crate::proto::gitproxy::v1::GetBlobRequest,
                             >::from_parts(req.reborrow(), req.bytes());
-                            svc.revert_commit(ctx, sreq)
+                            svc.get_blob(ctx, sreq)
                                 .await?
                                 .encode::<
-                                    crate::proto::gitproxy::v1::RevertCommitResponse,
+                                    crate::proto::gitproxy::v1::GetBlobResponse,
                                 >(format)
                         }
                     })
                 },
             )
-            .with_spec(GIT_PROXY_SERVICE_REVERT_COMMIT_SPEC)
+            .with_spec(GIT_PROXY_SERVICE_GET_BLOB_SPEC)
+            .route_view(
+                GIT_PROXY_SERVICE_SERVICE_NAME,
+                "ListBlobs",
+                {
+                    let svc = ::std::sync::Arc::clone(&self);
+                    ::connectrpc::view_handler_fn(move |
+                        ctx,
+                        req: ::buffa::view::OwnedView<
+                            crate::proto::gitproxy::v1::__buffa::view::ListBlobsRequestView<
+                                'static,
+                            >,
+                        >,
+                        format|
+                    {
+                        let svc = ::std::sync::Arc::clone(&svc);
+                        async move {
+                            let sreq = ::connectrpc::ServiceRequest::<
+                                crate::proto::gitproxy::v1::ListBlobsRequest,
+                            >::from_parts(req.reborrow(), req.bytes());
+                            svc.list_blobs(ctx, sreq)
+                                .await?
+                                .encode::<
+                                    crate::proto::gitproxy::v1::ListBlobsResponse,
+                                >(format)
+                        }
+                    })
+                },
+            )
+            .with_spec(GIT_PROXY_SERVICE_LIST_BLOBS_SPEC)
     }
 }
 /// Type-inference marker used by [`Router::add_service`](::connectrpc::Router::add_service).
@@ -1885,12 +1885,6 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                         .with_spec(GIT_PROXY_SERVICE_DELETE_TAG_SPEC),
                 )
             }
-            "CheckoutTag" => {
-                Some(
-                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
-                        .with_spec(GIT_PROXY_SERVICE_CHECKOUT_TAG_SPEC),
-                )
-            }
             "Commit" => {
                 Some(
                     ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
@@ -1909,10 +1903,10 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                         .with_spec(GIT_PROXY_SERVICE_LOG_SPEC),
                 )
             }
-            "RevertMerge" => {
+            "Revert" => {
                 Some(
                     ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
-                        .with_spec(GIT_PROXY_SERVICE_REVERT_MERGE_SPEC),
+                        .with_spec(GIT_PROXY_SERVICE_REVERT_SPEC),
                 )
             }
             "Diff" => {
@@ -1927,10 +1921,16 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                         .with_spec(GIT_PROXY_SERVICE_STATUS_SPEC),
                 )
             }
-            "RevertCommit" => {
+            "GetBlob" => {
                 Some(
                     ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
-                        .with_spec(GIT_PROXY_SERVICE_REVERT_COMMIT_SPEC),
+                        .with_spec(GIT_PROXY_SERVICE_GET_BLOB_SPEC),
+                )
+            }
+            "ListBlobs" => {
+                Some(
+                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
+                        .with_spec(GIT_PROXY_SERVICE_LIST_BLOBS_SPEC),
                 )
             }
             _ => None,
@@ -2171,27 +2171,6 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                         .encode::<crate::proto::gitproxy::v1::DeleteTagResponse>(format)
                 })
             }
-            "CheckoutTag" => {
-                let svc = ::std::sync::Arc::clone(&self.inner);
-                Box::pin(async move {
-                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
-                        crate::proto::gitproxy::v1::CheckoutTagRequest,
-                    >(request.encoded()?, format)?;
-                    let req: crate::proto::gitproxy::v1::__buffa::view::CheckoutTagRequestView<
-                        '_,
-                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
-                        &body,
-                    )?;
-                    let req = ::connectrpc::ServiceRequest::<
-                        crate::proto::gitproxy::v1::CheckoutTagRequest,
-                    >::from_parts(&req, &body);
-                    svc.checkout_tag(ctx, req)
-                        .await?
-                        .encode::<
-                            crate::proto::gitproxy::v1::CheckoutTagResponse,
-                        >(format)
-                })
-            }
             "Commit" => {
                 let svc = ::std::sync::Arc::clone(&self.inner);
                 Box::pin(async move {
@@ -2249,25 +2228,23 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                         .encode::<crate::proto::gitproxy::v1::LogResponse>(format)
                 })
             }
-            "RevertMerge" => {
+            "Revert" => {
                 let svc = ::std::sync::Arc::clone(&self.inner);
                 Box::pin(async move {
                     let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
-                        crate::proto::gitproxy::v1::RevertMergeRequest,
+                        crate::proto::gitproxy::v1::RevertRequest,
                     >(request.encoded()?, format)?;
-                    let req: crate::proto::gitproxy::v1::__buffa::view::RevertMergeRequestView<
+                    let req: crate::proto::gitproxy::v1::__buffa::view::RevertRequestView<
                         '_,
                     > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
                         &body,
                     )?;
                     let req = ::connectrpc::ServiceRequest::<
-                        crate::proto::gitproxy::v1::RevertMergeRequest,
+                        crate::proto::gitproxy::v1::RevertRequest,
                     >::from_parts(&req, &body);
-                    svc.revert_merge(ctx, req)
+                    svc.revert(ctx, req)
                         .await?
-                        .encode::<
-                            crate::proto::gitproxy::v1::RevertMergeResponse,
-                        >(format)
+                        .encode::<crate::proto::gitproxy::v1::RevertResponse>(format)
                 })
             }
             "Diff" => {
@@ -2308,25 +2285,42 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                         .encode::<crate::proto::gitproxy::v1::StatusResponse>(format)
                 })
             }
-            "RevertCommit" => {
+            "GetBlob" => {
                 let svc = ::std::sync::Arc::clone(&self.inner);
                 Box::pin(async move {
                     let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
-                        crate::proto::gitproxy::v1::RevertCommitRequest,
+                        crate::proto::gitproxy::v1::GetBlobRequest,
                     >(request.encoded()?, format)?;
-                    let req: crate::proto::gitproxy::v1::__buffa::view::RevertCommitRequestView<
+                    let req: crate::proto::gitproxy::v1::__buffa::view::GetBlobRequestView<
                         '_,
                     > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
                         &body,
                     )?;
                     let req = ::connectrpc::ServiceRequest::<
-                        crate::proto::gitproxy::v1::RevertCommitRequest,
+                        crate::proto::gitproxy::v1::GetBlobRequest,
                     >::from_parts(&req, &body);
-                    svc.revert_commit(ctx, req)
+                    svc.get_blob(ctx, req)
                         .await?
-                        .encode::<
-                            crate::proto::gitproxy::v1::RevertCommitResponse,
-                        >(format)
+                        .encode::<crate::proto::gitproxy::v1::GetBlobResponse>(format)
+                })
+            }
+            "ListBlobs" => {
+                let svc = ::std::sync::Arc::clone(&self.inner);
+                Box::pin(async move {
+                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
+                        crate::proto::gitproxy::v1::ListBlobsRequest,
+                    >(request.encoded()?, format)?;
+                    let req: crate::proto::gitproxy::v1::__buffa::view::ListBlobsRequestView<
+                        '_,
+                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
+                        &body,
+                    )?;
+                    let req = ::connectrpc::ServiceRequest::<
+                        crate::proto::gitproxy::v1::ListBlobsRequest,
+                    >::from_parts(&req, &body);
+                    svc.list_blobs(ctx, req)
+                        .await?
+                        .encode::<crate::proto::gitproxy::v1::ListBlobsResponse>(format)
                 })
             }
             _ => ::connectrpc::dispatcher::codegen::unimplemented_unary(path),
@@ -2936,51 +2930,6 @@ where
             )
             .await
     }
-    /// Call the CheckoutTag RPC. Sends a request to /gitproxy.v1.GitProxyService/CheckoutTag.
-    pub async fn checkout_tag(
-        &self,
-        request: crate::proto::gitproxy::v1::CheckoutTagRequest,
-    ) -> Result<
-        ::connectrpc::client::UnaryResponse<
-            ::buffa::view::OwnedView<
-                crate::proto::gitproxy::v1::__buffa::view::CheckoutTagResponseView<
-                    'static,
-                >,
-            >,
-        >,
-        ::connectrpc::ConnectError,
-    > {
-        self.checkout_tag_with_options(
-                request,
-                ::connectrpc::client::CallOptions::default(),
-            )
-            .await
-    }
-    /// Call the CheckoutTag RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
-    pub async fn checkout_tag_with_options(
-        &self,
-        request: crate::proto::gitproxy::v1::CheckoutTagRequest,
-        options: ::connectrpc::client::CallOptions,
-    ) -> Result<
-        ::connectrpc::client::UnaryResponse<
-            ::buffa::view::OwnedView<
-                crate::proto::gitproxy::v1::__buffa::view::CheckoutTagResponseView<
-                    'static,
-                >,
-            >,
-        >,
-        ::connectrpc::ConnectError,
-    > {
-        ::connectrpc::client::call_unary(
-                &self.transport,
-                &self.config,
-                GIT_PROXY_SERVICE_SERVICE_NAME,
-                "CheckoutTag",
-                request,
-                options,
-            )
-            .await
-    }
     /// Call the Commit RPC. Sends a request to /gitproxy.v1.GitProxyService/Commit.
     pub async fn commit(
         &self,
@@ -3095,37 +3044,30 @@ where
             )
             .await
     }
-    /// Call the RevertMerge RPC. Sends a request to /gitproxy.v1.GitProxyService/RevertMerge.
-    pub async fn revert_merge(
+    /// Call the Revert RPC. Sends a request to /gitproxy.v1.GitProxyService/Revert.
+    pub async fn revert(
         &self,
-        request: crate::proto::gitproxy::v1::RevertMergeRequest,
+        request: crate::proto::gitproxy::v1::RevertRequest,
     ) -> Result<
         ::connectrpc::client::UnaryResponse<
             ::buffa::view::OwnedView<
-                crate::proto::gitproxy::v1::__buffa::view::RevertMergeResponseView<
-                    'static,
-                >,
+                crate::proto::gitproxy::v1::__buffa::view::RevertResponseView<'static>,
             >,
         >,
         ::connectrpc::ConnectError,
     > {
-        self.revert_merge_with_options(
-                request,
-                ::connectrpc::client::CallOptions::default(),
-            )
+        self.revert_with_options(request, ::connectrpc::client::CallOptions::default())
             .await
     }
-    /// Call the RevertMerge RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
-    pub async fn revert_merge_with_options(
+    /// Call the Revert RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
+    pub async fn revert_with_options(
         &self,
-        request: crate::proto::gitproxy::v1::RevertMergeRequest,
+        request: crate::proto::gitproxy::v1::RevertRequest,
         options: ::connectrpc::client::CallOptions,
     ) -> Result<
         ::connectrpc::client::UnaryResponse<
             ::buffa::view::OwnedView<
-                crate::proto::gitproxy::v1::__buffa::view::RevertMergeResponseView<
-                    'static,
-                >,
+                crate::proto::gitproxy::v1::__buffa::view::RevertResponseView<'static>,
             >,
         >,
         ::connectrpc::ConnectError,
@@ -3134,7 +3076,7 @@ where
                 &self.transport,
                 &self.config,
                 GIT_PROXY_SERVICE_SERVICE_NAME,
-                "RevertMerge",
+                "Revert",
                 request,
                 options,
             )
@@ -3216,37 +3158,30 @@ where
             )
             .await
     }
-    /// Call the RevertCommit RPC. Sends a request to /gitproxy.v1.GitProxyService/RevertCommit.
-    pub async fn revert_commit(
+    /// Call the GetBlob RPC. Sends a request to /gitproxy.v1.GitProxyService/GetBlob.
+    pub async fn get_blob(
         &self,
-        request: crate::proto::gitproxy::v1::RevertCommitRequest,
+        request: crate::proto::gitproxy::v1::GetBlobRequest,
     ) -> Result<
         ::connectrpc::client::UnaryResponse<
             ::buffa::view::OwnedView<
-                crate::proto::gitproxy::v1::__buffa::view::RevertCommitResponseView<
-                    'static,
-                >,
+                crate::proto::gitproxy::v1::__buffa::view::GetBlobResponseView<'static>,
             >,
         >,
         ::connectrpc::ConnectError,
     > {
-        self.revert_commit_with_options(
-                request,
-                ::connectrpc::client::CallOptions::default(),
-            )
+        self.get_blob_with_options(request, ::connectrpc::client::CallOptions::default())
             .await
     }
-    /// Call the RevertCommit RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
-    pub async fn revert_commit_with_options(
+    /// Call the GetBlob RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
+    pub async fn get_blob_with_options(
         &self,
-        request: crate::proto::gitproxy::v1::RevertCommitRequest,
+        request: crate::proto::gitproxy::v1::GetBlobRequest,
         options: ::connectrpc::client::CallOptions,
     ) -> Result<
         ::connectrpc::client::UnaryResponse<
             ::buffa::view::OwnedView<
-                crate::proto::gitproxy::v1::__buffa::view::RevertCommitResponseView<
-                    'static,
-                >,
+                crate::proto::gitproxy::v1::__buffa::view::GetBlobResponseView<'static>,
             >,
         >,
         ::connectrpc::ConnectError,
@@ -3255,7 +3190,48 @@ where
                 &self.transport,
                 &self.config,
                 GIT_PROXY_SERVICE_SERVICE_NAME,
-                "RevertCommit",
+                "GetBlob",
+                request,
+                options,
+            )
+            .await
+    }
+    /// Call the ListBlobs RPC. Sends a request to /gitproxy.v1.GitProxyService/ListBlobs.
+    pub async fn list_blobs(
+        &self,
+        request: crate::proto::gitproxy::v1::ListBlobsRequest,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::gitproxy::v1::__buffa::view::ListBlobsResponseView<'static>,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        self.list_blobs_with_options(
+                request,
+                ::connectrpc::client::CallOptions::default(),
+            )
+            .await
+    }
+    /// Call the ListBlobs RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
+    pub async fn list_blobs_with_options(
+        &self,
+        request: crate::proto::gitproxy::v1::ListBlobsRequest,
+        options: ::connectrpc::client::CallOptions,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::gitproxy::v1::__buffa::view::ListBlobsResponseView<'static>,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        ::connectrpc::client::call_unary(
+                &self.transport,
+                &self.config,
+                GIT_PROXY_SERVICE_SERVICE_NAME,
+                "ListBlobs",
                 request,
                 options,
             )

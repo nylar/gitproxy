@@ -1,4 +1,4 @@
-use std::{collections::HashMap, iter::zip, path::Path};
+use std::{collections::HashMap, iter::zip};
 
 use buffa::{MessageField, MessageView};
 use connectrpc::client::{ClientConfig, HttpClient};
@@ -7,7 +7,7 @@ use gitproxy::{
     connect::gitproxy::v1::GitProxyServiceClient,
     proto::gitproxy::v1::{
         CommitAuthor, CommitRequest, ConflictDiff, CreateBranchRequest, CreateRepositoryRequest,
-        DeleteRepositoryRequest, MergeRequest, diff_patch::Operation,
+        DeleteRepositoryRequest, File, MergeRequest, diff_patch::Operation,
     },
 };
 use json_patch::{PatchOperation, jsonptr::PointerBuf};
@@ -30,7 +30,7 @@ async fn main() {
         .await
         .unwrap();
 
-    let resp = client
+    client
         .create_repository(CreateRepositoryRequest {
             namespace: NAMESPACE.to_owned(),
             ..Default::default()
@@ -38,22 +38,11 @@ async fn main() {
         .await
         .unwrap();
 
-    let main_dir = Path::new(resp.view().repository.path).join("main");
-
-    std::fs::create_dir_all(&main_dir.join("menus/")).unwrap();
-    std::fs::create_dir_all(&main_dir.join("pages/")).unwrap();
-
     let mut menu_foo = Menu {
         id: "foo".to_owned(),
         title: HashMap::from([("en-US".to_owned(), "Foo".to_owned())]),
         page_ids: vec!["bar".to_owned(), "baz".to_owned()],
     };
-
-    std::fs::write(
-        main_dir.join("menus/foo.json"),
-        &serde_json::to_vec(&menu_foo).unwrap(),
-    )
-    .unwrap();
 
     let mut page_bar = Page {
         id: "bar".to_owned(),
@@ -69,28 +58,33 @@ async fn main() {
         menu_id: "foo".to_owned(),
     };
 
-    std::fs::write(
-        main_dir.join("pages/bar.json"),
-        &serde_json::to_vec(&page_bar).unwrap(),
-    )
-    .unwrap();
-
-    std::fs::write(
-        main_dir.join("pages/baz.json"),
-        &serde_json::to_vec(&page_baz).unwrap(),
-    )
-    .unwrap();
-
     client
         .commit(CommitRequest {
             namespace: NAMESPACE.to_owned(),
             branch: "main".to_owned(),
-            message: "Initial comit".to_owned(),
+            message: "Initial main commit".to_owned(),
             author: MessageField::some(CommitAuthor {
                 name: "test".to_owned(),
                 email: "test@example.com".to_owned(),
                 ..Default::default()
             }),
+            files: vec![
+                File {
+                    path: "menus/foo.json".to_owned(),
+                    contents: serde_json::to_vec(&menu_foo).unwrap(),
+                    ..Default::default()
+                },
+                File {
+                    path: "pages/bar.json".to_owned(),
+                    contents: serde_json::to_vec(&page_bar).unwrap(),
+                    ..Default::default()
+                },
+                File {
+                    path: "pages/baz.json".to_owned(),
+                    contents: serde_json::to_vec(&page_baz).unwrap(),
+                    ..Default::default()
+                },
+            ],
             ..Default::default()
         })
         .await
@@ -98,7 +92,7 @@ async fn main() {
 
     let branch: &str = "my-branch";
 
-    let resp = client
+    client
         .create_branch(CreateBranchRequest {
             namespace: NAMESPACE.to_owned(),
             branch: branch.to_owned(),
@@ -107,30 +101,9 @@ async fn main() {
         .await
         .unwrap();
 
-    let branch_dir = Path::new(resp.view().branch.path);
-
     menu_foo.title.insert("en-US".to_owned(), "Quux".to_owned());
-
-    std::fs::write(
-        branch_dir.join("menus/foo.json"),
-        &serde_json::to_vec(&menu_foo).unwrap(),
-    )
-    .unwrap();
-
     page_bar.title.insert("en-US".to_owned(), "Thud".to_owned());
     page_baz.archived = true;
-
-    std::fs::write(
-        branch_dir.join("pages/bar.json"),
-        &serde_json::to_vec(&page_bar).unwrap(),
-    )
-    .unwrap();
-
-    std::fs::write(
-        branch_dir.join("pages/baz.json"),
-        &serde_json::to_vec(&page_baz).unwrap(),
-    )
-    .unwrap();
 
     client
         .commit(CommitRequest {
@@ -142,6 +115,23 @@ async fn main() {
                 email: "test@example.com".to_owned(),
                 ..Default::default()
             }),
+            files: vec![
+                File {
+                    path: "menus/foo.json".to_owned(),
+                    contents: serde_json::to_vec(&menu_foo).unwrap(),
+                    ..Default::default()
+                },
+                File {
+                    path: "pages/bar.json".to_owned(),
+                    contents: serde_json::to_vec(&page_bar).unwrap(),
+                    ..Default::default()
+                },
+                File {
+                    path: "pages/baz.json".to_owned(),
+                    contents: serde_json::to_vec(&page_baz).unwrap(),
+                    ..Default::default()
+                },
+            ],
             ..Default::default()
         })
         .await
@@ -151,32 +141,32 @@ async fn main() {
         .title
         .insert("en-US".to_owned(), "Plugh".to_owned());
 
-    std::fs::write(
-        main_dir.join("menus/foo.json"),
-        &serde_json::to_vec(&menu_foo).unwrap(),
-    )
-    .unwrap();
-
     page_bar
         .title
         .insert("en-US".to_owned(), "Blargh".to_owned());
-
-    std::fs::write(
-        main_dir.join("pages/bar.json"),
-        &serde_json::to_vec(&page_bar).unwrap(),
-    )
-    .unwrap();
 
     client
         .commit(CommitRequest {
             namespace: NAMESPACE.to_owned(),
             branch: "main".to_owned(),
-            message: "Initial comit".to_owned(),
+            message: "Change in main".to_owned(),
             author: MessageField::some(CommitAuthor {
                 name: "test".to_owned(),
                 email: "test@example.com".to_owned(),
                 ..Default::default()
             }),
+            files: vec![
+                File {
+                    path: "menus/foo.json".to_owned(),
+                    contents: serde_json::to_vec(&menu_foo).unwrap(),
+                    ..Default::default()
+                },
+                File {
+                    path: "pages/bar.json".to_owned(),
+                    contents: serde_json::to_vec(&page_bar).unwrap(),
+                    ..Default::default()
+                },
+            ],
             ..Default::default()
         })
         .await
@@ -185,7 +175,8 @@ async fn main() {
     let resp = client
         .merge(MergeRequest {
             namespace: NAMESPACE.to_owned(),
-            branch: branch.to_owned(),
+            source_branch: branch.to_owned(),
+            target_branch: "main".to_owned(),
             ..Default::default()
         })
         .await
@@ -194,10 +185,7 @@ async fn main() {
     cliclack::clear_screen().unwrap();
     cliclack::intro(style(" Resolve conflicts ").on_magenta().black()).unwrap();
 
-    resolve_conflicts(
-        branch_dir,
-        &resp.view().to_owned_message().unwrap().conflicts,
-    );
+    let files = resolve_conflicts(&resp.view().to_owned_message().unwrap().conflicts);
 
     cliclack::outro(style(" Conflicts resolved! ").on_green().black()).unwrap();
 
@@ -211,6 +199,7 @@ async fn main() {
                 email: "test@example.com".to_owned(),
                 ..Default::default()
             }),
+            files,
             ..Default::default()
         })
         .await
@@ -219,10 +208,11 @@ async fn main() {
     println!("Merge commit: {}", resp.view().commit);
 }
 
-fn resolve_conflicts(dir: &Path, conflicts: &[ConflictDiff]) {
+fn resolve_conflicts(conflicts: &[ConflictDiff]) -> Vec<File> {
+    let mut files = Vec::new();
+
     for conflict in conflicts {
-        let data = std::fs::read(dir.join(&conflict.path)).unwrap();
-        let mut value: Value = serde_json::from_slice(&data).unwrap();
+        let mut value: Value = serde_json::from_slice(&conflict.contents).unwrap();
 
         cliclack::note(
             format!("Before: {}", conflict.path.to_owned()),
@@ -248,8 +238,14 @@ fn resolve_conflicts(dir: &Path, conflicts: &[ConflictDiff]) {
         .unwrap();
 
         let data = serde_json::to_vec(&value).unwrap();
-        std::fs::write(dir.join(&conflict.path), &data).unwrap();
+
+        files.push(File {
+            path: conflict.path.to_owned(),
+            contents: data,
+            ..Default::default()
+        });
     }
+    files
 }
 
 fn title(ours: &PatchOperation) -> String {

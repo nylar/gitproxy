@@ -54,20 +54,22 @@ pub mod __buffa {
         reg.register_json_any(super::__CREATE_TAG_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__DELETE_TAG_REQUEST_JSON_ANY);
         reg.register_json_any(super::__DELETE_TAG_RESPONSE_JSON_ANY);
-        reg.register_json_any(super::__CHECKOUT_TAG_REQUEST_JSON_ANY);
-        reg.register_json_any(super::__CHECKOUT_TAG_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__COMMIT_REQUEST_JSON_ANY);
         reg.register_json_any(super::__COMMIT_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__MERGE_REQUEST_JSON_ANY);
         reg.register_json_any(super::__MERGE_RESPONSE_JSON_ANY);
-        reg.register_json_any(super::__REVERT_MERGE_REQUEST_JSON_ANY);
-        reg.register_json_any(super::__REVERT_MERGE_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__REVERT_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__REVERT_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__LOG_REQUEST_JSON_ANY);
         reg.register_json_any(super::__LOG_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__DIFF_REQUEST_JSON_ANY);
         reg.register_json_any(super::__DIFF_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__STATUS_REQUEST_JSON_ANY);
         reg.register_json_any(super::__STATUS_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__GET_BLOB_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__GET_BLOB_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__LIST_BLOBS_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__LIST_BLOBS_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__REVERT_COMMIT_REQUEST_JSON_ANY);
         reg.register_json_any(super::__REVERT_COMMIT_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__COMMIT_AUTHOR_JSON_ANY);
@@ -84,6 +86,8 @@ pub mod __buffa {
         reg.register_json_any(super::diff_patch::__COPY_JSON_ANY);
         reg.register_json_any(super::diff_patch::__TEST_JSON_ANY);
         reg.register_json_any(super::__CONFLICT_DIFF_JSON_ANY);
+        reg.register_json_any(super::__FILE_JSON_ANY);
+        reg.register_json_any(super::__TAG_JSON_ANY);
     }
 }
 #[doc(inline)]
@@ -175,14 +179,6 @@ pub use self::__buffa::view::DeleteTagResponseView;
 #[doc(inline)]
 pub use self::__buffa::view::DeleteTagResponseOwnedView;
 #[doc(inline)]
-pub use self::__buffa::view::CheckoutTagRequestView;
-#[doc(inline)]
-pub use self::__buffa::view::CheckoutTagRequestOwnedView;
-#[doc(inline)]
-pub use self::__buffa::view::CheckoutTagResponseView;
-#[doc(inline)]
-pub use self::__buffa::view::CheckoutTagResponseOwnedView;
-#[doc(inline)]
 pub use self::__buffa::view::CommitRequestView;
 #[doc(inline)]
 pub use self::__buffa::view::CommitRequestOwnedView;
@@ -199,13 +195,13 @@ pub use self::__buffa::view::MergeResponseView;
 #[doc(inline)]
 pub use self::__buffa::view::MergeResponseOwnedView;
 #[doc(inline)]
-pub use self::__buffa::view::RevertMergeRequestView;
+pub use self::__buffa::view::RevertRequestView;
 #[doc(inline)]
-pub use self::__buffa::view::RevertMergeRequestOwnedView;
+pub use self::__buffa::view::RevertRequestOwnedView;
 #[doc(inline)]
-pub use self::__buffa::view::RevertMergeResponseView;
+pub use self::__buffa::view::RevertResponseView;
 #[doc(inline)]
-pub use self::__buffa::view::RevertMergeResponseOwnedView;
+pub use self::__buffa::view::RevertResponseOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::LogRequestView;
 #[doc(inline)]
@@ -230,6 +226,22 @@ pub use self::__buffa::view::StatusRequestOwnedView;
 pub use self::__buffa::view::StatusResponseView;
 #[doc(inline)]
 pub use self::__buffa::view::StatusResponseOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::GetBlobRequestView;
+#[doc(inline)]
+pub use self::__buffa::view::GetBlobRequestOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::GetBlobResponseView;
+#[doc(inline)]
+pub use self::__buffa::view::GetBlobResponseOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::ListBlobsRequestView;
+#[doc(inline)]
+pub use self::__buffa::view::ListBlobsRequestOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::ListBlobsResponseView;
+#[doc(inline)]
+pub use self::__buffa::view::ListBlobsResponseOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::RevertCommitRequestView;
 #[doc(inline)]
@@ -270,5 +282,13 @@ pub use self::__buffa::view::DiffPatchOwnedView;
 pub use self::__buffa::view::ConflictDiffView;
 #[doc(inline)]
 pub use self::__buffa::view::ConflictDiffOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::FileView;
+#[doc(inline)]
+pub use self::__buffa::view::FileOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::TagView;
+#[doc(inline)]
+pub use self::__buffa::view::TagOwnedView;
 #[doc(inline)]
 pub use self::__buffa::register_types;

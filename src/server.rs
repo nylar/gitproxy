@@ -10,15 +10,15 @@ use crate::{
     connect::gitproxy::v1::GitProxyService,
     error::Error,
     proto::gitproxy::v1::{
-        Branch, CheckoutTagRequest, CheckoutTagResponse, CommitAuthor, CommitRequest,
-        CommitResponse, CreateBranchRequest, CreateBranchResponse, CreateRepositoryRequest,
-        CreateRepositoryResponse, CreateTagRequest, CreateTagResponse, DeleteBranchRequest,
-        DeleteBranchResponse, DeleteRepositoryRequest, DeleteRepositoryResponse, DeleteTagRequest,
-        DeleteTagResponse, Diff, DiffRequest, DiffResponse, GetBranchRequest, GetBranchResponse,
-        GetRepositoryRequest, GetRepositoryResponse, ListBranchesRequest, ListBranchesResponse,
-        ListRepositoriesRequest, ListRepositoriesResponse, ListTagsRequest, ListTagsResponse, Log,
-        LogRequest, LogResponse, MergeRequest, MergeResponse, Repository, RevertCommitRequest,
-        RevertCommitResponse, RevertMergeRequest, RevertMergeResponse, StatusRequest,
+        Branch, CommitAuthor, CommitRequest, CommitResponse, CreateBranchRequest,
+        CreateBranchResponse, CreateRepositoryRequest, CreateRepositoryResponse, CreateTagRequest,
+        CreateTagResponse, DeleteBranchRequest, DeleteBranchResponse, DeleteRepositoryRequest,
+        DeleteRepositoryResponse, DeleteTagRequest, DeleteTagResponse, Diff, DiffRequest,
+        DiffResponse, GetBlobRequest, GetBlobResponse, GetBranchRequest, GetBranchResponse,
+        GetRepositoryRequest, GetRepositoryResponse, ListBlobsRequest, ListBlobsResponse,
+        ListBranchesRequest, ListBranchesResponse, ListRepositoriesRequest,
+        ListRepositoriesResponse, ListTagsRequest, ListTagsResponse, Log, LogRequest, LogResponse,
+        MergeRequest, MergeResponse, Repository, RevertRequest, RevertResponse, StatusRequest,
         StatusResponse, log_request::Order,
     },
     repository::{Author, LogOrder},
@@ -76,7 +76,6 @@ impl GitProxyService for Server {
             repositories.push(crate::proto::gitproxy::v1::Repository {
                 namespace: dir.file_name().into_string().unwrap(),
                 head_commit: head.to_string(),
-                path: self.root_dir.join(dir.path()).to_str().unwrap().to_string(),
                 ..Default::default()
             });
         }
@@ -102,7 +101,6 @@ impl GitProxyService for Server {
             repository: MessageField::some(Repository {
                 namespace: request.namespace.to_string(),
                 head_commit: head.to_string(),
-                path: self.repo_dir(request.namespace).display().to_string(),
                 ..Default::default()
             }),
             ..Default::default()
@@ -132,11 +130,6 @@ impl GitProxyService for Server {
             repository: MessageField::some(crate::proto::gitproxy::v1::Repository {
                 namespace: request.namespace.to_string(),
                 head_commit: head.to_string(),
-                path: self
-                    .repo_dir(request.namespace)
-                    .to_str()
-                    .unwrap()
-                    .to_string(),
                 ..Default::default()
             }),
             ..Default::default()
@@ -174,12 +167,6 @@ impl GitProxyService for Server {
             .iter()
             .map(|b| Branch {
                 name: b.to_owned(),
-                path: self
-                    .repo_dir(request.namespace)
-                    .join(b)
-                    .to_str()
-                    .unwrap()
-                    .to_string(),
                 ..Default::default()
             })
             .collect();
@@ -211,12 +198,6 @@ impl GitProxyService for Server {
         Response::ok(GetBranchResponse {
             branch: MessageField::some(Branch {
                 name: request.branch.to_owned(),
-                path: self
-                    .repo_dir(request.namespace)
-                    .join(request.branch)
-                    .to_str()
-                    .unwrap()
-                    .to_string(),
                 ..Default::default()
             }),
             ..Default::default()
@@ -238,12 +219,6 @@ impl GitProxyService for Server {
         Response::ok(CreateBranchResponse {
             branch: MessageField::some(Branch {
                 name: request.branch.to_owned(),
-                path: self
-                    .repo_dir(request.namespace)
-                    .join(request.branch)
-                    .to_str()
-                    .unwrap()
-                    .to_string(),
                 ..Default::default()
             }),
             ..Default::default()
@@ -292,7 +267,7 @@ impl GitProxyService for Server {
         let req = request.to_owned_message();
         let service = self.service(request.namespace);
 
-        spawn_blocking(move || {
+        let tag = spawn_blocking(move || {
             service.create_tag(
                 req.name,
                 req.message,
@@ -308,6 +283,7 @@ impl GitProxyService for Server {
         .map_err(Error::TokioTask)??;
 
         Response::ok(CreateTagResponse {
+            tag: MessageField::some(tag),
             ..Default::default()
         })
     }
@@ -329,24 +305,6 @@ impl GitProxyService for Server {
         })
     }
 
-    async fn checkout_tag(
-        &self,
-        _ctx: RequestContext,
-        request: ServiceRequest<'_, CheckoutTagRequest>,
-    ) -> ServiceResult<CheckoutTagResponse> {
-        let req = request.to_owned_message();
-        let service = self.service(request.namespace);
-
-        let path = spawn_blocking(move || service.checkout_tag(req.name))
-            .await
-            .map_err(Error::TokioTask)??;
-
-        Response::ok(CheckoutTagResponse {
-            path: path.to_str().unwrap().to_string(),
-            ..Default::default()
-        })
-    }
-
     async fn commit(
         &self,
         _ctx: RequestContext,
@@ -363,6 +321,7 @@ impl GitProxyService for Server {
                     name: req.author.name.to_owned(),
                     email: req.author.email.to_owned(),
                 },
+                req.files,
             )
         })
         .await
@@ -382,9 +341,11 @@ impl GitProxyService for Server {
         let req = request.to_owned_message();
         let service = self.service(request.namespace);
 
-        let merge = spawn_blocking(move || service.merge(req.branch, req.dry_run))
-            .await
-            .map_err(Error::TokioTask)??;
+        let merge = spawn_blocking(move || {
+            service.merge(req.source_branch, req.target_branch, req.dry_run)
+        })
+        .await
+        .map_err(Error::TokioTask)??;
 
         Response::ok(merge.into())
     }
@@ -402,9 +363,10 @@ impl GitProxyService for Server {
             _ => LogOrder::Normal,
         };
 
-        let entries = spawn_blocking(move || service.log(req.branch, order, req.parent_branch))
-            .await
-            .map_err(Error::TokioTask)??;
+        let entries =
+            spawn_blocking(move || service.log(req.source_branch, order, req.target_branch))
+                .await
+                .map_err(Error::TokioTask)??;
 
         let entries = entries
             .into_iter()
@@ -427,22 +389,26 @@ impl GitProxyService for Server {
         })
     }
 
-    async fn revert_merge(
+    async fn revert(
         &self,
         _ctx: RequestContext,
-        request: ServiceRequest<'_, RevertMergeRequest>,
-    ) -> ServiceResult<RevertMergeResponse> {
+        request: ServiceRequest<'_, RevertRequest>,
+    ) -> ServiceResult<RevertResponse> {
         let req = request.to_owned_message();
         let service = self.service(request.namespace);
 
-        let commit = spawn_blocking(move || service.revert_merge(req.commit))
-            .await
-            .map_err(Error::TokioTask)??;
+        let merge = spawn_blocking(move || {
+            let strategy = match req.strategy {
+                Some(s) => s.as_known(),
+                _ => Some(crate::proto::gitproxy::v1::revert_request::Strategy::Unspecified),
+            };
 
-        Response::ok(RevertMergeResponse {
-            commit: commit.to_string(),
-            ..Default::default()
+            service.revert_merge(req.target_branch, req.commit, strategy, req.dry_run)
         })
+        .await
+        .map_err(Error::TokioTask)??;
+
+        Response::ok(merge.into())
     }
 
     async fn diff(
@@ -476,7 +442,7 @@ impl GitProxyService for Server {
         let req = request.to_owned_message();
         let service = self.service(request.namespace);
 
-        let clean = spawn_blocking(move || service.status(req.branch))
+        let clean = spawn_blocking(move || service.status(req.source_branch, req.target_branch))
             .await
             .map_err(Error::TokioTask)??;
 
@@ -486,20 +452,38 @@ impl GitProxyService for Server {
         })
     }
 
-    async fn revert_commit(
+    async fn get_blob(
         &self,
         _ctx: RequestContext,
-        request: ServiceRequest<'_, RevertCommitRequest>,
-    ) -> ServiceResult<RevertCommitResponse> {
+        request: ServiceRequest<'_, GetBlobRequest>,
+    ) -> ServiceResult<GetBlobResponse> {
         let req = request.to_owned_message();
         let service = self.service(request.namespace);
 
-        let commit = spawn_blocking(move || service.revert_commit(req.branch, req.commit))
+        let blob = spawn_blocking(move || service.get_blob(req.commit, req.path))
             .await
             .map_err(Error::TokioTask)??;
 
-        Response::ok(RevertCommitResponse {
-            commit: commit.to_string(),
+        Response::ok(GetBlobResponse {
+            file: MessageField::some(blob),
+            ..Default::default()
+        })
+    }
+
+    async fn list_blobs(
+        &self,
+        _ctx: RequestContext,
+        request: ServiceRequest<'_, ListBlobsRequest>,
+    ) -> ServiceResult<ListBlobsResponse> {
+        let req = request.to_owned_message();
+        let service = self.service(request.namespace);
+
+        let blobs = spawn_blocking(move || service.list_blobs(req.commit))
+            .await
+            .map_err(Error::TokioTask)??;
+
+        Response::ok(ListBlobsResponse {
+            files: blobs,
             ..Default::default()
         })
     }

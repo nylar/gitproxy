@@ -8,8 +8,8 @@ use gitproxy::{
     proto::gitproxy::v1::{
         CommitAuthor, CommitRequest, ConflictDiff, CreateBranchRequest, CreateRepositoryRequest,
         CreateTagRequest, DeleteBranchRequest, DeleteRepositoryRequest, DeleteTagRequest,
-        DiffPatch, GetBranchRequest, ListBranchesRequest, ListRepositoriesRequest, ListTagsRequest,
-        LogRequest, MergeRequest, RevertCommitRequest, RevertMergeRequest,
+        DiffPatch, File, GetBlobRequest, GetBranchRequest, ListBlobsRequest, ListBranchesRequest,
+        ListRepositoriesRequest, ListTagsRequest, LogRequest, MergeRequest, RevertRequest,
         diff_patch::{Operation, Replace},
     },
 };
@@ -154,7 +154,7 @@ async fn test_tags() {
     let addr = start_server(root_dir.path()).await;
     let client = make_client(&addr);
 
-    client
+    let resp = client
         .create_repository(CreateRepositoryRequest {
             namespace: NAMESPACE.to_owned(),
             ..Default::default()
@@ -168,7 +168,7 @@ async fn test_tags() {
         .create_tag(CreateTagRequest {
             namespace: NAMESPACE.to_owned(),
             name: tag.to_owned(),
-            commit: None,
+            commit: resp.view().repository.head_commit.to_owned(),
             message: "My first tag".to_owned(),
             overwrite: false,
             author: MessageField::some(CommitAuthor {
@@ -189,7 +189,10 @@ async fn test_tags() {
         .await
         .unwrap();
 
-    assert_eq!(resp.view().tags.iter().as_slice(), &[tag]);
+    assert_eq!(
+        resp.view().tags.iter().map(|t| t.name).collect::<Vec<_>>(),
+        &[tag]
+    );
 
     client
         .delete_tag(DeleteTagRequest {
@@ -217,7 +220,7 @@ async fn test_branch_merges_successfully() {
 
     let branch: &str = "my-branch";
 
-    let resp = client
+    client
         .create_branch(CreateBranchRequest {
             namespace: NAMESPACE.to_owned(),
             branch: branch.to_owned(),
@@ -225,9 +228,6 @@ async fn test_branch_merges_successfully() {
         })
         .await
         .unwrap();
-
-    let branch_dir = Path::new(resp.view().branch.path);
-    std::fs::write(branch_dir.join("my_file.txt"), "foo\nbar\nbaz\n".as_bytes()).unwrap();
 
     client
         .commit(CommitRequest {
@@ -239,6 +239,11 @@ async fn test_branch_merges_successfully() {
                 email: "test@example.com".to_owned(),
                 ..Default::default()
             }),
+            files: vec![File {
+                path: "my_file.txt".to_owned(),
+                contents: "foo\nbar\nbaz\n".as_bytes().to_vec(),
+                ..Default::default()
+            }],
             ..Default::default()
         })
         .await
@@ -247,7 +252,8 @@ async fn test_branch_merges_successfully() {
     let resp = client
         .merge(MergeRequest {
             namespace: NAMESPACE.to_owned(),
-            branch: branch.to_owned(),
+            source_branch: branch.to_owned(),
+            target_branch: "main".to_owned(),
             ..Default::default()
         })
         .await
@@ -258,7 +264,7 @@ async fn test_branch_merges_successfully() {
     let log = client
         .log(LogRequest {
             namespace: NAMESPACE.to_owned(),
-            branch: None,
+            source_branch: "main".to_owned(),
             ..Default::default()
         })
         .await
@@ -268,10 +274,7 @@ async fn test_branch_merges_successfully() {
 
     assert_eq!(
         most_recent_commit.message,
-        format!(
-            "Merged branch {} into {}\n- Added my_file\n",
-            branch, "main"
-        )
+        format!("Merged branch\n- Added my_file\n")
     );
 }
 
@@ -281,24 +284,13 @@ async fn test_branch_merges_yields_conflicts() {
     let addr = start_server(root_dir.path()).await;
     let client = make_client(&addr);
 
-    let resp = client
+    client
         .create_repository(CreateRepositoryRequest {
             namespace: NAMESPACE.to_owned(),
             ..Default::default()
         })
         .await
         .unwrap();
-
-    let main_dir = Path::new(resp.view().repository.path).join("main");
-
-    std::fs::write(
-        main_dir.join("my_file.json"),
-        serde_json::to_vec(&serde_json::json!({
-            "a": "Initial content"
-        }))
-        .unwrap(),
-    )
-    .unwrap();
 
     client
         .commit(CommitRequest {
@@ -310,6 +302,14 @@ async fn test_branch_merges_yields_conflicts() {
                 email: "test@example.com".to_owned(),
                 ..Default::default()
             }),
+            files: vec![File {
+                path: "my_file.json".to_owned(),
+                contents: serde_json::to_vec(&serde_json::json!({
+                    "a": "Initial content"
+                }))
+                .unwrap(),
+                ..Default::default()
+            }],
             ..Default::default()
         })
         .await
@@ -317,7 +317,7 @@ async fn test_branch_merges_yields_conflicts() {
 
     let branch: &str = "my-branch";
 
-    let resp = client
+    client
         .create_branch(CreateBranchRequest {
             namespace: NAMESPACE.to_owned(),
             branch: branch.to_owned(),
@@ -325,16 +325,6 @@ async fn test_branch_merges_yields_conflicts() {
         })
         .await
         .unwrap();
-
-    let branch_dir = Path::new(resp.view().branch.path);
-    std::fs::write(
-        branch_dir.join("my_file.json"),
-        serde_json::to_vec(&serde_json::json!({
-            "a": "Change from my-branch"
-        }))
-        .unwrap(),
-    )
-    .unwrap();
 
     client
         .commit(CommitRequest {
@@ -346,19 +336,18 @@ async fn test_branch_merges_yields_conflicts() {
                 email: "test@example.com".to_owned(),
                 ..Default::default()
             }),
+            files: vec![File {
+                path: "my_file.json".to_owned(),
+                contents: serde_json::to_vec(&serde_json::json!({
+                    "a": "Change from my-branch"
+                }))
+                .unwrap(),
+                ..Default::default()
+            }],
             ..Default::default()
         })
         .await
         .unwrap();
-
-    std::fs::write(
-        main_dir.join("my_file.json"),
-        serde_json::to_vec(&serde_json::json!({
-            "a": "Change from main branch"
-        }))
-        .unwrap(),
-    )
-    .unwrap();
 
     client
         .commit(CommitRequest {
@@ -370,6 +359,14 @@ async fn test_branch_merges_yields_conflicts() {
                 email: "test@example.com".to_owned(),
                 ..Default::default()
             }),
+            files: vec![File {
+                path: "my_file.json".to_owned(),
+                contents: serde_json::to_vec(&serde_json::json!({
+                    "a": "Change from main branch"
+                }))
+                .unwrap(),
+                ..Default::default()
+            }],
             ..Default::default()
         })
         .await
@@ -378,7 +375,8 @@ async fn test_branch_merges_yields_conflicts() {
     let resp = client
         .merge(MergeRequest {
             namespace: NAMESPACE.to_owned(),
-            branch: branch.to_owned(),
+            source_branch: branch.to_owned(),
+            target_branch: "main".to_owned(),
             ..Default::default()
         })
         .await
@@ -386,6 +384,10 @@ async fn test_branch_merges_yields_conflicts() {
 
     let expected_diff = vec![ConflictDiff {
         path: "my_file.json".to_owned(),
+        contents: serde_json::to_vec(&serde_json::json!({
+            "a": "Change from main branch"
+        }))
+        .unwrap(),
         ours: vec![DiffPatch {
             operation: Some(Operation::Replace(Box::new(Replace {
                 path: "/a".to_owned(),
@@ -427,7 +429,7 @@ async fn test_merge_reverts_successfully() {
 
     let branch: &str = "my-branch";
 
-    let resp = client
+    client
         .create_branch(CreateBranchRequest {
             namespace: NAMESPACE.to_owned(),
             branch: branch.to_owned(),
@@ -435,9 +437,6 @@ async fn test_merge_reverts_successfully() {
         })
         .await
         .unwrap();
-
-    let branch_dir = Path::new(resp.view().branch.path);
-    std::fs::write(branch_dir.join("my_file.txt"), "foo\nbar\nbaz\n".as_bytes()).unwrap();
 
     client
         .commit(CommitRequest {
@@ -449,6 +448,11 @@ async fn test_merge_reverts_successfully() {
                 email: "test@example.com".to_owned(),
                 ..Default::default()
             }),
+            files: vec![File {
+                path: "my_file.txt".to_owned(),
+                contents: "foo\nbar\nbaz\n".as_bytes().to_vec(),
+                ..Default::default()
+            }],
             ..Default::default()
         })
         .await
@@ -457,7 +461,8 @@ async fn test_merge_reverts_successfully() {
     let resp = client
         .merge(MergeRequest {
             namespace: NAMESPACE.to_owned(),
-            branch: branch.to_owned(),
+            source_branch: branch.to_owned(),
+            target_branch: "main".to_owned(),
             ..Default::default()
         })
         .await
@@ -466,8 +471,9 @@ async fn test_merge_reverts_successfully() {
     let merge_commit = resp.view().commit.unwrap();
 
     client
-        .revert_merge(RevertMergeRequest {
+        .revert(RevertRequest {
             namespace: NAMESPACE.to_owned(),
+            target_branch: "main".to_owned(),
             commit: merge_commit.to_owned(),
             ..Default::default()
         })
@@ -477,7 +483,7 @@ async fn test_merge_reverts_successfully() {
     let log = client
         .log(LogRequest {
             namespace: NAMESPACE.to_owned(),
-            branch: None,
+            source_branch: "main".to_owned(),
             ..Default::default()
         })
         .await
@@ -507,7 +513,7 @@ async fn test_commit_reverts_successfully() {
 
     let branch: &str = "my-branch";
 
-    let resp = client
+    client
         .create_branch(CreateBranchRequest {
             namespace: NAMESPACE.to_owned(),
             branch: branch.to_owned(),
@@ -515,9 +521,6 @@ async fn test_commit_reverts_successfully() {
         })
         .await
         .unwrap();
-
-    let branch_dir = Path::new(resp.view().branch.path);
-    std::fs::write(branch_dir.join("my_file.txt"), "before".as_bytes()).unwrap();
 
     client
         .commit(CommitRequest {
@@ -529,12 +532,15 @@ async fn test_commit_reverts_successfully() {
                 email: "test@example.com".to_owned(),
                 ..Default::default()
             }),
+            files: vec![File {
+                path: "my_file.txt".to_owned(),
+                contents: "before".as_bytes().to_vec(),
+                ..Default::default()
+            }],
             ..Default::default()
         })
         .await
         .unwrap();
-
-    std::fs::write(branch_dir.join("my_file.txt"), "after".as_bytes()).unwrap();
 
     let resp = client
         .commit(CommitRequest {
@@ -546,6 +552,11 @@ async fn test_commit_reverts_successfully() {
                 email: "test@example.com".to_owned(),
                 ..Default::default()
             }),
+            files: vec![File {
+                path: "my_file.txt".to_owned(),
+                contents: "after".as_bytes().to_vec(),
+                ..Default::default()
+            }],
             ..Default::default()
         })
         .await
@@ -554,10 +565,10 @@ async fn test_commit_reverts_successfully() {
     let bad_commit = resp.view().commit;
 
     client
-        .revert_commit(RevertCommitRequest {
+        .revert(RevertRequest {
             namespace: NAMESPACE.to_owned(),
             commit: bad_commit.to_owned(),
-            branch: Some(branch.to_owned()),
+            target_branch: branch.to_owned(),
             ..Default::default()
         })
         .await
@@ -566,7 +577,7 @@ async fn test_commit_reverts_successfully() {
     let log = client
         .log(LogRequest {
             namespace: NAMESPACE.to_owned(),
-            branch: Some(branch.to_owned()),
+            source_branch: branch.to_owned(),
             ..Default::default()
         })
         .await
@@ -579,10 +590,17 @@ async fn test_commit_reverts_successfully() {
         &format!("Reverted {}", bad_commit)
     );
 
-    assert_eq!(
-        &std::fs::read_to_string(branch_dir.join("my_file.txt")).unwrap(),
-        "before"
-    )
+    let resp = client
+        .get_blob(GetBlobRequest {
+            namespace: NAMESPACE.to_owned(),
+            path: "my_file.txt".to_owned(),
+            commit: most_recent_commit.commit.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    assert_eq!(resp.view().file.contents, "before".as_bytes())
 }
 
 #[tokio::test]
@@ -601,7 +619,7 @@ async fn test_log_with_parent_includes_only_branch_changes() {
 
     let branch: &str = "my-branch";
 
-    let resp = client
+    client
         .create_branch(CreateBranchRequest {
             namespace: NAMESPACE.to_owned(),
             branch: branch.to_owned(),
@@ -609,9 +627,6 @@ async fn test_log_with_parent_includes_only_branch_changes() {
         })
         .await
         .unwrap();
-
-    let branch_dir = Path::new(resp.view().branch.path);
-    std::fs::write(branch_dir.join("my_file.txt"), "before".as_bytes()).unwrap();
 
     client
         .commit(CommitRequest {
@@ -623,6 +638,11 @@ async fn test_log_with_parent_includes_only_branch_changes() {
                 email: "test@example.com".to_owned(),
                 ..Default::default()
             }),
+            files: vec![File {
+                path: "my_file.txt".to_owned(),
+                contents: "before".as_bytes().to_vec(),
+                ..Default::default()
+            }],
             ..Default::default()
         })
         .await
@@ -631,8 +651,8 @@ async fn test_log_with_parent_includes_only_branch_changes() {
     let log = client
         .log(LogRequest {
             namespace: NAMESPACE.to_owned(),
-            branch: Some(branch.to_owned()),
-            parent_branch: Some("main".to_owned()),
+            source_branch: branch.to_owned(),
+            target_branch: Some("main".to_owned()),
             ..Default::default()
         })
         .await
@@ -646,6 +666,90 @@ async fn test_log_with_parent_includes_only_branch_changes() {
             .collect::<Vec<_>>(),
         &["Added my_file".to_owned()]
     );
+}
+
+#[tokio::test]
+async fn test_blobs() {
+    let root_dir = tempfile::tempdir().unwrap();
+    let addr = start_server(root_dir.path()).await;
+    let client = make_client(&addr);
+
+    client
+        .create_repository(CreateRepositoryRequest {
+            namespace: NAMESPACE.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let resp = client
+        .commit(CommitRequest {
+            namespace: NAMESPACE.to_owned(),
+            branch: "main".to_owned(),
+            message: "Added some files".to_owned(),
+            author: MessageField::some(CommitAuthor {
+                name: "test".to_owned(),
+                email: "test@example.com".to_owned(),
+                ..Default::default()
+            }),
+            files: vec![
+                File {
+                    path: "foo.txt".to_owned(),
+                    contents: "foo".as_bytes().to_vec(),
+                    ..Default::default()
+                },
+                File {
+                    path: "bar.txt".to_owned(),
+                    contents: "bar".as_bytes().to_vec(),
+                    ..Default::default()
+                },
+                File {
+                    path: "baz/quux.txt".to_owned(),
+                    contents: "quux".as_bytes().to_vec(),
+                    ..Default::default()
+                },
+            ],
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let commit = resp.view().commit.to_owned();
+
+    let resp = client
+        .get_blob(GetBlobRequest {
+            namespace: NAMESPACE.to_owned(),
+            path: "bar.txt".to_owned(),
+            commit: commit.clone(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    assert_eq!(resp.view().file.contents, "bar".as_bytes());
+
+    let resp = client
+        .get_blob(GetBlobRequest {
+            namespace: NAMESPACE.to_owned(),
+            path: "baz/quux.txt".to_owned(),
+            commit: commit.clone(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    assert_eq!(resp.view().file.contents, "quux".as_bytes());
+
+    let resp = client
+        .list_blobs(ListBlobsRequest {
+            namespace: NAMESPACE.to_owned(),
+            commit: commit.clone(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    assert_eq!(resp.view().files.len(), 3);
 }
 
 async fn start_server(root_dir: &Path) -> SocketAddr {

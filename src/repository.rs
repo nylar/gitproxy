@@ -1,9 +1,8 @@
 use std::path::{Path, PathBuf};
 
 use git2::{
-    Delta, DiffFindOptions, DiffOptions, Index, IndexEntry, MergeOptions, Oid,
-    Repository as GitRepository, Signature, Sort, Tree, WorktreeAddOptions, WorktreePruneOptions,
-    build::CheckoutBuilder,
+    Commit, Delta, DiffFindOptions, DiffOptions, Index, IndexEntry, IndexTime, MergeOptions,
+    ObjectType, Oid, Repository as GitRepository, Signature, Sort, Tree, TreeWalkResult,
 };
 use jiff::Timestamp;
 use json_patch::Patch;
@@ -36,7 +35,7 @@ impl Repository {
         } else {
             std::fs::create_dir_all(&git_dir)?;
             let repo = GitRepository::init_bare(&git_dir)?;
-            Self::init_repo(&repo, repo_dir, default_author)?;
+            Self::init_repo(&repo, default_author)?;
             repo
         };
 
@@ -47,7 +46,45 @@ impl Repository {
         })
     }
 
-    fn init_repo(repo: &GitRepository, repo_dir: &Path, author: &Author) -> Result<()> {
+    pub fn head(&self, branch: &str) -> Result<Oid> {
+        let commit = self.branch_commit(branch)?;
+        Ok(commit.id())
+    }
+
+    pub fn branch_commit(&self, branch: &str) -> Result<Commit<'_>> {
+        let commit = match self.repo.find_branch(branch, git2::BranchType::Local) {
+            Ok(existing) => existing.into_reference().peel_to_commit()?,
+            Err(e) if e.code() == git2::ErrorCode::NotFound => {
+                let main_branch = self
+                    .repo
+                    .find_branch(DEFAULT_PRIMARY_BRANCH, git2::BranchType::Local)?;
+                let main_commit = main_branch.into_reference().peel_to_commit()?;
+
+                let new_branch = self.repo.branch(branch, &main_commit, false)?;
+                new_branch.into_reference().peel_to_commit()?
+            }
+            Err(e) => return Err(Error::Git(e)),
+        };
+        Ok(commit)
+    }
+
+    pub fn delete_branch(&self, branch: &str) -> Result<()> {
+        self.repo
+            .find_branch(branch, git2::BranchType::Local)?
+            .delete()?;
+        Ok(())
+    }
+
+    pub fn list_branches(&self) -> Result<impl Iterator<Item = String>> {
+        Ok(self
+            .repo
+            .branches(Some(git2::BranchType::Local))?
+            .flatten()
+            .map(|(branch, _)| branch.name().unwrap().unwrap().to_owned())
+            .filter(|w| w != DEFAULT_PRIMARY_BRANCH))
+    }
+
+    fn init_repo(repo: &GitRepository, author: &Author) -> Result<()> {
         let sig = Signature::now(&author.name, &author.email)?;
         let tree_id = {
             let mut index = repo.index()?;
@@ -55,16 +92,6 @@ impl Repository {
         };
         let tree = repo.find_tree(tree_id)?;
         repo.commit(Some("HEAD"), &sig, &sig, "Initial commit", &tree, &[])?;
-
-        repo.worktree(
-            DEFAULT_PRIMARY_BRANCH,
-            &repo_dir.join(DEFAULT_PRIMARY_BRANCH),
-            Some(
-                WorktreeAddOptions::new()
-                    .checkout_existing(true)
-                    .reference(None),
-            ),
-        )?;
 
         Ok(())
     }
@@ -74,159 +101,203 @@ impl Repository {
         Ok(())
     }
 
-    pub fn primary_worktree(&self) -> Result<Worktree> {
-        self.worktree(DEFAULT_PRIMARY_BRANCH)
-    }
+    pub fn list_tags(&self) -> Result<Vec<Tag>> {
+        let mut tags = Vec::new();
+        let references = self.repo.references()?;
 
-    pub fn worktree(&self, name: &str) -> Result<Worktree> {
-        let path = self.repo_dir.join(name);
+        for reference in references {
+            let reference = reference?;
 
-        let worktree = if self
-            .repo
-            .worktrees()?
-            .iter()
-            .any(|worktree| worktree == Ok(Some(name)))
-        {
-            self.repo.find_worktree(name)?
-        } else {
-            self.repo
-                .worktree(name, &path, Some(&WorktreeAddOptions::new()))?
-        };
+            if reference.is_tag() {
+                let target = reference
+                    .target()
+                    .ok_or_else(|| Error::Git(git2::Error::from_str("invalid ref target")))?;
 
-        let repo = GitRepository::open_from_worktree(&worktree)?;
-        Ok(Worktree::open(
-            repo,
-            name,
-            path,
-            self.default_author.clone(),
-        ))
-    }
+                let object = self.repo.find_object(target, None)?;
+                let commit = reference.peel_to_commit()?;
 
-    pub fn checkout_tag(&self, name: &str) -> Result<PathBuf> {
-        let reference = self.repo.find_reference(&format!("refs/tags/{}", name))?;
+                let (name, email, time) = if let Ok(annotated_tag) = object.into_tag()
+                    && let Some(tagger) = annotated_tag.tagger()
+                {
+                    let author_name = tagger.name()?.to_owned();
+                    let author_email = tagger.email()?.to_owned();
+                    let time = Timestamp::from_second(tagger.when().seconds())?;
+                    (author_name, author_email, time)
+                } else {
+                    let author = commit.author();
+                    let author_name = author.name()?.to_owned();
+                    let author_email = author.email()?.to_owned();
+                    let time = Timestamp::from_second(commit.time().seconds())?;
+                    (author_name, author_email, time)
+                };
 
-        let branch = self.repo.branch(name, &reference.peel_to_commit()?, true)?;
-        let branch_ref = branch.into_reference();
-
-        let path = self.repo_dir.join(name);
-        let mut opts = WorktreeAddOptions::new();
-        opts.checkout_existing(true);
-        opts.reference(Some(&branch_ref));
-
-        self.repo.worktree(name, &path, Some(&opts))?;
-
-        Ok(path.to_path_buf())
-    }
-}
-
-pub struct Worktree {
-    repo: GitRepository,
-    name: String,
-    path: PathBuf,
-    default_author: Author,
-}
-
-impl Worktree {
-    fn open(repo: GitRepository, name: &str, path: PathBuf, default_author: Author) -> Self {
-        Self {
-            repo,
-            name: name.to_owned(),
-            path,
-            default_author,
+                if let Ok(ref_name) = reference.name() {
+                    tags.push(Tag {
+                        name: ref_name
+                            .strip_prefix("refs/tags/")
+                            .unwrap_or(ref_name)
+                            .to_owned(),
+                        commit: commit.id().to_string(),
+                        time,
+                        author: Author { name, email },
+                    });
+                }
+            }
         }
+
+        tags.sort_by(|a, b| a.time.cmp(&b.time).reverse());
+
+        Ok(tags)
     }
 
-    pub fn new(&self, name: &str) -> Result<Self> {
-        let path = self.path.parent().unwrap().join(name);
+    pub fn create_tag(
+        &self,
+        name: &str,
+        author: &Author,
+        message: &str,
+        commit: &str,
+        force: bool,
+    ) -> Result<Tag> {
+        let signature = Signature::now(&author.name, &author.email)?;
+        let target = self.repo.find_commit(Oid::from_str(commit)?)?;
 
-        let worktree = self
+        let commit = self
             .repo
-            .worktree(name, &path, Some(&WorktreeAddOptions::new()))?;
+            .tag(name, &target.into_object(), &signature, message, force)?;
 
-        let repo = GitRepository::open_from_worktree(&worktree)?;
-        Ok(Self::open(repo, name, path, self.default_author.clone()))
+        Ok(Tag {
+            name: name.to_owned(),
+            commit: commit.to_string(),
+            time: Timestamp::from_second(signature.when().seconds())?,
+            author: Author {
+                name: author.name.to_owned(),
+                email: author.email.to_owned(),
+            },
+        })
     }
 
-    pub fn remove(&self) -> Result<()> {
-        std::fs::remove_dir_all(self.path())?;
-
-        let worktree = self.repo.find_worktree(&self.name)?;
-
-        let mut opts = WorktreePruneOptions::new();
-        opts.working_tree(true);
-        worktree.prune(Some(&mut opts))?;
+    pub fn delete_tag(&self, name: &str) -> Result<()> {
+        self.repo.tag_delete(name)?;
         Ok(())
     }
 
-    pub fn path(&self) -> &Path {
-        &self.path
-    }
+    pub fn commit_files<'a>(
+        &self,
+        branch: &str,
+        message: &str,
+        author: &Author,
+        files: impl Iterator<Item = (&'a Path, &'a [u8])>,
+    ) -> Result<Oid> {
+        let (parent_commits, parent_tree) =
+            match self.repo.find_branch(branch, git2::BranchType::Local) {
+                Ok(branch) => {
+                    let commit = branch.into_reference().peel_to_commit()?;
+                    let tree = commit.tree()?;
+                    (vec![commit], Some(tree))
+                }
+                Err(e) if e.code() == git2::ErrorCode::NotFound => (vec![], None),
+                Err(e) => return Err(Error::Git(e)),
+            };
 
-    pub fn head(&self) -> Result<git2::Reference<'_>> {
-        let head = self.repo.head()?;
-        Ok(head)
-    }
-
-    pub fn revert(&self, reference: &str) -> Result<Oid> {
-        let oid = Oid::from_str(reference)?;
-        let commit = self.repo.find_commit(oid)?;
-
-        let mut checkout = CheckoutBuilder::new();
-        checkout.allow_conflicts(true).conflict_style_merge(true);
-
-        let mut opts = git2::RevertOptions::new();
-        if commit.parent_count() > 1 {
-            opts.mainline(1);
-        }
-        opts.checkout_builder(checkout);
-        self.repo.revert(&commit, Some(&mut opts))?;
-
-        let sig = Signature::now(&self.default_author.name, &self.default_author.email)?;
-        let oid = self.commit(
-            &format!("Reverted {}", reference),
-            &Author {
-                name: sig.name()?.to_owned(),
-                email: sig.email()?.to_owned(),
-            },
-        )?;
-
-        Ok(oid)
-    }
-
-    pub fn merge(&self, remote_reference: &git2::Reference<'_>, dry_run: bool) -> Result<Merge> {
-        self.squash_merge(remote_reference, dry_run)
-    }
-
-    pub fn commit_all(&self, message: &str, author: &Author) -> Result<Oid> {
         let signature = Signature::now(&author.name, &author.email)?;
 
-        let mut index = self.repo.index()?;
-        index.add_all(["*"], git2::IndexAddOption::DEFAULT, None)?;
-        index.write()?;
-        let tree_id = index.write_tree()?;
-        let parent_commit = self.repo.head()?.peel_to_commit()?;
+        let mut index = Index::new()?;
+        if let Some(tree) = parent_tree {
+            index.read_tree(&tree)?;
+        }
+
+        for (path, contents) in files {
+            let blob_id = self.repo.blob(contents)?;
+
+            let entry = IndexEntry {
+                ctime: IndexTime::new(0, 0),
+                mtime: IndexTime::new(0, 0),
+                dev: 0,
+                ino: 0,
+                mode: 0o100644,
+                uid: 0,
+                gid: 0,
+                file_size: contents.len() as u32,
+                id: blob_id,
+                flags: 0,
+                flags_extended: 0,
+                path: path.as_os_str().as_encoded_bytes().to_vec(),
+            };
+            index.add(&entry)?;
+        }
+        let tree_id = index.write_tree_to(&self.repo)?;
         let tree = self.repo.find_tree(tree_id)?;
         let oid = self.repo.commit(
-            Some("HEAD"),
+            Some(&format!("refs/heads/{}", branch)),
             &signature,
             &signature,
             message,
             &tree,
-            &[&parent_commit],
+            &parent_commits.iter().collect::<Vec<&git2::Commit>>(),
         )?;
 
         Ok(oid)
+    }
+
+    pub fn merge(&self, source_branch: &str, target_branch: &str, dry_run: bool) -> Result<Merge> {
+        let source_branch = self
+            .repo
+            .find_branch(source_branch, git2::BranchType::Local)?;
+        let source_commit = source_branch.into_reference().peel_to_commit()?;
+        let source_tree = source_commit.tree()?;
+
+        let target_branch = self
+            .repo
+            .find_branch(target_branch, git2::BranchType::Local)?;
+        let target_commit = target_branch.into_reference().peel_to_commit()?;
+        let target_tree = target_commit.tree()?;
+
+        let msg = self.build_squash_merge(&source_commit, &target_commit)?;
+
+        let ancestor = self
+            .repo
+            .merge_base(target_commit.id(), source_commit.id())?;
+        let ancestor_commit = self.repo.find_commit(ancestor)?;
+        let ancestor_tree = ancestor_commit.tree()?;
+
+        let opts = MergeOptions::new();
+
+        let mut idx =
+            self.repo
+                .merge_trees(&ancestor_tree, &target_tree, &source_tree, Some(&opts))?;
+
+        if idx.has_conflicts() {
+            let conflicts = conflict_diffs(&self.repo, &idx)?;
+            return Ok(Merge::Conflicts(conflicts));
+        }
+
+        if dry_run {
+            return Ok(Merge::Ok(None));
+        }
+
+        let squashed_tree_commit = idx.write_tree_to(&self.repo)?;
+        let tree = self.repo.find_tree(squashed_tree_commit)?;
+
+        let sig = Signature::now(&self.default_author.name, &self.default_author.email)?;
+        let merge_commit =
+            self.repo
+                .commit(Some("HEAD"), &sig, &sig, &msg, &tree, &[&target_commit])?;
+
+        Ok(Merge::Ok(Some(merge_commit)))
     }
 
     pub fn log(
         &self,
         sort_order: LogOrder,
-        parent_branch: Option<&str>,
+        source_branch: &str,
+        target_branch: Option<&str>,
     ) -> Result<impl Iterator<Item = LogEntry>> {
-        let mut revwalk = self.repo.revwalk()?;
-        revwalk.push_head()?;
+        let branch = self.branch_commit(source_branch)?;
 
-        if let Some(branch) = parent_branch {
+        let mut revwalk = self.repo.revwalk()?;
+        revwalk.push(branch.id())?;
+
+        if let Some(branch) = target_branch {
             let branch_commit = self
                 .repo
                 .resolve_reference_from_short_name(branch)?
@@ -261,58 +332,70 @@ impl Worktree {
             }))
     }
 
-    pub fn list_branches(&self) -> Result<Vec<String>> {
-        let worktrees = self.repo.worktrees()?;
-        Ok(worktrees
-            .iter()
-            .flatten()
-            .flatten()
-            .map(|w| w.to_owned())
-            .filter(|w| w != DEFAULT_PRIMARY_BRANCH)
-            .collect())
-    }
-
-    pub fn delete_branch(&self, name: &str) -> Result<()> {
-        let mut branch = self.repo.find_branch(name, git2::BranchType::Local)?;
-        branch.delete()?;
-        Ok(())
-    }
-
-    pub fn list_tags(&self) -> Result<Vec<String>> {
-        let tags = self.repo.tag_names(None)?;
-        Ok(tags
-            .iter()
-            .flatten()
-            .flatten()
-            .map(|w| w.to_string())
-            .collect())
-    }
-
-    pub fn create_tag(
+    pub fn revert(
         &self,
-        name: &str,
-        author: &Author,
-        message: &str,
-        commit: Option<&str>,
-        force: bool,
-    ) -> Result<()> {
-        let signature = Signature::now(&author.name, &author.email)?;
+        target_branch: &str,
+        commit: &str,
+        strategy: Option<Strategy>,
+        dry_run: bool,
+    ) -> Result<Merge> {
+        let target = self
+            .repo
+            .find_branch(target_branch, git2::BranchType::Local)?;
+        let head_commit = target.into_reference().peel_to_commit()?;
 
-        let reference = match commit {
-            Some(commit) => self.repo.find_reference(commit)?,
-            None => self.repo.head()?,
+        let merge_commit = self.repo.find_commit(Oid::from_str(commit)?)?;
+
+        let mainline = match merge_commit.parent_count() {
+            0 => {
+                return Err(Error::Git(git2::Error::from_str(
+                    "Initial root commit cannot be reverted",
+                )));
+            }
+            1 => 0,
+            _ => match strategy {
+                Some(Strategy::KeepOther) => 1,
+                _ => 0,
+            },
         };
 
-        let target = reference.peel(git2::ObjectType::Commit)?;
+        let opts = MergeOptions::new();
 
-        self.repo.tag(name, &target, &signature, message, force)?;
+        let mut idx =
+            self.repo
+                .revert_commit(&merge_commit, &head_commit, mainline, Some(&opts))?;
 
-        Ok(())
-    }
+        if idx.has_conflicts() {
+            let conflicts = conflict_diffs(&self.repo, &idx)?;
+            return Ok(Merge::Conflicts(conflicts));
+        }
 
-    pub fn delete_tag(&self, name: &str) -> Result<()> {
-        self.repo.tag_delete(name)?;
-        Ok(())
+        if dry_run {
+            return Ok(Merge::Ok(None));
+        }
+
+        let tree_id = idx.write_tree_to(&self.repo)?;
+        let tree = self.repo.find_tree(tree_id)?;
+
+        let sig = Signature::now(&self.default_author.name, &self.default_author.email)?;
+
+        let commit = self.repo.commit(
+            None,
+            &sig,
+            &sig,
+            &format!("Reverted {}", commit),
+            &tree,
+            &[&head_commit],
+        )?;
+
+        self.repo.reference(
+            &format!("refs/heads/{}", target_branch),
+            commit,
+            true,
+            "revert: update branch head",
+        )?;
+
+        Ok(Merge::Ok(Some(commit)))
     }
 
     pub fn diff(&self, base_reference: &str, target_reference: &str) -> Result<Vec<PatchDiff>> {
@@ -366,84 +449,71 @@ impl Worktree {
         Ok(results)
     }
 
-    pub fn clean(&self) -> Result<bool> {
-        Ok(self.repo.statuses(None)?.is_empty())
-    }
-
-    fn commit(&self, message: &str, author: &Author) -> Result<Oid> {
-        let signature = Signature::now(&author.name, &author.email)?;
-
-        let mut index = self.repo.index()?;
-        index.add_all(["*"], git2::IndexAddOption::DEFAULT, None)?;
-        index.write()?;
-        let tree_id = index.write_tree()?;
-        let parent_commit = self.repo.head()?.peel_to_commit()?;
-        let tree = self.repo.find_tree(tree_id)?;
-        let oid = self.repo.commit(
-            Some("HEAD"),
-            &signature,
-            &signature,
-            message,
-            &tree,
-            &[&parent_commit],
-        )?;
-        self.repo.cleanup_state()?;
-        self.repo
-            .checkout_head(Some(CheckoutBuilder::default().force()))?;
-        Ok(oid)
-    }
-
-    fn squash_merge(&self, remote_reference: &git2::Reference<'_>, dry_run: bool) -> Result<Merge> {
-        let local_reference = self.repo.head()?;
-
-        let remote_commit = remote_reference.peel_to_commit()?;
-        let local_commit = local_reference.peel_to_commit()?;
-
-        let opts = MergeOptions::new();
-        let mut idx = self
+    pub fn clean(&self, source_branch: &str, target_branch: &str) -> Result<bool> {
+        let source_tree = self.branch_commit(source_branch)?.tree()?;
+        let target_tree = self
             .repo
-            .merge_commits(&local_commit, &remote_commit, Some(&opts))?;
+            .find_branch(target_branch, git2::BranchType::Local)?
+            .into_reference()
+            .peel_to_commit()?
+            .tree()?;
 
-        if idx.has_conflicts() {
-            let conflicts = conflict_diffs(&self.repo, &idx)?;
-            return Ok(Merge::Conflicts(conflicts));
-        }
+        let mut opts = DiffOptions::new();
+        let diff =
+            self.repo
+                .diff_tree_to_tree(Some(&target_tree), Some(&source_tree), Some(&mut opts))?;
 
-        if dry_run {
-            return Ok(Merge::Ok(None));
-        }
+        Ok(diff.deltas().len() == 0)
+    }
 
-        let result_tree = self.repo.find_tree(idx.write_tree_to(&self.repo)?)?;
-        let msg = self.build_squash_merge(&local_reference, remote_reference)?;
-        let sig = Signature::now(&self.default_author.name, &self.default_author.email)?;
-        let local_commit = self.repo.find_commit(local_commit.id())?;
-        let merge_commit = self.repo.commit(
-            Some("HEAD"),
-            &sig,
-            &sig,
-            &msg,
-            &result_tree,
-            &[&local_commit],
-        )?;
-        self.repo
-            .checkout_head(Some(git2::build::CheckoutBuilder::default().force()))?;
+    pub fn blob(&self, commit: &str, path: &str) -> Result<Vec<u8>> {
+        let commit = self.repo.find_commit(Oid::from_str(commit)?)?;
+        let tree = commit.tree()?;
+        let tree_entry = tree.get_path(Path::new(path))?;
 
-        Ok(Merge::Ok(Some(merge_commit)))
+        let blob = tree_entry
+            .to_object(&self.repo)?
+            .into_blob()
+            .map_err(|_| Error::Git(git2::Error::from_str("Not a valid blob file")))?;
+        Ok(blob.content().to_vec())
+    }
+
+    pub fn all_blobs(&self, commit: &str) -> Result<Vec<(PathBuf, Vec<u8>)>> {
+        let commit = self.repo.find_commit(Oid::from_str(commit)?)?;
+        let tree = commit.tree()?;
+
+        let mut blobs = Vec::new();
+
+        tree.walk(git2::TreeWalkMode::PreOrder, |root, entry| {
+            if let Some(ObjectType::Blob) = entry.kind()
+                && let Ok(name) = entry.name()
+            {
+                let mut path = PathBuf::from(root);
+                path.push(name);
+
+                let blob = match self.repo.find_blob(entry.id()) {
+                    Ok(blob) => blob,
+                    Err(_) => return TreeWalkResult::Abort,
+                };
+
+                blobs.push((path, blob.content().to_vec()));
+            }
+            TreeWalkResult::Ok
+        })?;
+        Ok(blobs)
     }
 
     fn build_squash_merge(
         &self,
-        local: &git2::Reference<'_>,
-        remote: &git2::Reference<'_>,
+        source: &git2::Commit<'_>,
+        target: &git2::Commit<'_>,
     ) -> Result<String> {
-        let local_branch = local.shorthand()?;
-        let remote_branch = remote.shorthand()?;
-
         let mut revwalk = self.repo.revwalk()?;
-        revwalk.push(remote.peel_to_commit()?.id())?;
-        revwalk.hide(local.peel_to_commit()?.id())?;
+        revwalk.set_sorting(Sort::TOPOLOGICAL | Sort::REVERSE)?;
+        revwalk.push(source.id())?;
+        revwalk.hide(target.id())?;
 
-        let mut message = format!("Merged branch {} into {}\n", remote_branch, local_branch,);
+        let mut message = String::from("Merged branch\n");
         for oid in revwalk {
             let oid = oid?;
             if let Ok(commit) = self.repo.find_commit(oid)
@@ -500,13 +570,18 @@ fn conflict_diffs(repo: &GitRepository, index: &Index) -> Result<Vec<ConflictDif
     for conflict in index.conflicts()? {
         let conflict = conflict?;
         let entry = conflict
-            .ancestor
+            .our
             .as_ref()
-            .or(conflict.our.as_ref())
-            .or(conflict.their.as_ref());
+            .or(conflict.their.as_ref())
+            .or(conflict.ancestor.as_ref());
 
         if let Some(entry) = entry {
             let path = bytes2path(&entry.path);
+
+            let contents = match conflict.our.as_ref().or(conflict.their.as_ref()) {
+                Some(entry) => repo.find_blob(entry.id)?.content().to_vec(),
+                None => Vec::new(),
+            };
 
             let ancestor = object_to_json(repo, &conflict.ancestor)?;
             let ours = object_to_json(repo, &conflict.our)?;
@@ -514,6 +589,7 @@ fn conflict_diffs(repo: &GitRepository, index: &Index) -> Result<Vec<ConflictDif
 
             diffs.push(ConflictDiff {
                 path: path.to_path_buf(),
+                contents,
                 ours: json_patch::diff(&ancestor, &ours),
                 theirs: json_patch::diff(&ancestor, &theirs),
             });
@@ -562,6 +638,7 @@ pub enum Merge {
 #[derive(Debug)]
 pub struct ConflictDiff {
     pub path: PathBuf,
+    pub contents: Vec<u8>,
     pub ours: json_patch::Patch,
     pub theirs: json_patch::Patch,
 }
@@ -571,4 +648,19 @@ pub enum LogOrder {
     #[default]
     Normal,
     Reverse,
+}
+
+#[derive(Clone, Copy, Default)]
+pub enum Strategy {
+    #[default]
+    KeepMainline,
+    KeepOther,
+}
+
+#[derive(Debug)]
+pub struct Tag {
+    pub name: String,
+    pub commit: String,
+    pub time: Timestamp,
+    pub author: Author,
 }

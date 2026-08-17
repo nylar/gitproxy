@@ -1,12 +1,15 @@
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
-use buffa::EnumValue;
+use buffa::{EnumValue, MessageField};
+use buffa_types::Timestamp;
 use git2::Oid;
 
 use crate::{
     error::{Error, Result},
-    proto::gitproxy::v1,
-    repository::{Author, ConflictDiff, LogEntry, LogOrder, Merge, PatchDiff, Repository},
+    proto::gitproxy::v1::{self, CommitAuthor, File},
+    repository::{
+        Author, ConflictDiff, LogEntry, LogOrder, Merge, PatchDiff, Repository, Strategy, Tag,
+    },
 };
 
 pub struct Service {
@@ -21,9 +24,8 @@ impl Service {
 
     pub fn fetch_repository_head_commit(&self) -> Result<Oid> {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let main = repo.primary_worktree()?;
-        let head = main.head()?.peel_to_commit()?;
-        Ok(head.id())
+        let head = repo.head("main")?;
+        Ok(head)
     }
 
     pub fn remove_repository(&self) -> Result<()> {
@@ -34,38 +36,31 @@ impl Service {
 
     pub fn list_branches(&self) -> Result<Vec<String>> {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let main = repo.primary_worktree()?;
-        let branches = main.list_branches()?;
-        Ok(branches)
+        let branches = repo.list_branches()?;
+        Ok(branches.collect())
     }
 
     pub fn create_branch(&self, branch: String) -> Result<()> {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let main = repo.primary_worktree()?;
+        let mut branches = repo.list_branches()?;
 
-        let branches = main.list_branches()?;
-
-        if branches.iter().any(|b| b == &branch) {
+        if branches.any(|b| b == branch) {
             return Err(Error::BranchExists(branch));
         }
 
-        main.new(&branch)?;
+        repo.branch_commit(&branch)?;
         Ok(())
     }
 
     pub fn delete_branch(&self, branch: String) -> Result<()> {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let main = repo.primary_worktree()?;
-        let worktree = repo.worktree(&branch)?;
-        worktree.remove()?;
-        main.delete_branch(&branch)?;
+        repo.delete_branch(&branch)?;
         Ok(())
     }
 
-    pub fn list_tags(&self) -> Result<Vec<String>> {
+    pub fn list_tags(&self) -> Result<Vec<v1::Tag>> {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let main = repo.primary_worktree()?;
-        let tags = main.list_tags()?;
+        let tags = repo.list_tags()?.iter().map(Into::into).collect();
         Ok(tags)
     }
 
@@ -73,104 +68,114 @@ impl Service {
         &self,
         name: String,
         message: String,
-        commit: Option<String>,
+        commit: String,
         author: Author,
         overwrite: bool,
-    ) -> Result<()> {
+    ) -> Result<v1::Tag> {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let main = repo.primary_worktree()?;
-
-        main.create_tag(&name, &author, &message, commit.as_deref(), overwrite)?;
-        Ok(())
+        let tag = repo.create_tag(&name, &author, &message, &commit, overwrite)?;
+        Ok(v1::Tag::from(&tag))
     }
 
     pub fn delete_tag(&self, name: String) -> Result<()> {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let main = repo.primary_worktree()?;
-        main.delete_tag(&name)?;
+        repo.delete_tag(&name)?;
         Ok(())
     }
 
-    pub fn checkout_tag(&self, name: String) -> Result<PathBuf> {
+    pub fn commit(
+        &self,
+        branch: String,
+        message: String,
+        author: Author,
+        files: Vec<File>,
+    ) -> Result<Oid> {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let path = repo.checkout_tag(&name)?;
-        Ok(path)
-    }
-
-    pub fn commit(&self, branch: String, message: String, author: Author) -> Result<Oid> {
-        let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let branch = repo.worktree(&branch)?;
-        let commit = branch.commit_all(&message, &author)?;
+        let commit = repo.commit_files(
+            &branch,
+            &message,
+            &author,
+            files
+                .iter()
+                .map(|f| (Path::new(&f.path), f.contents.as_ref())),
+        )?;
         Ok(commit)
     }
 
-    pub fn merge(&self, branch: String, dry_run: bool) -> Result<Merge> {
+    pub fn merge(
+        &self,
+        source_branch: String,
+        target_branch: String,
+        dry_run: bool,
+    ) -> Result<Merge> {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let main = repo.primary_worktree()?;
-        let worktree = repo.worktree(&branch)?;
-
-        let head = worktree.head()?;
-        let merge = main.merge(&head, dry_run)?;
+        let merge = repo.merge(&source_branch, &target_branch, dry_run)?;
 
         // Only clear out old branch if we are able to successfully merge
         if let Merge::Ok(Some(_)) = merge {
-            worktree.remove()?;
-            main.delete_branch(&branch)?;
+            repo.delete_branch(&source_branch)?;
         }
         Ok(merge)
     }
 
     pub fn log(
         &self,
-        branch: Option<String>,
+        source_branch: String,
         order: LogOrder,
-        parent_branch: Option<String>,
+        target_branch: Option<String>,
     ) -> Result<Vec<LogEntry>> {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let worktree = match branch {
-            Some(branch) => repo.worktree(&branch),
-            None => repo.primary_worktree(),
-        }?;
-
-        Ok(worktree.log(order, parent_branch.as_deref())?.collect())
+        Ok(repo
+            .log(order, &source_branch, target_branch.as_deref())?
+            .collect())
     }
 
-    pub fn revert_merge(&self, commit: String) -> Result<Oid> {
+    pub fn revert_merge(
+        &self,
+        target_branch: String,
+        commit: String,
+        strategy: Option<v1::revert_request::Strategy>,
+        dry_run: bool,
+    ) -> Result<Merge> {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let main = repo.primary_worktree()?;
-        let commit = main.revert(&commit)?;
-        Ok(commit)
+        let merge = repo.revert(&target_branch, &commit, strategy.map(Into::into), dry_run)?;
+        Ok(merge)
     }
 
     pub fn diff(&self, base_reference: String, target_reference: String) -> Result<Vec<PatchDiff>> {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let main = repo.primary_worktree()?;
-        let diff = main.diff(&base_reference, &target_reference)?;
+        let diff = repo.diff(&base_reference, &target_reference)?;
         Ok(diff)
     }
 
-    pub fn status(&self, branch: Option<String>) -> Result<bool> {
+    pub fn status(&self, source_branch: String, target_branch: String) -> Result<bool> {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
-
-        let worktree = match branch {
-            Some(branch) => repo.worktree(&branch),
-            None => repo.primary_worktree(),
-        }?;
-
-        let clean = worktree.clean()?;
+        let clean = repo.clean(&source_branch, &target_branch)?;
         Ok(clean)
     }
 
-    pub fn revert_commit(&self, branch: Option<String>, commit: String) -> Result<Oid> {
+    pub fn get_blob(&self, commit: String, path: String) -> Result<File> {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
+        let blob = repo.blob(&commit, &path)?;
+        Ok(File {
+            path,
+            contents: blob.to_vec(),
+            ..Default::default()
+        })
+    }
 
-        let worktree = match branch {
-            Some(branch) => repo.worktree(&branch),
-            None => repo.primary_worktree(),
-        }?;
-
-        let commit = worktree.revert(&commit)?;
-        Ok(commit)
+    pub fn list_blobs(&self, commit: String) -> Result<Vec<File>> {
+        let repo = Repository::open(&self.repo_dir, &self.author)?;
+        let blobs = repo
+            .all_blobs(&commit)?
+            .iter()
+            .map(|(path, contents)| File {
+                path: path.display().to_string(),
+                contents: contents.to_vec(),
+                ..Default::default()
+            })
+            .collect();
+        Ok(blobs)
     }
 }
 
@@ -288,6 +293,7 @@ impl From<&ConflictDiff> for v1::ConflictDiff {
 
         Self {
             path: value.path.display().to_string(),
+            contents: value.contents.clone(),
             ours,
             theirs,
             ..Default::default()
@@ -311,5 +317,50 @@ impl From<Merge> for v1::MergeResponse {
         }
 
         resp
+    }
+}
+
+impl From<Merge> for v1::RevertResponse {
+    fn from(value: Merge) -> Self {
+        let mut resp = v1::RevertResponse {
+            commit: None,
+            conflicts: Vec::new(),
+            ..Default::default()
+        };
+
+        match value {
+            Merge::Ok(oid) => resp.commit = oid.map(|oid| oid.to_string()),
+            Merge::Conflicts(conflict_diffs) => {
+                resp.conflicts = conflict_diffs.iter().map(Into::into).collect()
+            }
+        }
+
+        resp
+    }
+}
+
+impl From<v1::revert_request::Strategy> for Strategy {
+    fn from(value: v1::revert_request::Strategy) -> Self {
+        match value {
+            v1::revert_request::Strategy::STRATEGY_UNSPECIFIED => Strategy::default(),
+            v1::revert_request::Strategy::STRATEGY_KEEP_MAINLINE => Self::KeepMainline,
+            v1::revert_request::Strategy::STRATEGY_KEEP_OTHER => Strategy::KeepOther,
+        }
+    }
+}
+
+impl From<&Tag> for v1::Tag {
+    fn from(value: &Tag) -> Self {
+        Self {
+            name: value.name.to_owned(),
+            commit: value.commit.to_owned(),
+            time: MessageField::some(Timestamp::from_unix_secs(value.time.as_second())),
+            author: MessageField::some(CommitAuthor {
+                name: value.author.name.to_owned(),
+                email: value.author.email.to_owned(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        }
     }
 }

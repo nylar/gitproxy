@@ -1,15 +1,11 @@
-use std::path::Path;
-
 use buffa::{MessageField, MessageFieldView};
 use connectrpc::client::{ClientConfig, HttpClient};
 use gitproxy::{
     connect::gitproxy::v1::GitProxyServiceClient,
-    error::Result,
     proto::gitproxy::v1::{
-        CheckoutTagRequest, CommitAuthor, CommitRequest, CreateBranchRequest,
-        CreateRepositoryRequest, CreateTagRequest, DeleteBranchRequest, DeleteRepositoryRequest,
-        DiffRequest, DiffView, LogRequest, LogView, MergeRequest, RevertMergeRequest,
-        StatusRequest, diff_patch::OperationView,
+        CommitAuthor, CommitRequest, CreateBranchRequest, CreateRepositoryRequest,
+        CreateTagRequest, DeleteRepositoryRequest, DiffRequest, DiffView, File, LogRequest,
+        LogView, MergeRequest, RevertRequest, StatusRequest, diff_patch::OperationView,
     },
 };
 use jiff::Timestamp;
@@ -41,7 +37,7 @@ async fn main() {
     println!("Repo created: {}", NAMESPACE);
 
     let branch1 = "branch-1";
-    let branch_path = client
+    client
         .create_branch(CreateBranchRequest {
             namespace: NAMESPACE.to_owned(),
             branch: branch1.to_owned(),
@@ -50,27 +46,6 @@ async fn main() {
         .await
         .unwrap();
     println!("Branch created: {}", branch1);
-
-    write_files(
-        branch_path.view().branch.path,
-        vec![
-            (
-                &Path::new("my-dir/foo.json"),
-                &serde_json::to_vec(&serde_json::json!({
-                    "a": "foo"
-                }))
-                .unwrap(),
-            ),
-            (
-                &Path::new("my-dir/bar.json"),
-                &serde_json::to_vec(&serde_json::json!({
-                    "b": "bar"
-                }))
-                .unwrap(),
-            ),
-        ],
-    )
-    .unwrap();
 
     let resp = client
         .commit(CommitRequest {
@@ -82,6 +57,24 @@ async fn main() {
                 email: "bob@example.com".to_owned(),
                 ..Default::default()
             }),
+            files: vec![
+                File {
+                    path: "my-dir/foo.json".to_owned(),
+                    contents: serde_json::to_vec(&serde_json::json!({
+                        "a": "foo"
+                    }))
+                    .unwrap(),
+                    ..Default::default()
+                },
+                File {
+                    path: "my-dir/bar.json".to_owned(),
+                    contents: serde_json::to_vec(&serde_json::json!({
+                        "b": "bar"
+                    }))
+                    .unwrap(),
+                    ..Default::default()
+                },
+            ],
             ..Default::default()
         })
         .await
@@ -91,26 +84,14 @@ async fn main() {
     let diff = client
         .diff(DiffRequest {
             namespace: NAMESPACE.to_owned(),
-            base_reference: "main".to_owned(),
-            target_reference: branch1.to_owned(),
+            base_reference: branch1.to_owned(),
+            target_reference: "main".to_owned(),
             ..Default::default()
         })
         .await
         .unwrap();
 
     print_diff(&diff.view().diff);
-
-    write_files(
-        branch_path.view().branch.path,
-        vec![(
-            &Path::new("my-dir/foo.json"),
-            &serde_json::to_vec(&serde_json::json!({
-                "a": "baz"
-            }))
-            .unwrap(),
-        )],
-    )
-    .unwrap();
 
     let resp = client
         .commit(CommitRequest {
@@ -122,6 +103,14 @@ async fn main() {
                 email: "bob@example.com".to_owned(),
                 ..Default::default()
             }),
+            files: vec![File {
+                path: "my-dir/foo.json".to_owned(),
+                contents: serde_json::to_vec(&serde_json::json!({
+                    "a": "baz"
+                }))
+                .unwrap(),
+                ..Default::default()
+            }],
             ..Default::default()
         })
         .await
@@ -143,7 +132,8 @@ async fn main() {
     let resp = client
         .merge(MergeRequest {
             namespace: NAMESPACE.to_owned(),
-            branch: branch1.to_owned(),
+            source_branch: branch1.to_owned(),
+            target_branch: "main".to_owned(),
             ..Default::default()
         })
         .await
@@ -151,7 +141,7 @@ async fn main() {
     println!("Branch {} merged: {}", branch1, resp.view().commit.unwrap());
 
     let branch2 = "branch-2";
-    let branch_path = client
+    client
         .create_branch(CreateBranchRequest {
             namespace: NAMESPACE.to_owned(),
             branch: branch2.to_owned(),
@@ -161,19 +151,7 @@ async fn main() {
         .unwrap();
     println!("Branch created: {}", branch2);
 
-    write_files(
-        branch_path.view().branch.path,
-        vec![(
-            &Path::new("my-dir/foo.json"),
-            &serde_json::to_vec(&serde_json::json!({
-                "a": "quux"
-            }))
-            .unwrap(),
-        )],
-    )
-    .unwrap();
-
-    println!("Dirty: {}", dirty(&client, NAMESPACE, Some(branch2)).await);
+    println!("Dirty: {}", dirty(&client, NAMESPACE, branch2).await);
 
     let resp = client
         .commit(CommitRequest {
@@ -185,13 +163,21 @@ async fn main() {
                 email: "bob@example.com".to_owned(),
                 ..Default::default()
             }),
+            files: vec![File {
+                path: "my-dir/foo.json".to_owned(),
+                contents: serde_json::to_vec(&serde_json::json!({
+                    "a": "quux"
+                }))
+                .unwrap(),
+                ..Default::default()
+            }],
             ..Default::default()
         })
         .await
         .unwrap();
     println!("Commit C: {}", resp.view().commit);
 
-    println!("Dirty: {}", dirty(&client, NAMESPACE, Some(branch2)).await);
+    println!("Dirty: {}", dirty(&client, NAMESPACE, branch2).await);
 
     let diff = client
         .diff(DiffRequest {
@@ -208,7 +194,8 @@ async fn main() {
     let resp = client
         .merge(MergeRequest {
             namespace: NAMESPACE.to_owned(),
-            branch: branch2.to_owned(),
+            source_branch: branch2.to_owned(),
+            target_branch: "main".to_owned(),
             ..Default::default()
         })
         .await
@@ -220,7 +207,7 @@ async fn main() {
     let resp = client
         .log(LogRequest {
             namespace: NAMESPACE.to_owned(),
-            branch: None, // main
+            source_branch: "main".to_owned(),
             ..Default::default()
         })
         .await
@@ -231,19 +218,22 @@ async fn main() {
     }
 
     let resp = client
-        .revert_merge(RevertMergeRequest {
+        .revert(RevertRequest {
             namespace: NAMESPACE.to_owned(),
+            target_branch: "main".to_owned(),
             commit: head.clone(),
             ..Default::default()
         })
         .await
         .unwrap();
-    println!("Commit {} reverted: {}", head, resp.view().commit);
+    println!("Commit {} reverted: {}", head, resp.view().commit.unwrap());
+
+    let last_commit = resp.view().commit.unwrap().to_owned();
 
     let resp = client
         .log(LogRequest {
             namespace: NAMESPACE.to_owned(),
-            branch: None, // main
+            source_branch: "main".to_owned(),
             ..Default::default()
         })
         .await
@@ -258,7 +248,7 @@ async fn main() {
         .create_tag(CreateTagRequest {
             namespace: NAMESPACE.to_owned(),
             name: tag.to_owned(),
-            commit: None,
+            commit: last_commit,
             message: "Tagging my-tag".to_owned(),
             author: MessageField::some(CommitAuthor {
                 name: "Bob".to_owned(),
@@ -266,26 +256,6 @@ async fn main() {
                 ..Default::default()
             }),
             overwrite: false,
-            ..Default::default()
-        })
-        .await
-        .unwrap();
-
-    let resp = client
-        .checkout_tag(CheckoutTagRequest {
-            namespace: NAMESPACE.to_owned(),
-            name: tag.to_owned(),
-            ..Default::default()
-        })
-        .await
-        .unwrap();
-
-    println!("Checked out tag {} to {}", tag, resp.view().path);
-
-    client
-        .delete_branch(DeleteBranchRequest {
-            namespace: NAMESPACE.to_owned(),
-            branch: tag.to_owned(),
             ..Default::default()
         })
         .await
@@ -298,19 +268,6 @@ fn print_log(log: &LogView<'_>) {
         "commit {}\nAuthor: {} <{}>\nDate: {}\n\n{}\n",
         log.commit, log.author.name, log.author.email, time, log.message
     );
-}
-
-fn write_files(root_path: &str, files: Vec<(&Path, &[u8])>) -> Result<()> {
-    let root_path = Path::new(root_path);
-
-    for (path, contents) in files {
-        let path = root_path.join(path);
-        println!("Writing file to {}", path.to_string_lossy());
-        std::fs::create_dir_all(path.parent().unwrap())?;
-        std::fs::write(path, contents)?;
-    }
-
-    Ok(())
 }
 
 fn print_diff(diff: &MessageFieldView<DiffView<'_>>) {
@@ -354,15 +311,12 @@ fn print_diff(diff: &MessageFieldView<DiffView<'_>>) {
     println!("--- DIFF ---");
 }
 
-async fn dirty(
-    client: &GitProxyServiceClient<HttpClient>,
-    namespace: &str,
-    branch: Option<&str>,
-) -> bool {
+async fn dirty(client: &GitProxyServiceClient<HttpClient>, namespace: &str, branch: &str) -> bool {
     let resp = client
         .status(StatusRequest {
             namespace: namespace.to_owned(),
-            branch: branch.map(|b| b.to_owned()),
+            source_branch: branch.to_owned(),
+            target_branch: "main".to_owned(),
             ..Default::default()
         })
         .await

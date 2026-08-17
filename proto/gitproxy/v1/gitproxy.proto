@@ -18,14 +18,14 @@ service GitProxyService {
     rpc ListTags(ListTagsRequest) returns (ListTagsResponse) {}
     rpc CreateTag(CreateTagRequest) returns (CreateTagResponse) {}
     rpc DeleteTag(DeleteTagRequest) returns (DeleteTagResponse) {}
-    rpc CheckoutTag(CheckoutTagRequest) returns (CheckoutTagResponse) {}
     rpc Commit(CommitRequest) returns (CommitResponse) {}
     rpc Merge(MergeRequest) returns (MergeResponse) {}
     rpc Log(LogRequest) returns (LogResponse) {}
-    rpc RevertMerge(RevertMergeRequest) returns (RevertMergeResponse) {}
+    rpc Revert(RevertRequest) returns (RevertResponse) {}
     rpc Diff(DiffRequest) returns (DiffResponse) {}
     rpc Status(StatusRequest) returns (StatusResponse) {}
-    rpc RevertCommit(RevertCommitRequest) returns (RevertCommitResponse) {}
+    rpc GetBlob(GetBlobRequest) returns (GetBlobResponse) {}
+    rpc ListBlobs(ListBlobsRequest) returns (ListBlobsResponse) {}
 }
 
 message ListRepositoriesRequest {
@@ -95,19 +95,21 @@ message ListTagsRequest {
 }
 
 message ListTagsResponse {
-    repeated string tags = 1;
+    repeated Tag tags = 1;
 }
 
 message CreateTagRequest {
     string namespace = 1 [(buf.validate.field).required = true];
     string name = 2 [(buf.validate.field).required = true];
-    optional string commit = 3;
+    string commit = 3;
     string message = 4 [(buf.validate.field).required = true];
     bool overwrite = 5 [(buf.validate.field).required = true];
     CommitAuthor author = 6 [(buf.validate.field).required = true];
 }
 
-message CreateTagResponse {}
+message CreateTagResponse {
+    Tag tag = 1;
+}
 
 message DeleteTagRequest {
     string namespace = 1 [(buf.validate.field).required = true];
@@ -116,20 +118,12 @@ message DeleteTagRequest {
 
 message DeleteTagResponse {}
 
-message CheckoutTagRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
-    string name = 2 [(buf.validate.field).required = true];
-}
-
-message CheckoutTagResponse {
-    string path = 1 [(buf.validate.field).required = true];
-}
-
 message CommitRequest {
     string namespace = 1 [(buf.validate.field).required = true];
     string branch = 2 [(buf.validate.field).required = true];
     string message = 3 [(buf.validate.field).required = true];
     CommitAuthor author = 4 [(buf.validate.field).required = true];
+    repeated File files = 5 [(buf.validate.field).required = true];
 }
 
 message CommitResponse {
@@ -138,8 +132,9 @@ message CommitResponse {
 
 message MergeRequest {
     string namespace = 1 [(buf.validate.field).required = true];
-    string branch = 2 [(buf.validate.field).required = true];
-    bool dry_run = 3 [(buf.validate.field).required = true];
+    string source_branch = 2 [(buf.validate.field).required = true];
+    string target_branch = 3 [(buf.validate.field).required = true];
+    bool dry_run = 4 [(buf.validate.field).required = true];
 }
 
 message MergeResponse {
@@ -147,13 +142,23 @@ message MergeResponse {
     repeated ConflictDiff conflicts = 2;
 }
 
-message RevertMergeRequest {
+message RevertRequest {
+    enum Strategy {
+        STRATEGY_UNSPECIFIED = 0;
+        STRATEGY_KEEP_MAINLINE = 1;
+        STRATEGY_KEEP_OTHER = 2;
+    }
+
     string namespace = 1 [(buf.validate.field).required = true];
-    string commit = 2 [(buf.validate.field).required = true];
+    string target_branch = 2 [(buf.validate.field).required = true];
+    string commit = 3 [(buf.validate.field).required = true];
+    optional Strategy strategy = 4;
+    bool dry_run = 5 [(buf.validate.field).required = true];
 }
 
-message RevertMergeResponse {
-    string commit = 1;
+message RevertResponse {
+    optional string commit = 1;
+    repeated ConflictDiff conflicts = 2;
 }
 
 message LogRequest {
@@ -164,9 +169,9 @@ message LogRequest {
     }
 
     string namespace = 1 [(buf.validate.field).required = true];
-    optional string branch = 2;
+    string source_branch = 2;
     Order order = 3;
-    optional string parent_branch = 4;
+    optional string target_branch = 4;
 }
 
 message LogResponse {
@@ -185,11 +190,31 @@ message DiffResponse {
 
 message StatusRequest {
     string namespace = 1 [(buf.validate.field).required = true];
-    optional string branch = 2;
+    string source_branch = 2 [(buf.validate.field).required = true];
+    string target_branch = 3 [(buf.validate.field).required = true];
 }
 
 message StatusResponse {
     bool dirty = 1;
+}
+
+message GetBlobRequest {
+    string namespace = 1 [(buf.validate.field).required = true];
+    string path = 2 [(buf.validate.field).required = true];
+    string commit = 3 [(buf.validate.field).required = true];
+}
+
+message GetBlobResponse {
+    File file = 1;
+}
+
+message ListBlobsRequest {
+    string namespace = 1 [(buf.validate.field).required = true];
+    string commit = 2 [(buf.validate.field).required = true];
+}
+
+message ListBlobsResponse {
+    repeated File files = 1;
 }
 
 message RevertCommitRequest {
@@ -217,12 +242,10 @@ message Log {
 message Repository {
     string namespace = 1;
     string head_commit = 2;
-    string path = 3;
 }
 
 message Branch {
     string name = 1;
-    string path = 2;
 }
 
 message Diff {
@@ -293,6 +316,19 @@ message DiffPatch {
 
 message ConflictDiff {
     string path = 1;
-    repeated DiffPatch ours = 2;
-    repeated DiffPatch theirs = 3;
+    bytes contents = 2;
+    repeated DiffPatch ours = 3;
+    repeated DiffPatch theirs = 4;
+}
+
+message File {
+    string path = 1;
+    bytes contents = 2;
+}
+
+message Tag {
+    string name = 1;
+    string commit = 2;
+    google.protobuf.Timestamp time = 3;
+    CommitAuthor author = 4;
 }

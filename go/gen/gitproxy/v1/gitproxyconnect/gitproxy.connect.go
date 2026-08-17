@@ -66,25 +66,23 @@ const (
 	// GitProxyServiceDeleteTagProcedure is the fully-qualified name of the GitProxyService's DeleteTag
 	// RPC.
 	GitProxyServiceDeleteTagProcedure = "/gitproxy.v1.GitProxyService/DeleteTag"
-	// GitProxyServiceCheckoutTagProcedure is the fully-qualified name of the GitProxyService's
-	// CheckoutTag RPC.
-	GitProxyServiceCheckoutTagProcedure = "/gitproxy.v1.GitProxyService/CheckoutTag"
 	// GitProxyServiceCommitProcedure is the fully-qualified name of the GitProxyService's Commit RPC.
 	GitProxyServiceCommitProcedure = "/gitproxy.v1.GitProxyService/Commit"
 	// GitProxyServiceMergeProcedure is the fully-qualified name of the GitProxyService's Merge RPC.
 	GitProxyServiceMergeProcedure = "/gitproxy.v1.GitProxyService/Merge"
 	// GitProxyServiceLogProcedure is the fully-qualified name of the GitProxyService's Log RPC.
 	GitProxyServiceLogProcedure = "/gitproxy.v1.GitProxyService/Log"
-	// GitProxyServiceRevertMergeProcedure is the fully-qualified name of the GitProxyService's
-	// RevertMerge RPC.
-	GitProxyServiceRevertMergeProcedure = "/gitproxy.v1.GitProxyService/RevertMerge"
+	// GitProxyServiceRevertProcedure is the fully-qualified name of the GitProxyService's Revert RPC.
+	GitProxyServiceRevertProcedure = "/gitproxy.v1.GitProxyService/Revert"
 	// GitProxyServiceDiffProcedure is the fully-qualified name of the GitProxyService's Diff RPC.
 	GitProxyServiceDiffProcedure = "/gitproxy.v1.GitProxyService/Diff"
 	// GitProxyServiceStatusProcedure is the fully-qualified name of the GitProxyService's Status RPC.
 	GitProxyServiceStatusProcedure = "/gitproxy.v1.GitProxyService/Status"
-	// GitProxyServiceRevertCommitProcedure is the fully-qualified name of the GitProxyService's
-	// RevertCommit RPC.
-	GitProxyServiceRevertCommitProcedure = "/gitproxy.v1.GitProxyService/RevertCommit"
+	// GitProxyServiceGetBlobProcedure is the fully-qualified name of the GitProxyService's GetBlob RPC.
+	GitProxyServiceGetBlobProcedure = "/gitproxy.v1.GitProxyService/GetBlob"
+	// GitProxyServiceListBlobsProcedure is the fully-qualified name of the GitProxyService's ListBlobs
+	// RPC.
+	GitProxyServiceListBlobsProcedure = "/gitproxy.v1.GitProxyService/ListBlobs"
 )
 
 // GitProxyServiceClient is a client for the gitproxy.v1.GitProxyService service.
@@ -100,14 +98,14 @@ type GitProxyServiceClient interface {
 	ListTags(context.Context, *connect.Request[v1.ListTagsRequest]) (*connect.Response[v1.ListTagsResponse], error)
 	CreateTag(context.Context, *connect.Request[v1.CreateTagRequest]) (*connect.Response[v1.CreateTagResponse], error)
 	DeleteTag(context.Context, *connect.Request[v1.DeleteTagRequest]) (*connect.Response[v1.DeleteTagResponse], error)
-	CheckoutTag(context.Context, *connect.Request[v1.CheckoutTagRequest]) (*connect.Response[v1.CheckoutTagResponse], error)
 	Commit(context.Context, *connect.Request[v1.CommitRequest]) (*connect.Response[v1.CommitResponse], error)
 	Merge(context.Context, *connect.Request[v1.MergeRequest]) (*connect.Response[v1.MergeResponse], error)
 	Log(context.Context, *connect.Request[v1.LogRequest]) (*connect.Response[v1.LogResponse], error)
-	RevertMerge(context.Context, *connect.Request[v1.RevertMergeRequest]) (*connect.Response[v1.RevertMergeResponse], error)
+	Revert(context.Context, *connect.Request[v1.RevertRequest]) (*connect.Response[v1.RevertResponse], error)
 	Diff(context.Context, *connect.Request[v1.DiffRequest]) (*connect.Response[v1.DiffResponse], error)
 	Status(context.Context, *connect.Request[v1.StatusRequest]) (*connect.Response[v1.StatusResponse], error)
-	RevertCommit(context.Context, *connect.Request[v1.RevertCommitRequest]) (*connect.Response[v1.RevertCommitResponse], error)
+	GetBlob(context.Context, *connect.Request[v1.GetBlobRequest]) (*connect.Response[v1.GetBlobResponse], error)
+	ListBlobs(context.Context, *connect.Request[v1.ListBlobsRequest]) (*connect.Response[v1.ListBlobsResponse], error)
 }
 
 // NewGitProxyServiceClient constructs a client for the gitproxy.v1.GitProxyService service. By
@@ -187,12 +185,6 @@ func NewGitProxyServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(gitProxyServiceMethods.ByName("DeleteTag")),
 			connect.WithClientOptions(opts...),
 		),
-		checkoutTag: connect.NewClient[v1.CheckoutTagRequest, v1.CheckoutTagResponse](
-			httpClient,
-			baseURL+GitProxyServiceCheckoutTagProcedure,
-			connect.WithSchema(gitProxyServiceMethods.ByName("CheckoutTag")),
-			connect.WithClientOptions(opts...),
-		),
 		commit: connect.NewClient[v1.CommitRequest, v1.CommitResponse](
 			httpClient,
 			baseURL+GitProxyServiceCommitProcedure,
@@ -211,10 +203,10 @@ func NewGitProxyServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(gitProxyServiceMethods.ByName("Log")),
 			connect.WithClientOptions(opts...),
 		),
-		revertMerge: connect.NewClient[v1.RevertMergeRequest, v1.RevertMergeResponse](
+		revert: connect.NewClient[v1.RevertRequest, v1.RevertResponse](
 			httpClient,
-			baseURL+GitProxyServiceRevertMergeProcedure,
-			connect.WithSchema(gitProxyServiceMethods.ByName("RevertMerge")),
+			baseURL+GitProxyServiceRevertProcedure,
+			connect.WithSchema(gitProxyServiceMethods.ByName("Revert")),
 			connect.WithClientOptions(opts...),
 		),
 		diff: connect.NewClient[v1.DiffRequest, v1.DiffResponse](
@@ -229,10 +221,16 @@ func NewGitProxyServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(gitProxyServiceMethods.ByName("Status")),
 			connect.WithClientOptions(opts...),
 		),
-		revertCommit: connect.NewClient[v1.RevertCommitRequest, v1.RevertCommitResponse](
+		getBlob: connect.NewClient[v1.GetBlobRequest, v1.GetBlobResponse](
 			httpClient,
-			baseURL+GitProxyServiceRevertCommitProcedure,
-			connect.WithSchema(gitProxyServiceMethods.ByName("RevertCommit")),
+			baseURL+GitProxyServiceGetBlobProcedure,
+			connect.WithSchema(gitProxyServiceMethods.ByName("GetBlob")),
+			connect.WithClientOptions(opts...),
+		),
+		listBlobs: connect.NewClient[v1.ListBlobsRequest, v1.ListBlobsResponse](
+			httpClient,
+			baseURL+GitProxyServiceListBlobsProcedure,
+			connect.WithSchema(gitProxyServiceMethods.ByName("ListBlobs")),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -251,14 +249,14 @@ type gitProxyServiceClient struct {
 	listTags         *connect.Client[v1.ListTagsRequest, v1.ListTagsResponse]
 	createTag        *connect.Client[v1.CreateTagRequest, v1.CreateTagResponse]
 	deleteTag        *connect.Client[v1.DeleteTagRequest, v1.DeleteTagResponse]
-	checkoutTag      *connect.Client[v1.CheckoutTagRequest, v1.CheckoutTagResponse]
 	commit           *connect.Client[v1.CommitRequest, v1.CommitResponse]
 	merge            *connect.Client[v1.MergeRequest, v1.MergeResponse]
 	log              *connect.Client[v1.LogRequest, v1.LogResponse]
-	revertMerge      *connect.Client[v1.RevertMergeRequest, v1.RevertMergeResponse]
+	revert           *connect.Client[v1.RevertRequest, v1.RevertResponse]
 	diff             *connect.Client[v1.DiffRequest, v1.DiffResponse]
 	status           *connect.Client[v1.StatusRequest, v1.StatusResponse]
-	revertCommit     *connect.Client[v1.RevertCommitRequest, v1.RevertCommitResponse]
+	getBlob          *connect.Client[v1.GetBlobRequest, v1.GetBlobResponse]
+	listBlobs        *connect.Client[v1.ListBlobsRequest, v1.ListBlobsResponse]
 }
 
 // ListRepositories calls gitproxy.v1.GitProxyService.ListRepositories.
@@ -316,11 +314,6 @@ func (c *gitProxyServiceClient) DeleteTag(ctx context.Context, req *connect.Requ
 	return c.deleteTag.CallUnary(ctx, req)
 }
 
-// CheckoutTag calls gitproxy.v1.GitProxyService.CheckoutTag.
-func (c *gitProxyServiceClient) CheckoutTag(ctx context.Context, req *connect.Request[v1.CheckoutTagRequest]) (*connect.Response[v1.CheckoutTagResponse], error) {
-	return c.checkoutTag.CallUnary(ctx, req)
-}
-
 // Commit calls gitproxy.v1.GitProxyService.Commit.
 func (c *gitProxyServiceClient) Commit(ctx context.Context, req *connect.Request[v1.CommitRequest]) (*connect.Response[v1.CommitResponse], error) {
 	return c.commit.CallUnary(ctx, req)
@@ -336,9 +329,9 @@ func (c *gitProxyServiceClient) Log(ctx context.Context, req *connect.Request[v1
 	return c.log.CallUnary(ctx, req)
 }
 
-// RevertMerge calls gitproxy.v1.GitProxyService.RevertMerge.
-func (c *gitProxyServiceClient) RevertMerge(ctx context.Context, req *connect.Request[v1.RevertMergeRequest]) (*connect.Response[v1.RevertMergeResponse], error) {
-	return c.revertMerge.CallUnary(ctx, req)
+// Revert calls gitproxy.v1.GitProxyService.Revert.
+func (c *gitProxyServiceClient) Revert(ctx context.Context, req *connect.Request[v1.RevertRequest]) (*connect.Response[v1.RevertResponse], error) {
+	return c.revert.CallUnary(ctx, req)
 }
 
 // Diff calls gitproxy.v1.GitProxyService.Diff.
@@ -351,9 +344,14 @@ func (c *gitProxyServiceClient) Status(ctx context.Context, req *connect.Request
 	return c.status.CallUnary(ctx, req)
 }
 
-// RevertCommit calls gitproxy.v1.GitProxyService.RevertCommit.
-func (c *gitProxyServiceClient) RevertCommit(ctx context.Context, req *connect.Request[v1.RevertCommitRequest]) (*connect.Response[v1.RevertCommitResponse], error) {
-	return c.revertCommit.CallUnary(ctx, req)
+// GetBlob calls gitproxy.v1.GitProxyService.GetBlob.
+func (c *gitProxyServiceClient) GetBlob(ctx context.Context, req *connect.Request[v1.GetBlobRequest]) (*connect.Response[v1.GetBlobResponse], error) {
+	return c.getBlob.CallUnary(ctx, req)
+}
+
+// ListBlobs calls gitproxy.v1.GitProxyService.ListBlobs.
+func (c *gitProxyServiceClient) ListBlobs(ctx context.Context, req *connect.Request[v1.ListBlobsRequest]) (*connect.Response[v1.ListBlobsResponse], error) {
+	return c.listBlobs.CallUnary(ctx, req)
 }
 
 // GitProxyServiceHandler is an implementation of the gitproxy.v1.GitProxyService service.
@@ -369,14 +367,14 @@ type GitProxyServiceHandler interface {
 	ListTags(context.Context, *connect.Request[v1.ListTagsRequest]) (*connect.Response[v1.ListTagsResponse], error)
 	CreateTag(context.Context, *connect.Request[v1.CreateTagRequest]) (*connect.Response[v1.CreateTagResponse], error)
 	DeleteTag(context.Context, *connect.Request[v1.DeleteTagRequest]) (*connect.Response[v1.DeleteTagResponse], error)
-	CheckoutTag(context.Context, *connect.Request[v1.CheckoutTagRequest]) (*connect.Response[v1.CheckoutTagResponse], error)
 	Commit(context.Context, *connect.Request[v1.CommitRequest]) (*connect.Response[v1.CommitResponse], error)
 	Merge(context.Context, *connect.Request[v1.MergeRequest]) (*connect.Response[v1.MergeResponse], error)
 	Log(context.Context, *connect.Request[v1.LogRequest]) (*connect.Response[v1.LogResponse], error)
-	RevertMerge(context.Context, *connect.Request[v1.RevertMergeRequest]) (*connect.Response[v1.RevertMergeResponse], error)
+	Revert(context.Context, *connect.Request[v1.RevertRequest]) (*connect.Response[v1.RevertResponse], error)
 	Diff(context.Context, *connect.Request[v1.DiffRequest]) (*connect.Response[v1.DiffResponse], error)
 	Status(context.Context, *connect.Request[v1.StatusRequest]) (*connect.Response[v1.StatusResponse], error)
-	RevertCommit(context.Context, *connect.Request[v1.RevertCommitRequest]) (*connect.Response[v1.RevertCommitResponse], error)
+	GetBlob(context.Context, *connect.Request[v1.GetBlobRequest]) (*connect.Response[v1.GetBlobResponse], error)
+	ListBlobs(context.Context, *connect.Request[v1.ListBlobsRequest]) (*connect.Response[v1.ListBlobsResponse], error)
 }
 
 // NewGitProxyServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -452,12 +450,6 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 		connect.WithSchema(gitProxyServiceMethods.ByName("DeleteTag")),
 		connect.WithHandlerOptions(opts...),
 	)
-	gitProxyServiceCheckoutTagHandler := connect.NewUnaryHandler(
-		GitProxyServiceCheckoutTagProcedure,
-		svc.CheckoutTag,
-		connect.WithSchema(gitProxyServiceMethods.ByName("CheckoutTag")),
-		connect.WithHandlerOptions(opts...),
-	)
 	gitProxyServiceCommitHandler := connect.NewUnaryHandler(
 		GitProxyServiceCommitProcedure,
 		svc.Commit,
@@ -476,10 +468,10 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 		connect.WithSchema(gitProxyServiceMethods.ByName("Log")),
 		connect.WithHandlerOptions(opts...),
 	)
-	gitProxyServiceRevertMergeHandler := connect.NewUnaryHandler(
-		GitProxyServiceRevertMergeProcedure,
-		svc.RevertMerge,
-		connect.WithSchema(gitProxyServiceMethods.ByName("RevertMerge")),
+	gitProxyServiceRevertHandler := connect.NewUnaryHandler(
+		GitProxyServiceRevertProcedure,
+		svc.Revert,
+		connect.WithSchema(gitProxyServiceMethods.ByName("Revert")),
 		connect.WithHandlerOptions(opts...),
 	)
 	gitProxyServiceDiffHandler := connect.NewUnaryHandler(
@@ -494,10 +486,16 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 		connect.WithSchema(gitProxyServiceMethods.ByName("Status")),
 		connect.WithHandlerOptions(opts...),
 	)
-	gitProxyServiceRevertCommitHandler := connect.NewUnaryHandler(
-		GitProxyServiceRevertCommitProcedure,
-		svc.RevertCommit,
-		connect.WithSchema(gitProxyServiceMethods.ByName("RevertCommit")),
+	gitProxyServiceGetBlobHandler := connect.NewUnaryHandler(
+		GitProxyServiceGetBlobProcedure,
+		svc.GetBlob,
+		connect.WithSchema(gitProxyServiceMethods.ByName("GetBlob")),
+		connect.WithHandlerOptions(opts...),
+	)
+	gitProxyServiceListBlobsHandler := connect.NewUnaryHandler(
+		GitProxyServiceListBlobsProcedure,
+		svc.ListBlobs,
+		connect.WithSchema(gitProxyServiceMethods.ByName("ListBlobs")),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/gitproxy.v1.GitProxyService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -524,22 +522,22 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 			gitProxyServiceCreateTagHandler.ServeHTTP(w, r)
 		case GitProxyServiceDeleteTagProcedure:
 			gitProxyServiceDeleteTagHandler.ServeHTTP(w, r)
-		case GitProxyServiceCheckoutTagProcedure:
-			gitProxyServiceCheckoutTagHandler.ServeHTTP(w, r)
 		case GitProxyServiceCommitProcedure:
 			gitProxyServiceCommitHandler.ServeHTTP(w, r)
 		case GitProxyServiceMergeProcedure:
 			gitProxyServiceMergeHandler.ServeHTTP(w, r)
 		case GitProxyServiceLogProcedure:
 			gitProxyServiceLogHandler.ServeHTTP(w, r)
-		case GitProxyServiceRevertMergeProcedure:
-			gitProxyServiceRevertMergeHandler.ServeHTTP(w, r)
+		case GitProxyServiceRevertProcedure:
+			gitProxyServiceRevertHandler.ServeHTTP(w, r)
 		case GitProxyServiceDiffProcedure:
 			gitProxyServiceDiffHandler.ServeHTTP(w, r)
 		case GitProxyServiceStatusProcedure:
 			gitProxyServiceStatusHandler.ServeHTTP(w, r)
-		case GitProxyServiceRevertCommitProcedure:
-			gitProxyServiceRevertCommitHandler.ServeHTTP(w, r)
+		case GitProxyServiceGetBlobProcedure:
+			gitProxyServiceGetBlobHandler.ServeHTTP(w, r)
+		case GitProxyServiceListBlobsProcedure:
+			gitProxyServiceListBlobsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -593,10 +591,6 @@ func (UnimplementedGitProxyServiceHandler) DeleteTag(context.Context, *connect.R
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.DeleteTag is not implemented"))
 }
 
-func (UnimplementedGitProxyServiceHandler) CheckoutTag(context.Context, *connect.Request[v1.CheckoutTagRequest]) (*connect.Response[v1.CheckoutTagResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.CheckoutTag is not implemented"))
-}
-
 func (UnimplementedGitProxyServiceHandler) Commit(context.Context, *connect.Request[v1.CommitRequest]) (*connect.Response[v1.CommitResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.Commit is not implemented"))
 }
@@ -609,8 +603,8 @@ func (UnimplementedGitProxyServiceHandler) Log(context.Context, *connect.Request
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.Log is not implemented"))
 }
 
-func (UnimplementedGitProxyServiceHandler) RevertMerge(context.Context, *connect.Request[v1.RevertMergeRequest]) (*connect.Response[v1.RevertMergeResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.RevertMerge is not implemented"))
+func (UnimplementedGitProxyServiceHandler) Revert(context.Context, *connect.Request[v1.RevertRequest]) (*connect.Response[v1.RevertResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.Revert is not implemented"))
 }
 
 func (UnimplementedGitProxyServiceHandler) Diff(context.Context, *connect.Request[v1.DiffRequest]) (*connect.Response[v1.DiffResponse], error) {
@@ -621,6 +615,10 @@ func (UnimplementedGitProxyServiceHandler) Status(context.Context, *connect.Requ
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.Status is not implemented"))
 }
 
-func (UnimplementedGitProxyServiceHandler) RevertCommit(context.Context, *connect.Request[v1.RevertCommitRequest]) (*connect.Response[v1.RevertCommitResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.RevertCommit is not implemented"))
+func (UnimplementedGitProxyServiceHandler) GetBlob(context.Context, *connect.Request[v1.GetBlobRequest]) (*connect.Response[v1.GetBlobResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.GetBlob is not implemented"))
+}
+
+func (UnimplementedGitProxyServiceHandler) ListBlobs(context.Context, *connect.Request[v1.ListBlobsRequest]) (*connect.Response[v1.ListBlobsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.ListBlobs is not implemented"))
 }

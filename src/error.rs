@@ -22,6 +22,8 @@ pub enum Error {
     Json(#[from] serde_json::Error),
     #[error("Buffa decode error {0}")]
     BuffaDecode(#[from] buffa::DecodeError),
+    #[error("Jiff error {0}")]
+    Jiff(#[from] jiff::Error),
 }
 
 impl From<Error> for ConnectError {
@@ -37,6 +39,7 @@ impl From<Error> for ConnectError {
             Error::TokioTask(error) => ConnectError::internal(error.to_string()),
             Error::Json(error) => ConnectError::internal(error.to_string()),
             Error::BuffaDecode(error) => ConnectError::internal(error.to_string()),
+            Error::Jiff(error) => ConnectError::internal(error.to_string()),
         }
     }
 }
