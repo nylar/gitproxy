@@ -91,7 +91,16 @@ impl Repository {
             index.write_tree()?
         };
         let tree = repo.find_tree(tree_id)?;
-        repo.commit(Some("HEAD"), &sig, &sig, "Initial commit", &tree, &[])?;
+        repo.commit(
+            Some(&format!("refs/heads/{}", DEFAULT_PRIMARY_BRANCH)),
+            &sig,
+            &sig,
+            "Initial commit",
+            &tree,
+            &[],
+        )?;
+
+        repo.set_head(&format!("refs/heads/{}", DEFAULT_PRIMARY_BRANCH))?;
 
         Ok(())
     }
