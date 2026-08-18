@@ -101,7 +101,7 @@ message ListTagsResponse {
 message CreateTagRequest {
     string namespace = 1 [(buf.validate.field).required = true];
     string name = 2 [(buf.validate.field).required = true];
-    string commit = 3;
+    string commit = 3 [(buf.validate.field).required = true];
     string message = 4 [(buf.validate.field).required = true];
     bool overwrite = 5 [(buf.validate.field).required = true];
     CommitAuthor author = 6 [(buf.validate.field).required = true];
