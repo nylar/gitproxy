@@ -1,4 +1,7 @@
-use std::{net::SocketAddr, path::Path};
+use std::{
+    net::SocketAddr,
+    path::{Path, PathBuf},
+};
 
 use buffa::MessageField;
 use connectrpc::client::{ClientConfig, HttpClient};
@@ -10,6 +13,7 @@ use gitproxy::{
         CreateTagRequest, DeleteBranchRequest, DeleteRepositoryRequest, DeleteTagRequest,
         DiffPatch, File, GetBlobRequest, GetBranchRequest, ListBlobsRequest, ListBranchesRequest,
         ListRepositoriesRequest, ListTagsRequest, LogRequest, MergeRequest, RevertRequest,
+        commit_request::{Files, Metadata, Payload},
         diff_patch::{Operation, Replace},
     },
 };
@@ -229,25 +233,19 @@ async fn test_branch_merges_successfully() {
         .await
         .unwrap();
 
-    client
-        .commit(CommitRequest {
-            namespace: NAMESPACE.to_owned(),
-            branch: branch.to_owned(),
-            message: "Added my_file".to_owned(),
-            author: MessageField::some(CommitAuthor {
-                name: "test".to_owned(),
-                email: "test@example.com".to_owned(),
-                ..Default::default()
-            }),
-            files: vec![File {
-                path: "my_file.txt".to_owned(),
-                contents: "foo\nbar\nbaz\n".as_bytes().to_vec(),
-                ..Default::default()
-            }],
-            ..Default::default()
-        })
-        .await
-        .unwrap();
+    let requests = commit_request(
+        NAMESPACE,
+        branch,
+        "test",
+        "test@example.com",
+        "Added my_file",
+        vec![(
+            Path::new("my_file.txt").to_path_buf(),
+            "foo\nbar\nbaz\n".as_bytes().to_vec(),
+        )],
+    );
+
+    client.commit(requests).await.unwrap();
 
     let resp = client
         .merge(MergeRequest {
@@ -292,28 +290,22 @@ async fn test_branch_merges_yields_conflicts() {
         .await
         .unwrap();
 
-    client
-        .commit(CommitRequest {
-            namespace: NAMESPACE.to_owned(),
-            branch: "main".to_owned(),
-            message: "Initial comit".to_owned(),
-            author: MessageField::some(CommitAuthor {
-                name: "test".to_owned(),
-                email: "test@example.com".to_owned(),
-                ..Default::default()
-            }),
-            files: vec![File {
-                path: "my_file.json".to_owned(),
-                contents: serde_json::to_vec(&serde_json::json!({
-                    "a": "Initial content"
-                }))
-                .unwrap(),
-                ..Default::default()
-            }],
-            ..Default::default()
-        })
-        .await
-        .unwrap();
+    let requests = commit_request(
+        NAMESPACE,
+        "main",
+        "test",
+        "test@example.com",
+        "Initial commit",
+        vec![(
+            Path::new("my_file.json").to_path_buf(),
+            serde_json::to_vec(&serde_json::json!({
+                "a": "Initial content"
+            }))
+            .unwrap(),
+        )],
+    );
+
+    client.commit(requests).await.unwrap();
 
     let branch: &str = "my-branch";
 
@@ -326,51 +318,39 @@ async fn test_branch_merges_yields_conflicts() {
         .await
         .unwrap();
 
-    client
-        .commit(CommitRequest {
-            namespace: NAMESPACE.to_owned(),
-            branch: branch.to_owned(),
-            message: "Change in my-branch".to_owned(),
-            author: MessageField::some(CommitAuthor {
-                name: "test".to_owned(),
-                email: "test@example.com".to_owned(),
-                ..Default::default()
-            }),
-            files: vec![File {
-                path: "my_file.json".to_owned(),
-                contents: serde_json::to_vec(&serde_json::json!({
-                    "a": "Change from my-branch"
-                }))
-                .unwrap(),
-                ..Default::default()
-            }],
-            ..Default::default()
-        })
-        .await
-        .unwrap();
+    let requests = commit_request(
+        NAMESPACE,
+        branch,
+        "test",
+        "test@example.com",
+        "Change in my-branch",
+        vec![(
+            Path::new("my_file.json").to_path_buf(),
+            serde_json::to_vec(&serde_json::json!({
+                "a": "Change from my-branch"
+            }))
+            .unwrap(),
+        )],
+    );
 
-    client
-        .commit(CommitRequest {
-            namespace: NAMESPACE.to_owned(),
-            branch: "main".to_owned(),
-            message: "Initial comit".to_owned(),
-            author: MessageField::some(CommitAuthor {
-                name: "test".to_owned(),
-                email: "test@example.com".to_owned(),
-                ..Default::default()
-            }),
-            files: vec![File {
-                path: "my_file.json".to_owned(),
-                contents: serde_json::to_vec(&serde_json::json!({
-                    "a": "Change from main branch"
-                }))
-                .unwrap(),
-                ..Default::default()
-            }],
-            ..Default::default()
-        })
-        .await
-        .unwrap();
+    client.commit(requests).await.unwrap();
+
+    let requests = commit_request(
+        NAMESPACE,
+        "main",
+        "test",
+        "test@example.com",
+        "Change in main",
+        vec![(
+            Path::new("my_file.json").to_path_buf(),
+            serde_json::to_vec(&serde_json::json!({
+                "a": "Change from main branch"
+            }))
+            .unwrap(),
+        )],
+    );
+
+    client.commit(requests).await.unwrap();
 
     let resp = client
         .merge(MergeRequest {
@@ -438,25 +418,19 @@ async fn test_merge_reverts_successfully() {
         .await
         .unwrap();
 
-    client
-        .commit(CommitRequest {
-            namespace: NAMESPACE.to_owned(),
-            branch: branch.to_owned(),
-            message: "Added my_file".to_owned(),
-            author: MessageField::some(CommitAuthor {
-                name: "test".to_owned(),
-                email: "test@example.com".to_owned(),
-                ..Default::default()
-            }),
-            files: vec![File {
-                path: "my_file.txt".to_owned(),
-                contents: "foo\nbar\nbaz\n".as_bytes().to_vec(),
-                ..Default::default()
-            }],
-            ..Default::default()
-        })
-        .await
-        .unwrap();
+    let requests = commit_request(
+        NAMESPACE,
+        branch,
+        "test",
+        "test@example.com",
+        "Added my_file",
+        vec![(
+            Path::new("my_file.txt").to_path_buf(),
+            "foo\nbar\nbaz\n".as_bytes().to_vec(),
+        )],
+    );
+
+    client.commit(requests).await.unwrap();
 
     let resp = client
         .merge(MergeRequest {
@@ -522,45 +496,33 @@ async fn test_commit_reverts_successfully() {
         .await
         .unwrap();
 
-    client
-        .commit(CommitRequest {
-            namespace: NAMESPACE.to_owned(),
-            branch: branch.to_owned(),
-            message: "Added my_file".to_owned(),
-            author: MessageField::some(CommitAuthor {
-                name: "test".to_owned(),
-                email: "test@example.com".to_owned(),
-                ..Default::default()
-            }),
-            files: vec![File {
-                path: "my_file.txt".to_owned(),
-                contents: "before".as_bytes().to_vec(),
-                ..Default::default()
-            }],
-            ..Default::default()
-        })
-        .await
-        .unwrap();
+    let requests = commit_request(
+        NAMESPACE,
+        branch,
+        "test",
+        "test@example.com",
+        "Added my_file",
+        vec![(
+            Path::new("my_file.txt").to_path_buf(),
+            "before".as_bytes().to_vec(),
+        )],
+    );
 
-    let resp = client
-        .commit(CommitRequest {
-            namespace: NAMESPACE.to_owned(),
-            branch: branch.to_owned(),
-            message: "Updated my_file".to_owned(),
-            author: MessageField::some(CommitAuthor {
-                name: "test".to_owned(),
-                email: "test@example.com".to_owned(),
-                ..Default::default()
-            }),
-            files: vec![File {
-                path: "my_file.txt".to_owned(),
-                contents: "after".as_bytes().to_vec(),
-                ..Default::default()
-            }],
-            ..Default::default()
-        })
-        .await
-        .unwrap();
+    client.commit(requests).await.unwrap();
+
+    let requests = commit_request(
+        NAMESPACE,
+        branch,
+        "test",
+        "test@example.com",
+        "Updated my_file",
+        vec![(
+            Path::new("my_file.txt").to_path_buf(),
+            "after".as_bytes().to_vec(),
+        )],
+    );
+
+    let resp = client.commit(requests).await.unwrap();
 
     let bad_commit = resp.view().commit;
 
@@ -628,25 +590,19 @@ async fn test_log_with_parent_includes_only_branch_changes() {
         .await
         .unwrap();
 
-    client
-        .commit(CommitRequest {
-            namespace: NAMESPACE.to_owned(),
-            branch: branch.to_owned(),
-            message: "Added my_file".to_owned(),
-            author: MessageField::some(CommitAuthor {
-                name: "test".to_owned(),
-                email: "test@example.com".to_owned(),
-                ..Default::default()
-            }),
-            files: vec![File {
-                path: "my_file.txt".to_owned(),
-                contents: "before".as_bytes().to_vec(),
-                ..Default::default()
-            }],
-            ..Default::default()
-        })
-        .await
-        .unwrap();
+    let requests = commit_request(
+        NAMESPACE,
+        branch,
+        "test",
+        "test@example.com",
+        "Added my_file",
+        vec![(
+            Path::new("my_file.txt").to_path_buf(),
+            "before".as_bytes().to_vec(),
+        )],
+    );
+
+    client.commit(requests).await.unwrap();
 
     let log = client
         .log(LogRequest {
@@ -682,37 +638,29 @@ async fn test_blobs() {
         .await
         .unwrap();
 
-    let resp = client
-        .commit(CommitRequest {
-            namespace: NAMESPACE.to_owned(),
-            branch: "main".to_owned(),
-            message: "Added some files".to_owned(),
-            author: MessageField::some(CommitAuthor {
-                name: "test".to_owned(),
-                email: "test@example.com".to_owned(),
-                ..Default::default()
-            }),
-            files: vec![
-                File {
-                    path: "foo.txt".to_owned(),
-                    contents: "foo".as_bytes().to_vec(),
-                    ..Default::default()
-                },
-                File {
-                    path: "bar.txt".to_owned(),
-                    contents: "bar".as_bytes().to_vec(),
-                    ..Default::default()
-                },
-                File {
-                    path: "baz/quux.txt".to_owned(),
-                    contents: "quux".as_bytes().to_vec(),
-                    ..Default::default()
-                },
-            ],
-            ..Default::default()
-        })
-        .await
-        .unwrap();
+    let requests = commit_request(
+        NAMESPACE,
+        "main",
+        "test",
+        "test@example.com",
+        "Added some files",
+        vec![
+            (
+                Path::new("foo.txt").to_path_buf(),
+                "foo".as_bytes().to_vec(),
+            ),
+            (
+                Path::new("bar.txt").to_path_buf(),
+                "bar".as_bytes().to_vec(),
+            ),
+            (
+                Path::new("baz/quux.txt").to_path_buf(),
+                "quux".as_bytes().to_vec(),
+            ),
+        ],
+    );
+
+    let resp = client.commit(requests).await.unwrap();
 
     let commit = resp.view().commit.to_owned();
 
@@ -774,4 +722,44 @@ fn config(root_dir: &Path) -> Config {
         git_user_name: "test".to_owned(),
         git_user_email: "test@example.com".to_owned(),
     }
+}
+
+fn commit_request(
+    namespace: &str,
+    branch: &str,
+    author_name: &str,
+    author_email: &str,
+    message: &str,
+    files: Vec<(PathBuf, Vec<u8>)>,
+) -> impl IntoIterator<Item = CommitRequest> {
+    let mut requests = vec![CommitRequest {
+        payload: Some(Payload::Metadata(Box::new(Metadata {
+            namespace: namespace.to_owned(),
+            branch: branch.to_owned(),
+            message: message.to_owned(),
+            author: MessageField::some(CommitAuthor {
+                name: author_name.to_owned(),
+                email: author_email.to_owned(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        }))),
+        ..Default::default()
+    }];
+
+    for (path, contents) in files {
+        requests.push(CommitRequest {
+            payload: Some(Payload::Files(Box::new(Files {
+                files: vec![File {
+                    path: path.display().to_string(),
+                    contents: contents.to_owned(),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            }))),
+            ..Default::default()
+        })
+    }
+
+    requests.into_iter()
 }

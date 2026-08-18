@@ -637,7 +637,7 @@ pub const GIT_PROXY_SERVICE_DELETE_TAG_SPEC: ::connectrpc::Spec = ::connectrpc::
 /// [`RequestContext::spec`](::connectrpc::RequestContext::spec).
 pub const GIT_PROXY_SERVICE_COMMIT_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
         "/gitproxy.v1.GitProxyService/Commit",
-        ::connectrpc::StreamType::Unary,
+        ::connectrpc::StreamType::ClientStream,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
 /// Static [`Spec`](::connectrpc::Spec) for the server-side `Merge` RPC.
@@ -1011,18 +1011,14 @@ pub trait GitProxyService: Send + Sync + 'static {
     ///
     /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
     ///
-    /// `request` is borrowed from the request body and is valid for the
-    /// duration of the call; message fields are read directly on it
-    /// (zero-copy). The response cannot borrow from `request` — use
-    /// `.to_owned_message()` (or copy the specific fields) for anything
-    /// returned, stored, or moved into `tokio::spawn`.
+    /// Each `requests` item is a [`StreamMessage`](::connectrpc::StreamMessage):
+    /// it owns its buffer, is `Send + 'static`, and exposes zero-copy
+    /// accessor methods (`item.name()`), `.view()`, and
+    /// `.to_owned_message()`.
     fn commit<'a>(
         &'a self,
         ctx: ::connectrpc::RequestContext,
-        request: ::connectrpc::ServiceRequest<
-            '_,
-            crate::proto::gitproxy::v1::CommitRequest,
-        >,
+        requests: ::connectrpc::InboundStream<crate::proto::gitproxy::v1::CommitRequest>,
     ) -> impl ::std::future::Future<
         Output = ::connectrpc::ServiceResult<
             impl ::connectrpc::Encodable<
@@ -1539,33 +1535,25 @@ impl<S: GitProxyService> GitProxyServiceExt for S {
                 },
             )
             .with_spec(GIT_PROXY_SERVICE_DELETE_TAG_SPEC)
-            .route_view(
+            .route_view_client_stream(
                 GIT_PROXY_SERVICE_SERVICE_NAME,
                 "Commit",
-                {
+                ::connectrpc::view_client_streaming_handler_fn({
                     let svc = ::std::sync::Arc::clone(&self);
-                    ::connectrpc::view_handler_fn(move |
-                        ctx,
-                        req: ::buffa::view::OwnedView<
-                            crate::proto::gitproxy::v1::__buffa::view::CommitRequestView<
-                                'static,
-                            >,
-                        >,
-                        format|
-                    {
+                    move |ctx, req, format| {
                         let svc = ::std::sync::Arc::clone(&svc);
                         async move {
-                            let sreq = ::connectrpc::ServiceRequest::<
+                            let req = ::connectrpc::dispatcher::codegen::into_stream_messages::<
                                 crate::proto::gitproxy::v1::CommitRequest,
-                            >::from_parts(req.reborrow(), req.bytes());
-                            svc.commit(ctx, sreq)
+                            >(req);
+                            svc.commit(ctx, req)
                                 .await?
                                 .encode::<
                                     crate::proto::gitproxy::v1::CommitResponse,
                                 >(format)
                         }
-                    })
-                },
+                    }
+                }),
             )
             .with_spec(GIT_PROXY_SERVICE_COMMIT_SPEC)
             .route_view(
@@ -1887,7 +1875,7 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
             }
             "Commit" => {
                 Some(
-                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
+                    ::connectrpc::dispatcher::codegen::MethodDescriptor::client_streaming()
                         .with_spec(GIT_PROXY_SERVICE_COMMIT_SPEC),
                 )
             }
@@ -2171,25 +2159,6 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                         .encode::<crate::proto::gitproxy::v1::DeleteTagResponse>(format)
                 })
             }
-            "Commit" => {
-                let svc = ::std::sync::Arc::clone(&self.inner);
-                Box::pin(async move {
-                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
-                        crate::proto::gitproxy::v1::CommitRequest,
-                    >(request.encoded()?, format)?;
-                    let req: crate::proto::gitproxy::v1::__buffa::view::CommitRequestView<
-                        '_,
-                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
-                        &body,
-                    )?;
-                    let req = ::connectrpc::ServiceRequest::<
-                        crate::proto::gitproxy::v1::CommitRequest,
-                    >::from_parts(&req, &body);
-                    svc.commit(ctx, req)
-                        .await?
-                        .encode::<crate::proto::gitproxy::v1::CommitResponse>(format)
-                })
-            }
             "Merge" => {
                 let svc = ::std::sync::Arc::clone(&self.inner);
                 Box::pin(async move {
@@ -2353,6 +2322,17 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
         };
         let _ = (&ctx, &requests, &format);
         match method {
+            "Commit" => {
+                let svc = ::std::sync::Arc::clone(&self.inner);
+                Box::pin(async move {
+                    let req_stream = ::connectrpc::dispatcher::codegen::decode_message_request_stream::<
+                        crate::proto::gitproxy::v1::CommitRequest,
+                    >(requests, format);
+                    svc.commit(ctx, req_stream)
+                        .await?
+                        .encode::<crate::proto::gitproxy::v1::CommitResponse>(format)
+                })
+            }
             _ => ::connectrpc::dispatcher::codegen::unimplemented_unary(path),
         }
     }
@@ -2933,7 +2913,7 @@ where
     /// Call the Commit RPC. Sends a request to /gitproxy.v1.GitProxyService/Commit.
     pub async fn commit(
         &self,
-        request: crate::proto::gitproxy::v1::CommitRequest,
+        requests: impl IntoIterator<Item = crate::proto::gitproxy::v1::CommitRequest>,
     ) -> Result<
         ::connectrpc::client::UnaryResponse<
             ::buffa::view::OwnedView<
@@ -2942,13 +2922,13 @@ where
         >,
         ::connectrpc::ConnectError,
     > {
-        self.commit_with_options(request, ::connectrpc::client::CallOptions::default())
+        self.commit_with_options(requests, ::connectrpc::client::CallOptions::default())
             .await
     }
     /// Call the Commit RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
     pub async fn commit_with_options(
         &self,
-        request: crate::proto::gitproxy::v1::CommitRequest,
+        requests: impl IntoIterator<Item = crate::proto::gitproxy::v1::CommitRequest>,
         options: ::connectrpc::client::CallOptions,
     ) -> Result<
         ::connectrpc::client::UnaryResponse<
@@ -2958,12 +2938,12 @@ where
         >,
         ::connectrpc::ConnectError,
     > {
-        ::connectrpc::client::call_unary(
+        ::connectrpc::client::call_client_stream(
                 &self.transport,
                 &self.config,
                 GIT_PROXY_SERVICE_SERVICE_NAME,
                 "Commit",
-                request,
+                requests,
                 options,
             )
             .await

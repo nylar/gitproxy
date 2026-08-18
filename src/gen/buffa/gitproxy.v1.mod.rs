@@ -55,6 +55,8 @@ pub mod __buffa {
         reg.register_json_any(super::__DELETE_TAG_REQUEST_JSON_ANY);
         reg.register_json_any(super::__DELETE_TAG_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__COMMIT_REQUEST_JSON_ANY);
+        reg.register_json_any(super::commit_request::__METADATA_JSON_ANY);
+        reg.register_json_any(super::commit_request::__FILES_JSON_ANY);
         reg.register_json_any(super::__COMMIT_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__MERGE_REQUEST_JSON_ANY);
         reg.register_json_any(super::__MERGE_RESPONSE_JSON_ANY);

@@ -2,8 +2,12 @@ use std::path::PathBuf;
 
 use buffa::MessageField;
 use buffa_types::Timestamp;
-use connectrpc::{ConnectError, RequestContext, Response, ServiceRequest, ServiceResult};
-use tokio::task::spawn_blocking;
+use connectrpc::{
+    ConnectError, InboundStream, RequestContext, Response, ServiceRequest, ServiceResult,
+};
+use futures::StreamExt;
+use protovalidate_buffa::Validate;
+use tokio::{sync::mpsc, task::spawn_blocking};
 
 use crate::{
     config::Config,
@@ -14,12 +18,14 @@ use crate::{
         CreateBranchResponse, CreateRepositoryRequest, CreateRepositoryResponse, CreateTagRequest,
         CreateTagResponse, DeleteBranchRequest, DeleteBranchResponse, DeleteRepositoryRequest,
         DeleteRepositoryResponse, DeleteTagRequest, DeleteTagResponse, Diff, DiffRequest,
-        DiffResponse, GetBlobRequest, GetBlobResponse, GetBranchRequest, GetBranchResponse,
+        DiffResponse, File, GetBlobRequest, GetBlobResponse, GetBranchRequest, GetBranchResponse,
         GetRepositoryRequest, GetRepositoryResponse, ListBlobsRequest, ListBlobsResponse,
         ListBranchesRequest, ListBranchesResponse, ListRepositoriesRequest,
         ListRepositoriesResponse, ListTagsRequest, ListTagsResponse, Log, LogRequest, LogResponse,
         MergeRequest, MergeResponse, Repository, RevertRequest, RevertResponse, StatusRequest,
-        StatusResponse, log_request::Order,
+        StatusResponse,
+        commit_request::{Metadata, Payload},
+        log_request::Order,
     },
     repository::{Author, LogOrder},
     service::Service,
@@ -308,24 +314,40 @@ impl GitProxyService for Server {
     async fn commit(
         &self,
         _ctx: RequestContext,
-        request: ServiceRequest<'_, CommitRequest>,
+        mut requests: InboundStream<CommitRequest>,
     ) -> ServiceResult<CommitResponse> {
-        let req = request.to_owned_message();
-        let service = self.service(request.namespace);
+        let (tx, mut rx) = mpsc::channel::<Vec<File>>(32);
 
-        let commit = spawn_blocking(move || {
-            service.commit(
-                req.branch,
-                req.message,
-                Author {
-                    name: req.author.name.to_owned(),
-                    email: req.author.email.to_owned(),
-                },
-                req.files,
-            )
-        })
-        .await
-        .map_err(Error::TokioTask)??;
+        let mut metadata = Metadata::default();
+
+        if let Some(Ok(first)) = requests.next().await {
+            let payload = first.to_owned_message().payload;
+
+            if let Some(Payload::Metadata(m)) = payload {
+                metadata = *m.to_owned();
+            }
+        }
+
+        metadata.validate().map_err(Error::Validation)?;
+
+        let service = self.service(&metadata.namespace);
+
+        let worker = spawn_blocking(move || service.commit(metadata, &mut rx));
+
+        while let Some(Ok(request)) = requests.next().await {
+            let payload = request.to_owned_message().payload;
+
+            if let Some(Payload::Files(files)) = payload
+                && !files.files.is_empty()
+                && tx.send(files.files).await.is_err()
+            {
+                break;
+            }
+        }
+
+        drop(tx);
+
+        let commit = worker.await.map_err(Error::TokioTask)??;
 
         Response::ok(CommitResponse {
             commit: commit.to_string(),

@@ -1,4 +1,8 @@
-use std::{collections::HashMap, iter::zip};
+use std::{
+    collections::HashMap,
+    iter::zip,
+    path::{Path, PathBuf},
+};
 
 use buffa::{MessageField, MessageView};
 use connectrpc::client::{ClientConfig, HttpClient};
@@ -7,7 +11,9 @@ use gitproxy::{
     connect::gitproxy::v1::GitProxyServiceClient,
     proto::gitproxy::v1::{
         CommitAuthor, CommitRequest, ConflictDiff, CreateBranchRequest, CreateRepositoryRequest,
-        DeleteRepositoryRequest, File, MergeRequest, diff_patch::Operation,
+        DeleteRepositoryRequest, File, MergeRequest,
+        commit_request::{Files, Metadata, Payload},
+        diff_patch::Operation,
     },
 };
 use json_patch::{PatchOperation, jsonptr::PointerBuf};
@@ -58,37 +64,29 @@ async fn main() {
         menu_id: "foo".to_owned(),
     };
 
-    client
-        .commit(CommitRequest {
-            namespace: NAMESPACE.to_owned(),
-            branch: "main".to_owned(),
-            message: "Initial main commit".to_owned(),
-            author: MessageField::some(CommitAuthor {
-                name: "test".to_owned(),
-                email: "test@example.com".to_owned(),
-                ..Default::default()
-            }),
-            files: vec![
-                File {
-                    path: "menus/foo.json".to_owned(),
-                    contents: serde_json::to_vec(&menu_foo).unwrap(),
-                    ..Default::default()
-                },
-                File {
-                    path: "pages/bar.json".to_owned(),
-                    contents: serde_json::to_vec(&page_bar).unwrap(),
-                    ..Default::default()
-                },
-                File {
-                    path: "pages/baz.json".to_owned(),
-                    contents: serde_json::to_vec(&page_baz).unwrap(),
-                    ..Default::default()
-                },
-            ],
-            ..Default::default()
-        })
-        .await
-        .unwrap();
+    let requests = commit_request(
+        NAMESPACE,
+        "main",
+        "test",
+        "test@example.com",
+        "Initial main commit",
+        vec![
+            (
+                Path::new("menus/foo.json").to_path_buf(),
+                serde_json::to_vec(&menu_foo).unwrap(),
+            ),
+            (
+                Path::new("pages/bar.json").to_path_buf(),
+                serde_json::to_vec(&page_bar).unwrap(),
+            ),
+            (
+                Path::new("pages/baz.json").to_path_buf(),
+                serde_json::to_vec(&page_baz).unwrap(),
+            ),
+        ],
+    );
+
+    client.commit(requests).await.unwrap();
 
     let branch: &str = "my-branch";
 
@@ -105,37 +103,29 @@ async fn main() {
     page_bar.title.insert("en-US".to_owned(), "Thud".to_owned());
     page_baz.archived = true;
 
-    client
-        .commit(CommitRequest {
-            namespace: NAMESPACE.to_owned(),
-            branch: branch.to_owned(),
-            message: "Change in my-branch".to_owned(),
-            author: MessageField::some(CommitAuthor {
-                name: "test".to_owned(),
-                email: "test@example.com".to_owned(),
-                ..Default::default()
-            }),
-            files: vec![
-                File {
-                    path: "menus/foo.json".to_owned(),
-                    contents: serde_json::to_vec(&menu_foo).unwrap(),
-                    ..Default::default()
-                },
-                File {
-                    path: "pages/bar.json".to_owned(),
-                    contents: serde_json::to_vec(&page_bar).unwrap(),
-                    ..Default::default()
-                },
-                File {
-                    path: "pages/baz.json".to_owned(),
-                    contents: serde_json::to_vec(&page_baz).unwrap(),
-                    ..Default::default()
-                },
-            ],
-            ..Default::default()
-        })
-        .await
-        .unwrap();
+    let requests = commit_request(
+        NAMESPACE,
+        branch,
+        "test",
+        "test@example.com",
+        "Change in my-branch",
+        vec![
+            (
+                Path::new("menus/foo.json").to_path_buf(),
+                serde_json::to_vec(&menu_foo).unwrap(),
+            ),
+            (
+                Path::new("pages/bar.json").to_path_buf(),
+                serde_json::to_vec(&page_bar).unwrap(),
+            ),
+            (
+                Path::new("pages/baz.json").to_path_buf(),
+                serde_json::to_vec(&page_baz).unwrap(),
+            ),
+        ],
+    );
+
+    client.commit(requests).await.unwrap();
 
     menu_foo
         .title
@@ -145,32 +135,25 @@ async fn main() {
         .title
         .insert("en-US".to_owned(), "Blargh".to_owned());
 
-    client
-        .commit(CommitRequest {
-            namespace: NAMESPACE.to_owned(),
-            branch: "main".to_owned(),
-            message: "Change in main".to_owned(),
-            author: MessageField::some(CommitAuthor {
-                name: "test".to_owned(),
-                email: "test@example.com".to_owned(),
-                ..Default::default()
-            }),
-            files: vec![
-                File {
-                    path: "menus/foo.json".to_owned(),
-                    contents: serde_json::to_vec(&menu_foo).unwrap(),
-                    ..Default::default()
-                },
-                File {
-                    path: "pages/bar.json".to_owned(),
-                    contents: serde_json::to_vec(&page_bar).unwrap(),
-                    ..Default::default()
-                },
-            ],
-            ..Default::default()
-        })
-        .await
-        .unwrap();
+    let requests = commit_request(
+        NAMESPACE,
+        "main",
+        "test",
+        "test@example.com",
+        "Change in main",
+        vec![
+            (
+                Path::new("menus/foo.json").to_path_buf(),
+                serde_json::to_vec(&menu_foo).unwrap(),
+            ),
+            (
+                Path::new("pages/bar.json").to_path_buf(),
+                serde_json::to_vec(&page_bar).unwrap(),
+            ),
+        ],
+    );
+
+    client.commit(requests).await.unwrap();
 
     let resp = client
         .merge(MergeRequest {
@@ -189,26 +172,31 @@ async fn main() {
 
     cliclack::outro(style(" Conflicts resolved! ").on_green().black()).unwrap();
 
+    let requests = commit_request(
+        NAMESPACE,
+        branch,
+        "test",
+        "test@example.com",
+        "Conflicts resolved",
+        files,
+    );
+
+    client.commit(requests).await.unwrap();
+
     let resp = client
-        .commit(CommitRequest {
+        .merge(MergeRequest {
             namespace: NAMESPACE.to_owned(),
-            branch: branch.to_owned(),
-            message: "Conflicts resolved".to_owned(),
-            author: MessageField::some(CommitAuthor {
-                name: "test".to_owned(),
-                email: "test@example.com".to_owned(),
-                ..Default::default()
-            }),
-            files,
+            source_branch: branch.to_owned(),
+            target_branch: "main".to_owned(),
             ..Default::default()
         })
         .await
         .unwrap();
 
-    println!("Merge commit: {}", resp.view().commit);
+    println!("Merge commit: {}", resp.view().commit.unwrap());
 }
 
-fn resolve_conflicts(conflicts: &[ConflictDiff]) -> Vec<File> {
+fn resolve_conflicts(conflicts: &[ConflictDiff]) -> Vec<(PathBuf, Vec<u8>)> {
     let mut files = Vec::new();
 
     for conflict in conflicts {
@@ -239,11 +227,7 @@ fn resolve_conflicts(conflicts: &[ConflictDiff]) -> Vec<File> {
 
         let data = serde_json::to_vec(&value).unwrap();
 
-        files.push(File {
-            path: conflict.path.to_owned(),
-            contents: data,
-            ..Default::default()
-        });
+        files.push((Path::new(&conflict.path).to_path_buf(), data));
     }
     files
 }
@@ -325,4 +309,44 @@ fn into_op(op: &Operation) -> PatchOperation {
             value: serde_json::from_str(&test.value).unwrap(),
         }),
     }
+}
+
+fn commit_request(
+    namespace: &str,
+    branch: &str,
+    author_name: &str,
+    author_email: &str,
+    message: &str,
+    files: Vec<(PathBuf, Vec<u8>)>,
+) -> impl IntoIterator<Item = CommitRequest> {
+    let mut requests = vec![CommitRequest {
+        payload: Some(Payload::Metadata(Box::new(Metadata {
+            namespace: namespace.to_owned(),
+            branch: branch.to_owned(),
+            message: message.to_owned(),
+            author: MessageField::some(CommitAuthor {
+                name: author_name.to_owned(),
+                email: author_email.to_owned(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        }))),
+        ..Default::default()
+    }];
+
+    for (path, contents) in files {
+        requests.push(CommitRequest {
+            payload: Some(Payload::Files(Box::new(Files {
+                files: vec![File {
+                    path: path.display().to_string(),
+                    contents: contents.to_owned(),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            }))),
+            ..Default::default()
+        })
+    }
+
+    requests.into_iter()
 }

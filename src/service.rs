@@ -3,10 +3,11 @@ use std::path::{Path, PathBuf};
 use buffa::{EnumValue, MessageField};
 use buffa_types::Timestamp;
 use git2::Oid;
+use tokio::sync::mpsc::Receiver;
 
 use crate::{
     error::{Error, Result},
-    proto::gitproxy::v1::{self, CommitAuthor, File},
+    proto::gitproxy::v1::{self, CommitAuthor, File, commit_request::Metadata},
     repository::{
         Author, ConflictDiff, LogEntry, LogOrder, Merge, PatchDiff, Repository, Strategy, Tag,
     },
@@ -83,22 +84,23 @@ impl Service {
         Ok(())
     }
 
-    pub fn commit(
-        &self,
-        branch: String,
-        message: String,
-        author: Author,
-        files: Vec<File>,
-    ) -> Result<Oid> {
+    pub fn commit(&self, metadata: Metadata, rx: &mut Receiver<Vec<File>>) -> Result<Oid> {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let commit = repo.commit_files(
-            &branch,
-            &message,
-            &author,
-            files
-                .iter()
-                .map(|f| (Path::new(&f.path), f.contents.as_ref())),
-        )?;
+
+        let mut files = Vec::new();
+
+        while let Some(f) = rx.blocking_recv() {
+            for file in f {
+                files.push((Path::new(&file.path).to_path_buf(), file.contents))
+            }
+        }
+
+        let author = Author {
+            name: metadata.author.name.to_owned(),
+            email: metadata.author.email.to_owned(),
+        };
+
+        let commit = repo.commit_files(&metadata.branch, &metadata.message, &author, files)?;
         Ok(commit)
     }
 

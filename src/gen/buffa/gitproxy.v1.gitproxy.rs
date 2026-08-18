@@ -2902,56 +2902,18 @@ pub const __DELETE_TAG_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry =
     is_wkt: false,
 };
 #[derive(Clone, PartialEq, Default)]
-#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[derive(::serde::Serialize)]
 #[serde(default)]
 pub struct CommitRequest {
-    /// Field 1: `namespace`
-    #[serde(
-        rename = "namespace",
-        with = "::buffa::json_helpers::proto_string",
-        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
-    )]
-    pub namespace: ::buffa::alloc::string::String,
-    /// Field 2: `branch`
-    #[serde(
-        rename = "branch",
-        with = "::buffa::json_helpers::proto_string",
-        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
-    )]
-    pub branch: ::buffa::alloc::string::String,
-    /// Field 3: `message`
-    #[serde(
-        rename = "message",
-        with = "::buffa::json_helpers::proto_string",
-        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
-    )]
-    pub message: ::buffa::alloc::string::String,
-    /// Field 4: `author`
-    #[serde(
-        rename = "author",
-        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
-    )]
-    pub author: ::buffa::MessageField<CommitAuthor>,
-    /// Field 5: `files`
-    #[serde(
-        rename = "files",
-        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
-        deserialize_with = "::buffa::json_helpers::null_as_default"
-    )]
-    pub files: ::buffa::alloc::vec::Vec<File>,
+    #[serde(flatten)]
+    pub payload: ::core::option::Option<__buffa::oneof::commit_request::Payload>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
 }
 impl ::core::fmt::Debug for CommitRequest {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        f.debug_struct("CommitRequest")
-            .field("namespace", &self.namespace)
-            .field("branch", &self.branch)
-            .field("message", &self.message)
-            .field("author", &self.author)
-            .field("files", &self.files)
-            .finish()
+        f.debug_struct("CommitRequest").field("payload", &self.payload).finish()
     }
 }
 impl CommitRequest {
@@ -2979,30 +2941,25 @@ impl ::buffa::Message for CommitRequest {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         let mut size = 0u32;
-        if !self.namespace.is_empty() {
-            size += 1u32 + ::buffa::types::string_encoded_len(&self.namespace) as u32;
-        }
-        if !self.branch.is_empty() {
-            size += 1u32 + ::buffa::types::string_encoded_len(&self.branch) as u32;
-        }
-        if !self.message.is_empty() {
-            size += 1u32 + ::buffa::types::string_encoded_len(&self.message) as u32;
-        }
-        if self.author.is_set() {
-            let __slot = __cache.reserve();
-            let inner_size = self.author.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
-                    + inner_size;
-        }
-        for v in &self.files {
-            let __slot = __cache.reserve();
-            let inner_size = v.compute_size(__cache);
-            __cache.set(__slot, inner_size);
-            size
-                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
-                    + inner_size;
+        if let ::core::option::Option::Some(ref v) = self.payload {
+            match v {
+                __buffa::oneof::commit_request::Payload::Metadata(x) => {
+                    let __slot = __cache.reserve();
+                    let inner = x.compute_size(__cache);
+                    __cache.set(__slot, inner);
+                    size
+                        += 1u32 + ::buffa::encoding::varint_len(inner as u64) as u32
+                            + inner;
+                }
+                __buffa::oneof::commit_request::Payload::Files(x) => {
+                    let __slot = __cache.reserve();
+                    let inner = x.compute_size(__cache);
+                    __cache.set(__slot, inner);
+                    size
+                        += 1u32 + ::buffa::encoding::varint_len(inner as u64) as u32
+                            + inner;
+                }
+            }
         }
         size += self.__buffa_unknown_fields.encoded_len() as u32;
         size
@@ -3014,22 +2971,25 @@ impl ::buffa::Message for CommitRequest {
     ) {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
-        if !self.namespace.is_empty() {
-            ::buffa::types::put_string_field(1u32, &self.namespace, buf);
-        }
-        if !self.branch.is_empty() {
-            ::buffa::types::put_string_field(2u32, &self.branch, buf);
-        }
-        if !self.message.is_empty() {
-            ::buffa::types::put_string_field(3u32, &self.message, buf);
-        }
-        if self.author.is_set() {
-            ::buffa::types::put_len_delimited_header(4u32, __cache.consume_next(), buf);
-            self.author.write_to(__cache, buf);
-        }
-        for v in &self.files {
-            ::buffa::types::put_len_delimited_header(5u32, __cache.consume_next(), buf);
-            v.write_to(__cache, buf);
+        if let ::core::option::Option::Some(ref v) = self.payload {
+            match v {
+                __buffa::oneof::commit_request::Payload::Metadata(x) => {
+                    ::buffa::types::put_len_delimited_header(
+                        1u32,
+                        __cache.consume_next(),
+                        buf,
+                    );
+                    x.write_to(__cache, buf);
+                }
+                __buffa::oneof::commit_request::Payload::Files(x) => {
+                    ::buffa::types::put_len_delimited_header(
+                        2u32,
+                        __cache.consume_next(),
+                        buf,
+                    );
+                    x.write_to(__cache, buf);
+                }
+            }
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -3049,41 +3009,40 @@ impl ::buffa::Message for CommitRequest {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
-                ::buffa::types::merge_string(&mut self.namespace, buf)?;
+                if let ::core::option::Option::Some(
+                    __buffa::oneof::commit_request::Payload::Metadata(ref mut existing),
+                ) = self.payload
+                {
+                    ::buffa::Message::merge_length_delimited(&mut **existing, buf, ctx)?;
+                } else {
+                    let mut val = ::core::default::Default::default();
+                    ::buffa::Message::merge_length_delimited(&mut val, buf, ctx)?;
+                    self.payload = ::core::option::Option::Some(
+                        __buffa::oneof::commit_request::Payload::Metadata(
+                            ::buffa::alloc::boxed::Box::new(val),
+                        ),
+                    );
+                }
             }
             2u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
-                ::buffa::types::merge_string(&mut self.branch, buf)?;
-            }
-            3u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::types::merge_string(&mut self.message, buf)?;
-            }
-            4u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                ::buffa::Message::merge_length_delimited(
-                    self.author.get_or_insert_default(),
-                    buf,
-                    ctx,
-                )?;
-            }
-            5u32 => {
-                ::buffa::encoding::check_wire_type(
-                    tag,
-                    ::buffa::encoding::WireType::LengthDelimited,
-                )?;
-                let mut elem = ::core::default::Default::default();
-                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
-                self.files.push(elem);
+                if let ::core::option::Option::Some(
+                    __buffa::oneof::commit_request::Payload::Files(ref mut existing),
+                ) = self.payload
+                {
+                    ::buffa::Message::merge_length_delimited(&mut **existing, buf, ctx)?;
+                } else {
+                    let mut val = ::core::default::Default::default();
+                    ::buffa::Message::merge_length_delimited(&mut val, buf, ctx)?;
+                    self.payload = ::core::option::Option::Some(
+                        __buffa::oneof::commit_request::Payload::Files(
+                            ::buffa::alloc::boxed::Box::new(val),
+                        ),
+                    );
+                }
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -3093,11 +3052,7 @@ impl ::buffa::Message for CommitRequest {
         ::core::result::Result::Ok(())
     }
     fn clear(&mut self) {
-        self.namespace.clear();
-        self.branch.clear();
-        self.message.clear();
-        self.author = ::buffa::MessageField::none();
-        self.files.clear();
+        self.payload = ::core::option::Option::None;
         self.__buffa_unknown_fields.clear();
     }
 }
@@ -3108,6 +3063,87 @@ impl ::buffa::ExtensionSet for CommitRequest {
     }
     fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
         &mut self.__buffa_unknown_fields
+    }
+}
+impl<'de> serde::Deserialize<'de> for CommitRequest {
+    fn deserialize<D: serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        struct _V;
+        impl<'de> serde::de::Visitor<'de> for _V {
+            type Value = CommitRequest;
+            fn expecting(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+                f.write_str("struct CommitRequest")
+            }
+            #[allow(clippy::field_reassign_with_default)]
+            fn visit_map<A: serde::de::MapAccess<'de>>(
+                self,
+                mut map: A,
+            ) -> ::core::result::Result<CommitRequest, A::Error> {
+                let mut __oneof_payload: ::core::option::Option<
+                    __buffa::oneof::commit_request::Payload,
+                > = None;
+                while let Some(key) = map.next_key::<::buffa::alloc::string::String>()? {
+                    match key.as_str() {
+                        "metadata" => {
+                            let v: ::core::option::Option<commit_request::Metadata> = map
+                                .next_value_seed(
+                                    ::buffa::json_helpers::NullableDeserializeSeed(
+                                        ::buffa::json_helpers::DefaultDeserializeSeed::<
+                                            commit_request::Metadata,
+                                        >::new(),
+                                    ),
+                                )?;
+                            if let Some(v) = v {
+                                if __oneof_payload.is_some() {
+                                    return Err(
+                                        serde::de::Error::custom(
+                                            "multiple oneof fields set for 'payload'",
+                                        ),
+                                    );
+                                }
+                                __oneof_payload = Some(
+                                    __buffa::oneof::commit_request::Payload::Metadata(
+                                        ::buffa::alloc::boxed::Box::new(v),
+                                    ),
+                                );
+                            }
+                        }
+                        "files" => {
+                            let v: ::core::option::Option<commit_request::Files> = map
+                                .next_value_seed(
+                                    ::buffa::json_helpers::NullableDeserializeSeed(
+                                        ::buffa::json_helpers::DefaultDeserializeSeed::<
+                                            commit_request::Files,
+                                        >::new(),
+                                    ),
+                                )?;
+                            if let Some(v) = v {
+                                if __oneof_payload.is_some() {
+                                    return Err(
+                                        serde::de::Error::custom(
+                                            "multiple oneof fields set for 'payload'",
+                                        ),
+                                    );
+                                }
+                                __oneof_payload = Some(
+                                    __buffa::oneof::commit_request::Payload::Files(
+                                        ::buffa::alloc::boxed::Box::new(v),
+                                    ),
+                                );
+                            }
+                        }
+                        _ => {
+                            map.next_value::<serde::de::IgnoredAny>()?;
+                        }
+                    }
+                }
+                let mut __r = <CommitRequest as ::core::default::Default>::default();
+                __r.payload = __oneof_payload;
+                Ok(__r)
+            }
+        }
+        d.deserialize_map(_V)
     }
 }
 impl ::buffa::json_helpers::ProtoElemJson for CommitRequest {
@@ -3130,6 +3166,360 @@ pub const __COMMIT_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::bu
     from_json: ::buffa::type_registry::any_from_json::<CommitRequest>,
     is_wkt: false,
 };
+pub mod commit_request {
+    #[allow(unused_imports)]
+    use super::*;
+    #[derive(Clone, PartialEq, Default)]
+    #[derive(::serde::Serialize, ::serde::Deserialize)]
+    #[serde(default)]
+    pub struct Metadata {
+        /// Field 1: `namespace`
+        #[serde(
+            rename = "namespace",
+            with = "::buffa::json_helpers::proto_string",
+            skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
+        )]
+        pub namespace: ::buffa::alloc::string::String,
+        /// Field 2: `branch`
+        #[serde(
+            rename = "branch",
+            with = "::buffa::json_helpers::proto_string",
+            skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
+        )]
+        pub branch: ::buffa::alloc::string::String,
+        /// Field 3: `message`
+        #[serde(
+            rename = "message",
+            with = "::buffa::json_helpers::proto_string",
+            skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
+        )]
+        pub message: ::buffa::alloc::string::String,
+        /// Field 4: `author`
+        #[serde(
+            rename = "author",
+            skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+        )]
+        pub author: ::buffa::MessageField<super::CommitAuthor>,
+        #[serde(skip)]
+        #[doc(hidden)]
+        pub __buffa_unknown_fields: ::buffa::UnknownFields,
+    }
+    impl ::core::fmt::Debug for Metadata {
+        fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+            f.debug_struct("Metadata")
+                .field("namespace", &self.namespace)
+                .field("branch", &self.branch)
+                .field("message", &self.message)
+                .field("author", &self.author)
+                .finish()
+        }
+    }
+    impl Metadata {
+        /// Protobuf type URL for this message, for use with `Any::pack` and
+        /// `Any::unpack_if`.
+        ///
+        /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+        pub const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.CommitRequest.Metadata";
+    }
+    ::buffa::impl_default_instance!(Metadata);
+    impl ::buffa::MessageName for Metadata {
+        const PACKAGE: &'static str = "gitproxy.v1";
+        const NAME: &'static str = "CommitRequest.Metadata";
+        const FULL_NAME: &'static str = "gitproxy.v1.CommitRequest.Metadata";
+        const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.CommitRequest.Metadata";
+    }
+    impl ::buffa::Message for Metadata {
+        /// Returns the total encoded size in bytes.
+        ///
+        /// The result is a `u32`; the protobuf specification requires all
+        /// messages to fit within 2 GiB (2,147,483,647 bytes), so a
+        /// compliant message will never overflow this type.
+        #[allow(clippy::let_and_return)]
+        fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+            #[allow(unused_imports)]
+            use ::buffa::Enumeration as _;
+            let mut size = 0u32;
+            if !self.namespace.is_empty() {
+                size
+                    += 1u32 + ::buffa::types::string_encoded_len(&self.namespace) as u32;
+            }
+            if !self.branch.is_empty() {
+                size += 1u32 + ::buffa::types::string_encoded_len(&self.branch) as u32;
+            }
+            if !self.message.is_empty() {
+                size += 1u32 + ::buffa::types::string_encoded_len(&self.message) as u32;
+            }
+            if self.author.is_set() {
+                let __slot = __cache.reserve();
+                let inner_size = self.author.compute_size(__cache);
+                __cache.set(__slot, inner_size);
+                size
+                    += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                        + inner_size;
+            }
+            size += self.__buffa_unknown_fields.encoded_len() as u32;
+            size
+        }
+        fn write_to(
+            &self,
+            __cache: &mut ::buffa::SizeCache,
+            buf: &mut impl ::buffa::bytes::BufMut,
+        ) {
+            #[allow(unused_imports)]
+            use ::buffa::Enumeration as _;
+            if !self.namespace.is_empty() {
+                ::buffa::types::put_string_field(1u32, &self.namespace, buf);
+            }
+            if !self.branch.is_empty() {
+                ::buffa::types::put_string_field(2u32, &self.branch, buf);
+            }
+            if !self.message.is_empty() {
+                ::buffa::types::put_string_field(3u32, &self.message, buf);
+            }
+            if self.author.is_set() {
+                ::buffa::types::put_len_delimited_header(
+                    4u32,
+                    __cache.consume_next(),
+                    buf,
+                );
+                self.author.write_to(__cache, buf);
+            }
+            self.__buffa_unknown_fields.write_to(buf);
+        }
+        fn merge_field(
+            &mut self,
+            tag: ::buffa::encoding::Tag,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            #[allow(unused_imports)]
+            use ::buffa::bytes::Buf as _;
+            #[allow(unused_imports)]
+            use ::buffa::Enumeration as _;
+            match tag.field_number() {
+                1u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::LengthDelimited,
+                    )?;
+                    ::buffa::types::merge_string(&mut self.namespace, buf)?;
+                }
+                2u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::LengthDelimited,
+                    )?;
+                    ::buffa::types::merge_string(&mut self.branch, buf)?;
+                }
+                3u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::LengthDelimited,
+                    )?;
+                    ::buffa::types::merge_string(&mut self.message, buf)?;
+                }
+                4u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::LengthDelimited,
+                    )?;
+                    ::buffa::Message::merge_length_delimited(
+                        self.author.get_or_insert_default(),
+                        buf,
+                        ctx,
+                    )?;
+                }
+                _ => {
+                    self.__buffa_unknown_fields
+                        .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+                }
+            }
+            ::core::result::Result::Ok(())
+        }
+        fn clear(&mut self) {
+            self.namespace.clear();
+            self.branch.clear();
+            self.message.clear();
+            self.author = ::buffa::MessageField::none();
+            self.__buffa_unknown_fields.clear();
+        }
+    }
+    impl ::buffa::ExtensionSet for Metadata {
+        const PROTO_FQN: &'static str = "gitproxy.v1.CommitRequest.Metadata";
+        fn unknown_fields(&self) -> &::buffa::UnknownFields {
+            &self.__buffa_unknown_fields
+        }
+        fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+            &mut self.__buffa_unknown_fields
+        }
+    }
+    impl ::buffa::json_helpers::ProtoElemJson for Metadata {
+        fn serialize_proto_json<S: ::serde::Serializer>(
+            v: &Self,
+            s: S,
+        ) -> ::core::result::Result<S::Ok, S::Error> {
+            ::serde::Serialize::serialize(v, s)
+        }
+        fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+            d: D,
+        ) -> ::core::result::Result<Self, D::Error> {
+            <Self as ::serde::Deserialize>::deserialize(d)
+        }
+    }
+    #[doc(hidden)]
+    pub const __METADATA_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+        type_url: "type.googleapis.com/gitproxy.v1.CommitRequest.Metadata",
+        to_json: ::buffa::type_registry::any_to_json::<Metadata>,
+        from_json: ::buffa::type_registry::any_from_json::<Metadata>,
+        is_wkt: false,
+    };
+    #[derive(Clone, PartialEq, Default)]
+    #[derive(::serde::Serialize, ::serde::Deserialize)]
+    #[serde(default)]
+    pub struct Files {
+        /// Field 1: `files`
+        #[serde(
+            rename = "files",
+            skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+            deserialize_with = "::buffa::json_helpers::null_as_default"
+        )]
+        pub files: ::buffa::alloc::vec::Vec<super::File>,
+        #[serde(skip)]
+        #[doc(hidden)]
+        pub __buffa_unknown_fields: ::buffa::UnknownFields,
+    }
+    impl ::core::fmt::Debug for Files {
+        fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+            f.debug_struct("Files").field("files", &self.files).finish()
+        }
+    }
+    impl Files {
+        /// Protobuf type URL for this message, for use with `Any::pack` and
+        /// `Any::unpack_if`.
+        ///
+        /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+        pub const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.CommitRequest.Files";
+    }
+    ::buffa::impl_default_instance!(Files);
+    impl ::buffa::MessageName for Files {
+        const PACKAGE: &'static str = "gitproxy.v1";
+        const NAME: &'static str = "CommitRequest.Files";
+        const FULL_NAME: &'static str = "gitproxy.v1.CommitRequest.Files";
+        const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.CommitRequest.Files";
+    }
+    impl ::buffa::Message for Files {
+        /// Returns the total encoded size in bytes.
+        ///
+        /// The result is a `u32`; the protobuf specification requires all
+        /// messages to fit within 2 GiB (2,147,483,647 bytes), so a
+        /// compliant message will never overflow this type.
+        #[allow(clippy::let_and_return)]
+        fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+            #[allow(unused_imports)]
+            use ::buffa::Enumeration as _;
+            let mut size = 0u32;
+            for v in &self.files {
+                let __slot = __cache.reserve();
+                let inner_size = v.compute_size(__cache);
+                __cache.set(__slot, inner_size);
+                size
+                    += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                        + inner_size;
+            }
+            size += self.__buffa_unknown_fields.encoded_len() as u32;
+            size
+        }
+        fn write_to(
+            &self,
+            __cache: &mut ::buffa::SizeCache,
+            buf: &mut impl ::buffa::bytes::BufMut,
+        ) {
+            #[allow(unused_imports)]
+            use ::buffa::Enumeration as _;
+            for v in &self.files {
+                ::buffa::types::put_len_delimited_header(
+                    1u32,
+                    __cache.consume_next(),
+                    buf,
+                );
+                v.write_to(__cache, buf);
+            }
+            self.__buffa_unknown_fields.write_to(buf);
+        }
+        fn merge_field(
+            &mut self,
+            tag: ::buffa::encoding::Tag,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            #[allow(unused_imports)]
+            use ::buffa::bytes::Buf as _;
+            #[allow(unused_imports)]
+            use ::buffa::Enumeration as _;
+            match tag.field_number() {
+                1u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::LengthDelimited,
+                    )?;
+                    let mut elem = ::core::default::Default::default();
+                    ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                    self.files.push(elem);
+                }
+                _ => {
+                    self.__buffa_unknown_fields
+                        .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+                }
+            }
+            ::core::result::Result::Ok(())
+        }
+        fn clear(&mut self) {
+            self.files.clear();
+            self.__buffa_unknown_fields.clear();
+        }
+    }
+    impl ::buffa::ExtensionSet for Files {
+        const PROTO_FQN: &'static str = "gitproxy.v1.CommitRequest.Files";
+        fn unknown_fields(&self) -> &::buffa::UnknownFields {
+            &self.__buffa_unknown_fields
+        }
+        fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+            &mut self.__buffa_unknown_fields
+        }
+    }
+    impl ::buffa::json_helpers::ProtoElemJson for Files {
+        fn serialize_proto_json<S: ::serde::Serializer>(
+            v: &Self,
+            s: S,
+        ) -> ::core::result::Result<S::Ok, S::Error> {
+            ::serde::Serialize::serialize(v, s)
+        }
+        fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+            d: D,
+        ) -> ::core::result::Result<Self, D::Error> {
+            <Self as ::serde::Deserialize>::deserialize(d)
+        }
+    }
+    #[doc(hidden)]
+    pub const __FILES_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+        type_url: "type.googleapis.com/gitproxy.v1.CommitRequest.Files",
+        to_json: ::buffa::type_registry::any_to_json::<Files>,
+        from_json: ::buffa::type_registry::any_from_json::<Files>,
+        is_wkt: false,
+    };
+    #[doc(inline)]
+    pub use super::__buffa::oneof::commit_request::Payload;
+    #[doc(inline)]
+    pub use super::__buffa::view::commit_request::MetadataView;
+    #[doc(inline)]
+    pub use super::__buffa::view::commit_request::MetadataOwnedView;
+    #[doc(inline)]
+    pub use super::__buffa::view::commit_request::FilesView;
+    #[doc(inline)]
+    pub use super::__buffa::view::commit_request::FilesOwnedView;
+    #[doc(inline)]
+    pub use super::__buffa::view::oneof::commit_request::Payload as PayloadView;
+}
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]

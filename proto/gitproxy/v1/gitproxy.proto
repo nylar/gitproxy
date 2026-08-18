@@ -18,7 +18,7 @@ service GitProxyService {
     rpc ListTags(ListTagsRequest) returns (ListTagsResponse) {}
     rpc CreateTag(CreateTagRequest) returns (CreateTagResponse) {}
     rpc DeleteTag(DeleteTagRequest) returns (DeleteTagResponse) {}
-    rpc Commit(CommitRequest) returns (CommitResponse) {}
+    rpc Commit(stream CommitRequest) returns (CommitResponse) {}
     rpc Merge(MergeRequest) returns (MergeResponse) {}
     rpc Log(LogRequest) returns (LogResponse) {}
     rpc Revert(RevertRequest) returns (RevertResponse) {}
@@ -119,11 +119,21 @@ message DeleteTagRequest {
 message DeleteTagResponse {}
 
 message CommitRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
-    string branch = 2 [(buf.validate.field).required = true];
-    string message = 3 [(buf.validate.field).required = true];
-    CommitAuthor author = 4 [(buf.validate.field).required = true];
-    repeated File files = 5 [(buf.validate.field).required = true];
+    message Metadata {
+        string namespace = 1 [(buf.validate.field).required = true];
+        string branch = 2 [(buf.validate.field).required = true];
+        string message = 3 [(buf.validate.field).required = true];
+        CommitAuthor author = 4 [(buf.validate.field).required = true];
+    }
+
+    message Files {
+        repeated File files = 1 [(buf.validate.field).required = true];
+    }
+
+    oneof payload {
+        Metadata metadata = 1;
+        Files files = 2;
+    }
 }
 
 message CommitResponse {

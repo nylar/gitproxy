@@ -181,12 +181,12 @@ impl Repository {
         Ok(())
     }
 
-    pub fn commit_files<'a>(
+    pub fn commit_files(
         &self,
         branch: &str,
         message: &str,
         author: &Author,
-        files: impl Iterator<Item = (&'a Path, &'a [u8])>,
+        files: Vec<(PathBuf, Vec<u8>)>,
     ) -> Result<Oid> {
         let (parent_commits, parent_tree) =
             match self.repo.find_branch(branch, git2::BranchType::Local) {
@@ -207,7 +207,7 @@ impl Repository {
         }
 
         for (path, contents) in files {
-            let blob_id = self.repo.blob(contents)?;
+            let blob_id = self.repo.blob(&contents)?;
 
             let entry = IndexEntry {
                 ctime: IndexTime::new(0, 0),

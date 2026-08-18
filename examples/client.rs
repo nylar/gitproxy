@@ -1,3 +1,5 @@
+use std::path::{Path, PathBuf};
+
 use buffa::{MessageField, MessageFieldView};
 use connectrpc::client::{ClientConfig, HttpClient};
 use gitproxy::{
@@ -5,7 +7,9 @@ use gitproxy::{
     proto::gitproxy::v1::{
         CommitAuthor, CommitRequest, CreateBranchRequest, CreateRepositoryRequest,
         CreateTagRequest, DeleteRepositoryRequest, DiffRequest, DiffView, File, LogRequest,
-        LogView, MergeRequest, RevertRequest, StatusRequest, diff_patch::OperationView,
+        LogView, MergeRequest, RevertRequest, StatusRequest,
+        commit_request::{Files, Metadata, Payload},
+        diff_patch::OperationView,
     },
 };
 use jiff::Timestamp;
@@ -47,38 +51,31 @@ async fn main() {
         .unwrap();
     println!("Branch created: {}", branch1);
 
-    let resp = client
-        .commit(CommitRequest {
-            namespace: NAMESPACE.to_owned(),
-            branch: branch1.to_owned(),
-            message: "change A".to_owned(),
-            author: MessageField::some(CommitAuthor {
-                name: "Bob".to_owned(),
-                email: "bob@example.com".to_owned(),
-                ..Default::default()
-            }),
-            files: vec![
-                File {
-                    path: "my-dir/foo.json".to_owned(),
-                    contents: serde_json::to_vec(&serde_json::json!({
-                        "a": "foo"
-                    }))
-                    .unwrap(),
-                    ..Default::default()
-                },
-                File {
-                    path: "my-dir/bar.json".to_owned(),
-                    contents: serde_json::to_vec(&serde_json::json!({
-                        "b": "bar"
-                    }))
-                    .unwrap(),
-                    ..Default::default()
-                },
-            ],
-            ..Default::default()
-        })
-        .await
-        .unwrap();
+    let requests = commit_request(
+        NAMESPACE,
+        branch1,
+        "Bob",
+        "bob@example.com",
+        "change A",
+        vec![
+            (
+                Path::new("my-dir/foo.json").to_path_buf(),
+                serde_json::to_vec(&serde_json::json!({
+                    "a": "foo"
+                }))
+                .unwrap(),
+            ),
+            (
+                Path::new("my-dir/bar.json").to_path_buf(),
+                serde_json::to_vec(&serde_json::json!({
+                    "b": "bar"
+                }))
+                .unwrap(),
+            ),
+        ],
+    );
+
+    let resp = client.commit(requests).await.unwrap();
     println!("Commit A: {}", resp.view().commit);
 
     let diff = client
@@ -93,28 +90,22 @@ async fn main() {
 
     print_diff(&diff.view().diff);
 
-    let resp = client
-        .commit(CommitRequest {
-            namespace: NAMESPACE.to_owned(),
-            branch: branch1.to_owned(),
-            message: "change B".to_owned(),
-            author: MessageField::some(CommitAuthor {
-                name: "Bob".to_owned(),
-                email: "bob@example.com".to_owned(),
-                ..Default::default()
-            }),
-            files: vec![File {
-                path: "my-dir/foo.json".to_owned(),
-                contents: serde_json::to_vec(&serde_json::json!({
-                    "a": "baz"
-                }))
-                .unwrap(),
-                ..Default::default()
-            }],
-            ..Default::default()
-        })
-        .await
-        .unwrap();
+    let requests = commit_request(
+        NAMESPACE,
+        branch1,
+        "Bob",
+        "bob@example.com",
+        "change B",
+        vec![(
+            Path::new("my-dir/foo.json").to_path_buf(),
+            serde_json::to_vec(&serde_json::json!({
+                "a": "baz"
+            }))
+            .unwrap(),
+        )],
+    );
+
+    let resp = client.commit(requests).await.unwrap();
     println!("Commit B: {}", resp.view().commit);
 
     let diff = client
@@ -153,28 +144,22 @@ async fn main() {
 
     println!("Dirty: {}", dirty(&client, NAMESPACE, branch2).await);
 
-    let resp = client
-        .commit(CommitRequest {
-            namespace: NAMESPACE.to_owned(),
-            branch: branch2.to_owned(),
-            message: "change C".to_owned(),
-            author: MessageField::some(CommitAuthor {
-                name: "Bob".to_owned(),
-                email: "bob@example.com".to_owned(),
-                ..Default::default()
-            }),
-            files: vec![File {
-                path: "my-dir/foo.json".to_owned(),
-                contents: serde_json::to_vec(&serde_json::json!({
-                    "a": "quux"
-                }))
-                .unwrap(),
-                ..Default::default()
-            }],
-            ..Default::default()
-        })
-        .await
-        .unwrap();
+    let requests = commit_request(
+        NAMESPACE,
+        branch2,
+        "Bob",
+        "bob@example.com",
+        "change C",
+        vec![(
+            Path::new("my-dir/foo.json").to_path_buf(),
+            serde_json::to_vec(&serde_json::json!({
+                "a": "quux"
+            }))
+            .unwrap(),
+        )],
+    );
+
+    let resp = client.commit(requests).await.unwrap();
     println!("Commit C: {}", resp.view().commit);
 
     println!("Dirty: {}", dirty(&client, NAMESPACE, branch2).await);
@@ -260,6 +245,46 @@ async fn main() {
         })
         .await
         .unwrap();
+}
+
+fn commit_request(
+    namespace: &str,
+    branch: &str,
+    author_name: &str,
+    author_email: &str,
+    message: &str,
+    files: Vec<(PathBuf, Vec<u8>)>,
+) -> impl IntoIterator<Item = CommitRequest> {
+    let mut requests = vec![CommitRequest {
+        payload: Some(Payload::Metadata(Box::new(Metadata {
+            namespace: namespace.to_owned(),
+            branch: branch.to_owned(),
+            message: message.to_owned(),
+            author: MessageField::some(CommitAuthor {
+                name: author_name.to_owned(),
+                email: author_email.to_owned(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        }))),
+        ..Default::default()
+    }];
+
+    for (path, contents) in files {
+        requests.push(CommitRequest {
+            payload: Some(Payload::Files(Box::new(Files {
+                files: vec![File {
+                    path: path.display().to_string(),
+                    contents: contents.to_owned(),
+                    ..Default::default()
+                }],
+                ..Default::default()
+            }))),
+            ..Default::default()
+        })
+    }
+
+    requests.into_iter()
 }
 
 fn print_log(log: &LogView<'_>) {

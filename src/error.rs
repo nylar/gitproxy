@@ -1,4 +1,5 @@
 use connectrpc::ConnectError;
+use protovalidate_buffa::ValidationError;
 
 pub type Result<T> = std::result::Result<T, Error>;
 
@@ -24,6 +25,8 @@ pub enum Error {
     BuffaDecode(#[from] buffa::DecodeError),
     #[error("Jiff error {0}")]
     Jiff(#[from] jiff::Error),
+    #[error("Validation error {0}")]
+    Validation(#[from] ValidationError),
 }
 
 impl From<Error> for ConnectError {
@@ -40,6 +43,7 @@ impl From<Error> for ConnectError {
             Error::Json(error) => ConnectError::internal(error.to_string()),
             Error::BuffaDecode(error) => ConnectError::internal(error.to_string()),
             Error::Jiff(error) => ConnectError::internal(error.to_string()),
+            Error::Validation(error) => ConnectError::invalid_argument(error.to_string()),
         }
     }
 }
