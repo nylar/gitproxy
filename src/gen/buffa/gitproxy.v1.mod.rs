@@ -72,8 +72,8 @@ pub mod __buffa {
         reg.register_json_any(super::__GET_BLOB_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__LIST_BLOBS_REQUEST_JSON_ANY);
         reg.register_json_any(super::__LIST_BLOBS_RESPONSE_JSON_ANY);
-        reg.register_json_any(super::__REVERT_COMMIT_REQUEST_JSON_ANY);
-        reg.register_json_any(super::__REVERT_COMMIT_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__RESOLVE_CONFLICTS_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__RESOLVE_CONFLICTS_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__COMMIT_AUTHOR_JSON_ANY);
         reg.register_json_any(super::__LOG_JSON_ANY);
         reg.register_json_any(super::__REPOSITORY_JSON_ANY);
@@ -245,13 +245,13 @@ pub use self::__buffa::view::ListBlobsResponseView;
 #[doc(inline)]
 pub use self::__buffa::view::ListBlobsResponseOwnedView;
 #[doc(inline)]
-pub use self::__buffa::view::RevertCommitRequestView;
+pub use self::__buffa::view::ResolveConflictsRequestView;
 #[doc(inline)]
-pub use self::__buffa::view::RevertCommitRequestOwnedView;
+pub use self::__buffa::view::ResolveConflictsRequestOwnedView;
 #[doc(inline)]
-pub use self::__buffa::view::RevertCommitResponseView;
+pub use self::__buffa::view::ResolveConflictsResponseView;
 #[doc(inline)]
-pub use self::__buffa::view::RevertCommitResponseOwnedView;
+pub use self::__buffa::view::ResolveConflictsResponseOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::CommitAuthorView;
 #[doc(inline)]

@@ -26,6 +26,7 @@ service GitProxyService {
     rpc Status(StatusRequest) returns (StatusResponse) {}
     rpc GetBlob(GetBlobRequest) returns (GetBlobResponse) {}
     rpc ListBlobs(ListBlobsRequest) returns (ListBlobsResponse) {}
+    rpc ResolveConflicts(ResolveConflictsRequest) returns (ResolveConflictsResponse) {}
 }
 
 message ListRepositoriesRequest {
@@ -227,14 +228,18 @@ message ListBlobsResponse {
     repeated File files = 1;
 }
 
-message RevertCommitRequest {
+message ResolveConflictsRequest {
     string namespace = 1 [(buf.validate.field).required = true];
-    string commit = 2 [(buf.validate.field).required = true];
-    optional string branch = 3 [(buf.validate.field).required = true];
+    string source_branch = 2 [(buf.validate.field).required = true];
+    string target_branch = 3 [(buf.validate.field).required = true];
+    repeated File files = 4 [(buf.validate.field).required = true];
+    string message = 5 [(buf.validate.field).required = true];
+    CommitAuthor author = 6 [(buf.validate.field).required = true];
 }
 
-message RevertCommitResponse {
-    string commit = 1;
+message ResolveConflictsResponse {
+    optional string commit = 1;
+    repeated ConflictDiff conflicts = 2;
 }
 
 message CommitAuthor {

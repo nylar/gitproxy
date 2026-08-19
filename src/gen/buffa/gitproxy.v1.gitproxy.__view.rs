@@ -11138,17 +11138,25 @@ impl ::serde::Serialize for ListBlobsResponseOwnedView {
     }
 }
 #[derive(Clone, Debug, Default)]
-pub struct RevertCommitRequestView<'a> {
+pub struct ResolveConflictsRequestView<'a> {
     /// Field 1: `namespace`
     pub namespace: &'a str,
-    /// Field 2: `commit`
-    pub commit: &'a str,
-    /// Field 3: `branch`
-    pub branch: ::core::option::Option<&'a str>,
+    /// Field 2: `source_branch`
+    pub source_branch: &'a str,
+    /// Field 3: `target_branch`
+    pub target_branch: &'a str,
+    /// Field 4: `files`
+    pub files: ::buffa::RepeatedView<'a, super::super::__buffa::view::FileView<'a>>,
+    /// Field 5: `message`
+    pub message: &'a str,
+    /// Field 6: `author`
+    pub author: ::buffa::MessageFieldView<
+        super::super::__buffa::view::CommitAuthorView<'a>,
+    >,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
-impl<'a> ::buffa::MessageView<'a> for RevertCommitRequestView<'a> {
-    type Owned = super::super::RevertCommitRequest;
+impl<'a> ::buffa::MessageView<'a> for ResolveConflictsRequestView<'a> {
+    type Owned = super::super::ResolveConflictsRequest;
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         <Self as ::buffa::MessageView>::decode_view_ctx(
@@ -11186,14 +11194,57 @@ impl<'a> ::buffa::MessageView<'a> for RevertCommitRequestView<'a> {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
-                view.commit = ::buffa::types::borrow_str(&mut cur)?;
+                view.source_branch = ::buffa::types::borrow_str(&mut cur)?;
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
-                view.branch = Some(::buffa::types::borrow_str(&mut cur)?);
+                view.target_branch = ::buffa::types::borrow_str(&mut cur)?;
+            }
+            5u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                view.message = ::buffa::types::borrow_str(&mut cur)?;
+            }
+            6u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __sub_ctx = ctx.descend()?;
+                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
+                match view.author.as_mut() {
+                    Some(existing) => {
+                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
+                    }
+                    None => {
+                        view.author = ::buffa::MessageFieldView::set(
+                            <super::super::__buffa::view::CommitAuthorView as ::buffa::MessageView>::decode_view_ctx(
+                                sub,
+                                __sub_ctx,
+                            )?,
+                        );
+                    }
+                }
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __sub_ctx = ctx.descend()?;
+                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
+                view.files
+                    .push(
+                        <super::super::__buffa::view::FileView as ::buffa::MessageView>::decode_view_ctx(
+                            sub,
+                            __sub_ctx,
+                        )?,
+                    );
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -11206,7 +11257,7 @@ impl<'a> ::buffa::MessageView<'a> for RevertCommitRequestView<'a> {
     fn to_owned_message(
         &self,
     ) -> ::core::result::Result<
-        super::super::RevertCommitRequest,
+        super::super::ResolveConflictsRequest,
         ::buffa::DecodeError,
     > {
         self.to_owned_from_source(None)
@@ -11216,35 +11267,70 @@ impl<'a> ::buffa::MessageView<'a> for RevertCommitRequestView<'a> {
         &self,
         __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
     ) -> ::core::result::Result<
-        super::super::RevertCommitRequest,
+        super::super::ResolveConflictsRequest,
         ::buffa::DecodeError,
     > {
         #[allow(unused_imports)]
         use ::buffa::alloc::string::ToString as _;
         let _ = __buffa_src;
-        ::core::result::Result::Ok(super::super::RevertCommitRequest {
+        ::core::result::Result::Ok(super::super::ResolveConflictsRequest {
             namespace: self.namespace.to_string(),
-            commit: self.commit.to_string(),
-            branch: self.branch.map(|s| s.to_string()),
+            source_branch: self.source_branch.to_string(),
+            target_branch: self.target_branch.to_string(),
+            files: self
+                .files
+                .iter()
+                .map(|v| v.to_owned_from_source(__buffa_src))
+                .collect::<::core::result::Result<_, ::buffa::DecodeError>>()?,
+            message: self.message.to_string(),
+            author: match self.author.as_option() {
+                Some(v) => {
+                    ::buffa::MessageField::<
+                        super::super::CommitAuthor,
+                    >::some(v.to_owned_from_source(__buffa_src)?)
+                }
+                None => ::buffa::MessageField::none(),
+            },
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
     }
 }
-impl<'a> ::buffa::ViewEncode<'a> for RevertCommitRequestView<'a> {
+impl<'a> ::buffa::ViewEncode<'a> for ResolveConflictsRequestView<'a> {
     #[allow(clippy::needless_borrow, clippy::let_and_return)]
-    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         let mut size = 0u32;
         if !self.namespace.is_empty() {
             size += 1u32 + ::buffa::types::string_encoded_len(&self.namespace) as u32;
         }
-        if !self.commit.is_empty() {
-            size += 1u32 + ::buffa::types::string_encoded_len(&self.commit) as u32;
+        if !self.source_branch.is_empty() {
+            size
+                += 1u32 + ::buffa::types::string_encoded_len(&self.source_branch) as u32;
         }
-        if let Some(ref v) = self.branch {
-            size += 1u32 + ::buffa::types::string_encoded_len(v) as u32;
+        if !self.target_branch.is_empty() {
+            size
+                += 1u32 + ::buffa::types::string_encoded_len(&self.target_branch) as u32;
+        }
+        for v in &self.files {
+            let __slot = __cache.reserve();
+            let inner_size = v.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                    + inner_size;
+        }
+        if !self.message.is_empty() {
+            size += 1u32 + ::buffa::types::string_encoded_len(&self.message) as u32;
+        }
+        if self.author.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.author.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                    + inner_size;
         }
         size += self.__buffa_unknown_fields.encoded_len() as u32;
         size
@@ -11252,7 +11338,7 @@ impl<'a> ::buffa::ViewEncode<'a> for RevertCommitRequestView<'a> {
     #[allow(clippy::needless_borrow)]
     fn write_to(
         &self,
-        _cache: &mut ::buffa::SizeCache,
+        __cache: &mut ::buffa::SizeCache,
         buf: &mut impl ::buffa::bytes::BufMut,
     ) {
         #[allow(unused_imports)]
@@ -11260,11 +11346,22 @@ impl<'a> ::buffa::ViewEncode<'a> for RevertCommitRequestView<'a> {
         if !self.namespace.is_empty() {
             ::buffa::types::put_string_field(1u32, &self.namespace, buf);
         }
-        if !self.commit.is_empty() {
-            ::buffa::types::put_string_field(2u32, &self.commit, buf);
+        if !self.source_branch.is_empty() {
+            ::buffa::types::put_string_field(2u32, &self.source_branch, buf);
         }
-        if let Some(ref v) = self.branch {
-            ::buffa::types::put_string_field(3u32, v, buf);
+        if !self.target_branch.is_empty() {
+            ::buffa::types::put_string_field(3u32, &self.target_branch, buf);
+        }
+        for v in &self.files {
+            ::buffa::types::put_len_delimited_header(4u32, __cache.consume_next(), buf);
+            v.write_to(__cache, buf);
+        }
+        if !self.message.is_empty() {
+            ::buffa::types::put_string_field(5u32, &self.message, buf);
+        }
+        if self.author.is_set() {
+            ::buffa::types::put_len_delimited_header(6u32, __cache.consume_next(), buf);
+            self.author.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -11280,7 +11377,7 @@ impl<'a> ::buffa::ViewEncode<'a> for RevertCommitRequestView<'a> {
 /// fields depends on default-omission rules; serializers that require
 /// known map lengths (e.g. `bincode`) will return a runtime error.
 /// Use the owned message type for those formats.
-impl<'__a> ::serde::Serialize for RevertCommitRequestView<'__a> {
+impl<'__a> ::serde::Serialize for ResolveConflictsRequestView<'__a> {
     fn serialize<__S: ::serde::Serializer>(
         &self,
         __s: __S,
@@ -11290,33 +11387,44 @@ impl<'__a> ::serde::Serialize for RevertCommitRequestView<'__a> {
         if !::buffa::json_helpers::skip_if::is_empty_str(self.namespace) {
             __map.serialize_entry("namespace", self.namespace)?;
         }
-        if !::buffa::json_helpers::skip_if::is_empty_str(self.commit) {
-            __map.serialize_entry("commit", self.commit)?;
+        if !::buffa::json_helpers::skip_if::is_empty_str(self.source_branch) {
+            __map.serialize_entry("sourceBranch", self.source_branch)?;
         }
-        if let ::core::option::Option::Some(__v) = self.branch {
-            __map.serialize_entry("branch", __v)?;
+        if !::buffa::json_helpers::skip_if::is_empty_str(self.target_branch) {
+            __map.serialize_entry("targetBranch", self.target_branch)?;
+        }
+        if !self.files.is_empty() {
+            __map.serialize_entry("files", &*self.files)?;
+        }
+        if !::buffa::json_helpers::skip_if::is_empty_str(self.message) {
+            __map.serialize_entry("message", self.message)?;
+        }
+        {
+            if let ::core::option::Option::Some(__v) = self.author.as_option() {
+                __map.serialize_entry("author", __v)?;
+            }
         }
         __map.end()
     }
 }
-impl<'a> ::buffa::MessageName for RevertCommitRequestView<'a> {
+impl<'a> ::buffa::MessageName for ResolveConflictsRequestView<'a> {
     const PACKAGE: &'static str = "gitproxy.v1";
-    const NAME: &'static str = "RevertCommitRequest";
-    const FULL_NAME: &'static str = "gitproxy.v1.RevertCommitRequest";
-    const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.RevertCommitRequest";
+    const NAME: &'static str = "ResolveConflictsRequest";
+    const FULL_NAME: &'static str = "gitproxy.v1.ResolveConflictsRequest";
+    const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.ResolveConflictsRequest";
 }
-::buffa::impl_default_view_instance!(RevertCommitRequestView);
-::buffa::impl_view_reborrow!(RevertCommitRequestView);
-/** Self-contained, `'static` owned view of a `RevertCommitRequest` message.
+::buffa::impl_default_view_instance!(ResolveConflictsRequestView);
+::buffa::impl_view_reborrow!(ResolveConflictsRequestView);
+/** Self-contained, `'static` owned view of a `ResolveConflictsRequest` message.
 
- Wraps [`::buffa::OwnedView`]`<`[`RevertCommitRequestView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
+ Wraps [`::buffa::OwnedView`]`<`[`ResolveConflictsRequestView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
 
- Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`RevertCommitRequestView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
+ Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`ResolveConflictsRequestView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
 #[derive(Clone, Debug)]
-pub struct RevertCommitRequestOwnedView(
-    ::buffa::OwnedView<RevertCommitRequestView<'static>>,
+pub struct ResolveConflictsRequestOwnedView(
+    ::buffa::OwnedView<ResolveConflictsRequestView<'static>>,
 );
-impl RevertCommitRequestOwnedView {
+impl ResolveConflictsRequestOwnedView {
     /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
     ///
     /// The view borrows directly from the buffer's data; the buffer is
@@ -11330,7 +11438,7 @@ impl RevertCommitRequestOwnedView {
         bytes: ::buffa::bytes::Bytes,
     ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         ::core::result::Result::Ok(
-            RevertCommitRequestOwnedView(::buffa::OwnedView::decode(bytes)?),
+            ResolveConflictsRequestOwnedView(::buffa::OwnedView::decode(bytes)?),
         )
     }
     /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
@@ -11345,7 +11453,7 @@ impl RevertCommitRequestOwnedView {
         opts: &::buffa::DecodeOptions,
     ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         ::core::result::Result::Ok(
-            RevertCommitRequestOwnedView(
+            ResolveConflictsRequestOwnedView(
                 ::buffa::OwnedView::decode_with_options(bytes, opts)?,
             ),
         )
@@ -11357,15 +11465,15 @@ impl RevertCommitRequestOwnedView {
     /// Returns [`::buffa::DecodeError`] if the re-encoded bytes are
     /// somehow invalid (should not happen for well-formed messages).
     pub fn from_owned(
-        msg: &super::super::RevertCommitRequest,
+        msg: &super::super::ResolveConflictsRequest,
     ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         ::core::result::Result::Ok(
-            RevertCommitRequestOwnedView(::buffa::OwnedView::from_owned(msg)?),
+            ResolveConflictsRequestOwnedView(::buffa::OwnedView::from_owned(msg)?),
         )
     }
-    /// Borrow the full [`RevertCommitRequestView`] with its lifetime tied to `&self`.
+    /// Borrow the full [`ResolveConflictsRequestView`] with its lifetime tied to `&self`.
     #[must_use]
-    pub fn view(&self) -> &RevertCommitRequestView<'_> {
+    pub fn view(&self) -> &ResolveConflictsRequestView<'_> {
         self.0.reborrow()
     }
     /// Convert to the owned message type.
@@ -11377,7 +11485,7 @@ impl RevertCommitRequestOwnedView {
     pub fn to_owned_message(
         &self,
     ) -> ::core::result::Result<
-        super::super::RevertCommitRequest,
+        super::super::ResolveConflictsRequest,
         ::buffa::DecodeError,
     > {
         self.0.to_owned_message()
@@ -11397,40 +11505,59 @@ impl RevertCommitRequestOwnedView {
     pub fn namespace(&self) -> &'_ str {
         self.0.reborrow().namespace
     }
-    /// Field 2: `commit`
+    /// Field 2: `source_branch`
     #[must_use]
-    pub fn commit(&self) -> &'_ str {
-        self.0.reborrow().commit
+    pub fn source_branch(&self) -> &'_ str {
+        self.0.reborrow().source_branch
     }
-    /// Field 3: `branch`
+    /// Field 3: `target_branch`
     #[must_use]
-    pub fn branch(&self) -> ::core::option::Option<&'_ str> {
-        self.0.reborrow().branch
+    pub fn target_branch(&self) -> &'_ str {
+        self.0.reborrow().target_branch
+    }
+    /// Field 4: `files`
+    #[must_use]
+    pub fn files(
+        &self,
+    ) -> &::buffa::RepeatedView<'_, super::super::__buffa::view::FileView<'_>> {
+        &self.0.reborrow().files
+    }
+    /// Field 5: `message`
+    #[must_use]
+    pub fn message(&self) -> &'_ str {
+        self.0.reborrow().message
+    }
+    /// Field 6: `author`
+    #[must_use]
+    pub fn author(
+        &self,
+    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::CommitAuthorView<'_>> {
+        &self.0.reborrow().author
     }
 }
-impl ::core::convert::From<::buffa::OwnedView<RevertCommitRequestView<'static>>>
-for RevertCommitRequestOwnedView {
-    fn from(inner: ::buffa::OwnedView<RevertCommitRequestView<'static>>) -> Self {
-        RevertCommitRequestOwnedView(inner)
+impl ::core::convert::From<::buffa::OwnedView<ResolveConflictsRequestView<'static>>>
+for ResolveConflictsRequestOwnedView {
+    fn from(inner: ::buffa::OwnedView<ResolveConflictsRequestView<'static>>) -> Self {
+        ResolveConflictsRequestOwnedView(inner)
     }
 }
-impl ::core::convert::From<RevertCommitRequestOwnedView>
-for ::buffa::OwnedView<RevertCommitRequestView<'static>> {
-    fn from(wrapper: RevertCommitRequestOwnedView) -> Self {
+impl ::core::convert::From<ResolveConflictsRequestOwnedView>
+for ::buffa::OwnedView<ResolveConflictsRequestView<'static>> {
+    fn from(wrapper: ResolveConflictsRequestOwnedView) -> Self {
         wrapper.0
     }
 }
-impl ::core::convert::AsRef<::buffa::OwnedView<RevertCommitRequestView<'static>>>
-for RevertCommitRequestOwnedView {
-    fn as_ref(&self) -> &::buffa::OwnedView<RevertCommitRequestView<'static>> {
+impl ::core::convert::AsRef<::buffa::OwnedView<ResolveConflictsRequestView<'static>>>
+for ResolveConflictsRequestOwnedView {
+    fn as_ref(&self) -> &::buffa::OwnedView<ResolveConflictsRequestView<'static>> {
         &self.0
     }
 }
-impl ::buffa::HasMessageView for super::super::RevertCommitRequest {
-    type View<'a> = RevertCommitRequestView<'a>;
-    type ViewHandle = RevertCommitRequestOwnedView;
+impl ::buffa::HasMessageView for super::super::ResolveConflictsRequest {
+    type View<'a> = ResolveConflictsRequestView<'a>;
+    type ViewHandle = ResolveConflictsRequestOwnedView;
 }
-impl ::serde::Serialize for RevertCommitRequestOwnedView {
+impl ::serde::Serialize for ResolveConflictsRequestOwnedView {
     fn serialize<__S: ::serde::Serializer>(
         &self,
         __s: __S,
@@ -11439,13 +11566,18 @@ impl ::serde::Serialize for RevertCommitRequestOwnedView {
     }
 }
 #[derive(Clone, Debug, Default)]
-pub struct RevertCommitResponseView<'a> {
+pub struct ResolveConflictsResponseView<'a> {
     /// Field 1: `commit`
-    pub commit: &'a str,
+    pub commit: ::core::option::Option<&'a str>,
+    /// Field 2: `conflicts`
+    pub conflicts: ::buffa::RepeatedView<
+        'a,
+        super::super::__buffa::view::ConflictDiffView<'a>,
+    >,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
-impl<'a> ::buffa::MessageView<'a> for RevertCommitResponseView<'a> {
-    type Owned = super::super::RevertCommitResponse;
+impl<'a> ::buffa::MessageView<'a> for ResolveConflictsResponseView<'a> {
+    type Owned = super::super::ResolveConflictsResponse;
     fn decode_view(buf: &'a [u8]) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         let __limit = ::core::cell::Cell::new(::buffa::DEFAULT_UNKNOWN_FIELD_LIMIT);
         <Self as ::buffa::MessageView>::decode_view_ctx(
@@ -11476,7 +11608,22 @@ impl<'a> ::buffa::MessageView<'a> for RevertCommitResponseView<'a> {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
-                view.commit = ::buffa::types::borrow_str(&mut cur)?;
+                view.commit = Some(::buffa::types::borrow_str(&mut cur)?);
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __sub_ctx = ctx.descend()?;
+                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
+                view.conflicts
+                    .push(
+                        <super::super::__buffa::view::ConflictDiffView as ::buffa::MessageView>::decode_view_ctx(
+                            sub,
+                            __sub_ctx,
+                        )?,
+                    );
             }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
@@ -11489,7 +11636,7 @@ impl<'a> ::buffa::MessageView<'a> for RevertCommitResponseView<'a> {
     fn to_owned_message(
         &self,
     ) -> ::core::result::Result<
-        super::super::RevertCommitResponse,
+        super::super::ResolveConflictsResponse,
         ::buffa::DecodeError,
     > {
         self.to_owned_from_source(None)
@@ -11499,27 +11646,40 @@ impl<'a> ::buffa::MessageView<'a> for RevertCommitResponseView<'a> {
         &self,
         __buffa_src: ::core::option::Option<&::buffa::bytes::Bytes>,
     ) -> ::core::result::Result<
-        super::super::RevertCommitResponse,
+        super::super::ResolveConflictsResponse,
         ::buffa::DecodeError,
     > {
         #[allow(unused_imports)]
         use ::buffa::alloc::string::ToString as _;
         let _ = __buffa_src;
-        ::core::result::Result::Ok(super::super::RevertCommitResponse {
-            commit: self.commit.to_string(),
+        ::core::result::Result::Ok(super::super::ResolveConflictsResponse {
+            commit: self.commit.map(|s| s.to_string()),
+            conflicts: self
+                .conflicts
+                .iter()
+                .map(|v| v.to_owned_from_source(__buffa_src))
+                .collect::<::core::result::Result<_, ::buffa::DecodeError>>()?,
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
     }
 }
-impl<'a> ::buffa::ViewEncode<'a> for RevertCommitResponseView<'a> {
+impl<'a> ::buffa::ViewEncode<'a> for ResolveConflictsResponseView<'a> {
     #[allow(clippy::needless_borrow, clippy::let_and_return)]
-    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         let mut size = 0u32;
-        if !self.commit.is_empty() {
-            size += 1u32 + ::buffa::types::string_encoded_len(&self.commit) as u32;
+        if let Some(ref v) = self.commit {
+            size += 1u32 + ::buffa::types::string_encoded_len(v) as u32;
+        }
+        for v in &self.conflicts {
+            let __slot = __cache.reserve();
+            let inner_size = v.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                    + inner_size;
         }
         size += self.__buffa_unknown_fields.encoded_len() as u32;
         size
@@ -11527,13 +11687,17 @@ impl<'a> ::buffa::ViewEncode<'a> for RevertCommitResponseView<'a> {
     #[allow(clippy::needless_borrow)]
     fn write_to(
         &self,
-        _cache: &mut ::buffa::SizeCache,
+        __cache: &mut ::buffa::SizeCache,
         buf: &mut impl ::buffa::bytes::BufMut,
     ) {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
-        if !self.commit.is_empty() {
-            ::buffa::types::put_string_field(1u32, &self.commit, buf);
+        if let Some(ref v) = self.commit {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        for v in &self.conflicts {
+            ::buffa::types::put_len_delimited_header(2u32, __cache.consume_next(), buf);
+            v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -11549,37 +11713,40 @@ impl<'a> ::buffa::ViewEncode<'a> for RevertCommitResponseView<'a> {
 /// fields depends on default-omission rules; serializers that require
 /// known map lengths (e.g. `bincode`) will return a runtime error.
 /// Use the owned message type for those formats.
-impl<'__a> ::serde::Serialize for RevertCommitResponseView<'__a> {
+impl<'__a> ::serde::Serialize for ResolveConflictsResponseView<'__a> {
     fn serialize<__S: ::serde::Serializer>(
         &self,
         __s: __S,
     ) -> ::core::result::Result<__S::Ok, __S::Error> {
         use ::serde::ser::SerializeMap as _;
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
-        if !::buffa::json_helpers::skip_if::is_empty_str(self.commit) {
-            __map.serialize_entry("commit", self.commit)?;
+        if let ::core::option::Option::Some(__v) = self.commit {
+            __map.serialize_entry("commit", __v)?;
+        }
+        if !self.conflicts.is_empty() {
+            __map.serialize_entry("conflicts", &*self.conflicts)?;
         }
         __map.end()
     }
 }
-impl<'a> ::buffa::MessageName for RevertCommitResponseView<'a> {
+impl<'a> ::buffa::MessageName for ResolveConflictsResponseView<'a> {
     const PACKAGE: &'static str = "gitproxy.v1";
-    const NAME: &'static str = "RevertCommitResponse";
-    const FULL_NAME: &'static str = "gitproxy.v1.RevertCommitResponse";
-    const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.RevertCommitResponse";
+    const NAME: &'static str = "ResolveConflictsResponse";
+    const FULL_NAME: &'static str = "gitproxy.v1.ResolveConflictsResponse";
+    const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.ResolveConflictsResponse";
 }
-::buffa::impl_default_view_instance!(RevertCommitResponseView);
-::buffa::impl_view_reborrow!(RevertCommitResponseView);
-/** Self-contained, `'static` owned view of a `RevertCommitResponse` message.
+::buffa::impl_default_view_instance!(ResolveConflictsResponseView);
+::buffa::impl_view_reborrow!(ResolveConflictsResponseView);
+/** Self-contained, `'static` owned view of a `ResolveConflictsResponse` message.
 
- Wraps [`::buffa::OwnedView`]`<`[`RevertCommitResponseView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
+ Wraps [`::buffa::OwnedView`]`<`[`ResolveConflictsResponseView`]`<'static>>`: the decoded view and the [`::buffa::bytes::Bytes`] buffer it borrows from travel together, so the handle is `'static` and `Send + Sync` — suitable for async handlers, spawned tasks, and anywhere a `'static` bound is required.
 
- Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`RevertCommitResponseView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
+ Field accessors return borrows tied to `&self`. Use [`Self::view`] to get the full [`ResolveConflictsResponseView`] when you need struct patterns, iteration helpers, or to pass the view to lifetime-parameterised code.*/
 #[derive(Clone, Debug)]
-pub struct RevertCommitResponseOwnedView(
-    ::buffa::OwnedView<RevertCommitResponseView<'static>>,
+pub struct ResolveConflictsResponseOwnedView(
+    ::buffa::OwnedView<ResolveConflictsResponseView<'static>>,
 );
-impl RevertCommitResponseOwnedView {
+impl ResolveConflictsResponseOwnedView {
     /// Decode an owned view from a [`::buffa::bytes::Bytes`] buffer.
     ///
     /// The view borrows directly from the buffer's data; the buffer is
@@ -11593,7 +11760,7 @@ impl RevertCommitResponseOwnedView {
         bytes: ::buffa::bytes::Bytes,
     ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         ::core::result::Result::Ok(
-            RevertCommitResponseOwnedView(::buffa::OwnedView::decode(bytes)?),
+            ResolveConflictsResponseOwnedView(::buffa::OwnedView::decode(bytes)?),
         )
     }
     /// Decode with custom [`::buffa::DecodeOptions`] (recursion limit,
@@ -11608,7 +11775,7 @@ impl RevertCommitResponseOwnedView {
         opts: &::buffa::DecodeOptions,
     ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         ::core::result::Result::Ok(
-            RevertCommitResponseOwnedView(
+            ResolveConflictsResponseOwnedView(
                 ::buffa::OwnedView::decode_with_options(bytes, opts)?,
             ),
         )
@@ -11620,15 +11787,15 @@ impl RevertCommitResponseOwnedView {
     /// Returns [`::buffa::DecodeError`] if the re-encoded bytes are
     /// somehow invalid (should not happen for well-formed messages).
     pub fn from_owned(
-        msg: &super::super::RevertCommitResponse,
+        msg: &super::super::ResolveConflictsResponse,
     ) -> ::core::result::Result<Self, ::buffa::DecodeError> {
         ::core::result::Result::Ok(
-            RevertCommitResponseOwnedView(::buffa::OwnedView::from_owned(msg)?),
+            ResolveConflictsResponseOwnedView(::buffa::OwnedView::from_owned(msg)?),
         )
     }
-    /// Borrow the full [`RevertCommitResponseView`] with its lifetime tied to `&self`.
+    /// Borrow the full [`ResolveConflictsResponseView`] with its lifetime tied to `&self`.
     #[must_use]
-    pub fn view(&self) -> &RevertCommitResponseView<'_> {
+    pub fn view(&self) -> &ResolveConflictsResponseView<'_> {
         self.0.reborrow()
     }
     /// Convert to the owned message type.
@@ -11640,7 +11807,7 @@ impl RevertCommitResponseOwnedView {
     pub fn to_owned_message(
         &self,
     ) -> ::core::result::Result<
-        super::super::RevertCommitResponse,
+        super::super::ResolveConflictsResponse,
         ::buffa::DecodeError,
     > {
         self.0.to_owned_message()
@@ -11657,33 +11824,40 @@ impl RevertCommitResponseOwnedView {
     }
     /// Field 1: `commit`
     #[must_use]
-    pub fn commit(&self) -> &'_ str {
+    pub fn commit(&self) -> ::core::option::Option<&'_ str> {
         self.0.reborrow().commit
     }
-}
-impl ::core::convert::From<::buffa::OwnedView<RevertCommitResponseView<'static>>>
-for RevertCommitResponseOwnedView {
-    fn from(inner: ::buffa::OwnedView<RevertCommitResponseView<'static>>) -> Self {
-        RevertCommitResponseOwnedView(inner)
+    /// Field 2: `conflicts`
+    #[must_use]
+    pub fn conflicts(
+        &self,
+    ) -> &::buffa::RepeatedView<'_, super::super::__buffa::view::ConflictDiffView<'_>> {
+        &self.0.reborrow().conflicts
     }
 }
-impl ::core::convert::From<RevertCommitResponseOwnedView>
-for ::buffa::OwnedView<RevertCommitResponseView<'static>> {
-    fn from(wrapper: RevertCommitResponseOwnedView) -> Self {
+impl ::core::convert::From<::buffa::OwnedView<ResolveConflictsResponseView<'static>>>
+for ResolveConflictsResponseOwnedView {
+    fn from(inner: ::buffa::OwnedView<ResolveConflictsResponseView<'static>>) -> Self {
+        ResolveConflictsResponseOwnedView(inner)
+    }
+}
+impl ::core::convert::From<ResolveConflictsResponseOwnedView>
+for ::buffa::OwnedView<ResolveConflictsResponseView<'static>> {
+    fn from(wrapper: ResolveConflictsResponseOwnedView) -> Self {
         wrapper.0
     }
 }
-impl ::core::convert::AsRef<::buffa::OwnedView<RevertCommitResponseView<'static>>>
-for RevertCommitResponseOwnedView {
-    fn as_ref(&self) -> &::buffa::OwnedView<RevertCommitResponseView<'static>> {
+impl ::core::convert::AsRef<::buffa::OwnedView<ResolveConflictsResponseView<'static>>>
+for ResolveConflictsResponseOwnedView {
+    fn as_ref(&self) -> &::buffa::OwnedView<ResolveConflictsResponseView<'static>> {
         &self.0
     }
 }
-impl ::buffa::HasMessageView for super::super::RevertCommitResponse {
-    type View<'a> = RevertCommitResponseView<'a>;
-    type ViewHandle = RevertCommitResponseOwnedView;
+impl ::buffa::HasMessageView for super::super::ResolveConflictsResponse {
+    type View<'a> = ResolveConflictsResponseView<'a>;
+    type ViewHandle = ResolveConflictsResponseOwnedView;
 }
-impl ::serde::Serialize for RevertCommitResponseOwnedView {
+impl ::serde::Serialize for ResolveConflictsResponseOwnedView {
     fn serialize<__S: ::serde::Serializer>(
         &self,
         __s: __S,

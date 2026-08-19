@@ -12,7 +12,8 @@ use gitproxy::{
         CommitAuthor, CommitRequest, ConflictDiff, CreateBranchRequest, CreateRepositoryRequest,
         CreateTagRequest, DeleteBranchRequest, DeleteRepositoryRequest, DeleteTagRequest,
         DiffPatch, File, GetBlobRequest, GetBranchRequest, ListBlobsRequest, ListBranchesRequest,
-        ListRepositoriesRequest, ListTagsRequest, LogRequest, MergeRequest, RevertRequest,
+        ListRepositoriesRequest, ListTagsRequest, LogRequest, MergeRequest,
+        ResolveConflictsRequest, RevertRequest,
         commit_request::{Files, Metadata, Payload},
         diff_patch::{Operation, Replace},
     },
@@ -391,6 +392,42 @@ async fn test_branch_merges_yields_conflicts() {
         resp.into_view().to_owned_message().unwrap().conflicts,
         expected_diff
     );
+
+    client
+        .resolve_conflicts(ResolveConflictsRequest {
+            namespace: NAMESPACE.to_owned(),
+            source_branch: branch.to_owned(),
+            target_branch: "main".to_owned(),
+            files: vec![File {
+                path: "my_file.json".to_owned(),
+                contents: serde_json::to_vec(&serde_json::json!({
+                    "a": "Change from my-branch"
+                }))
+                .unwrap(),
+                ..Default::default()
+            }],
+            message: "Resolved conflicts".to_owned(),
+            author: MessageField::some(CommitAuthor {
+                name: "test".to_owned(),
+                email: "test@example.com".to_owned(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let resp = client
+        .merge(MergeRequest {
+            namespace: NAMESPACE.to_owned(),
+            source_branch: branch.to_owned(),
+            target_branch: "main".to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    resp.view().commit.unwrap();
 }
 
 #[tokio::test]

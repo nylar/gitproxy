@@ -11,7 +11,7 @@ use gitproxy::{
     connect::gitproxy::v1::GitProxyServiceClient,
     proto::gitproxy::v1::{
         CommitAuthor, CommitRequest, ConflictDiff, CreateBranchRequest, CreateRepositoryRequest,
-        DeleteRepositoryRequest, File, MergeRequest,
+        DeleteRepositoryRequest, File, MergeRequest, ResolveConflictsRequest,
         commit_request::{Files, Metadata, Payload},
         diff_patch::Operation,
     },
@@ -170,18 +170,39 @@ async fn main() {
 
     let files = resolve_conflicts(&resp.view().to_owned_message().unwrap().conflicts);
 
-    cliclack::outro(style(" Conflicts resolved! ").on_green().black()).unwrap();
+    let resp = client
+        .resolve_conflicts(ResolveConflictsRequest {
+            namespace: NAMESPACE.to_owned(),
+            source_branch: branch.to_owned(),
+            target_branch: "main".to_owned(),
+            files: files
+                .into_iter()
+                .map(|f| File {
+                    path: f.0.display().to_string(),
+                    contents: f.1,
+                    ..Default::default()
+                })
+                .collect(),
+            author: MessageField::some(CommitAuthor {
+                name: "test".to_owned(),
+                email: "test@example.com".to_owned(),
+                ..Default::default()
+            }),
+            message: format!("Resolved conflicts for {}", branch),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
 
-    let requests = commit_request(
-        NAMESPACE,
-        branch,
-        "test",
-        "test@example.com",
-        "Conflicts resolved",
-        files,
-    );
-
-    client.commit(requests).await.unwrap();
+    cliclack::outro(
+        style(format!(
+            " Conflicts resolved! {} ",
+            resp.view().commit.unwrap()
+        ))
+        .on_green()
+        .black(),
+    )
+    .unwrap();
 
     let resp = client
         .merge(MergeRequest {

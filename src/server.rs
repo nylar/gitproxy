@@ -22,8 +22,8 @@ use crate::{
         GetRepositoryRequest, GetRepositoryResponse, ListBlobsRequest, ListBlobsResponse,
         ListBranchesRequest, ListBranchesResponse, ListRepositoriesRequest,
         ListRepositoriesResponse, ListTagsRequest, ListTagsResponse, Log, LogRequest, LogResponse,
-        MergeRequest, MergeResponse, Repository, RevertRequest, RevertResponse, StatusRequest,
-        StatusResponse,
+        MergeRequest, MergeResponse, Repository, ResolveConflictsRequest, ResolveConflictsResponse,
+        RevertRequest, RevertResponse, StatusRequest, StatusResponse,
         commit_request::{Metadata, Payload},
         log_request::Order,
     },
@@ -508,5 +508,31 @@ impl GitProxyService for Server {
             files: blobs,
             ..Default::default()
         })
+    }
+
+    async fn resolve_conflicts(
+        &self,
+        _ctx: RequestContext,
+        request: ServiceRequest<'_, ResolveConflictsRequest>,
+    ) -> ServiceResult<ResolveConflictsResponse> {
+        let req = request.to_owned_message();
+        let service = self.service(request.namespace);
+
+        let merge = spawn_blocking(move || {
+            service.resolve_conflicts(
+                req.source_branch,
+                req.target_branch,
+                req.files,
+                Author {
+                    name: req.author.name.to_owned(),
+                    email: req.author.email.to_owned(),
+                },
+                req.message,
+            )
+        })
+        .await
+        .map_err(Error::TokioTask)??;
+
+        Response::ok(merge.into())
     }
 }

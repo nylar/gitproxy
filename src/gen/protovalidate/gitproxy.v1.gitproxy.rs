@@ -3588,7 +3588,7 @@ impl ::protovalidate_buffa::Validate for ListBlobsResponse {
     unreachable_patterns,
     reason = "protovalidate-buffa generated validators — codegen emits uniform scaffolding regardless of which rules apply"
 )]
-impl ::protovalidate_buffa::Validate for RevertCommitRequest {
+impl ::protovalidate_buffa::Validate for ResolveConflictsRequest {
     fn validate(
         &self,
     ) -> ::core::result::Result<(), ::protovalidate_buffa::ValidationError> {
@@ -3620,16 +3620,16 @@ impl ::protovalidate_buffa::Validate for RevertCommitRequest {
                 });
         }
         if !self.namespace.is_empty() {}
-        if self.commit.is_empty() {
+        if self.source_branch.is_empty() {
             violations
                 .push(::protovalidate_buffa::Violation {
                     field: ::protovalidate_buffa::FieldPath {
                         elements: ::std::vec![
                             ::protovalidate_buffa::FieldPathElement { field_number :
                             Some(2i32), field_name :
-                            Some(::std::borrow::Cow::Borrowed("commit")), field_type :
-                            Some(::protovalidate_buffa::FieldType::String), key_type :
-                            None, value_type : None, subscript : None, },
+                            Some(::std::borrow::Cow::Borrowed("source_branch")),
+                            field_type : Some(::protovalidate_buffa::FieldType::String),
+                            key_type : None, value_type : None, subscript : None, },
                         ],
                     },
                     rule: ::protovalidate_buffa::FieldPath {
@@ -3646,15 +3646,98 @@ impl ::protovalidate_buffa::Validate for RevertCommitRequest {
                     for_key: false,
                 });
         }
-        if !self.commit.is_empty() {}
-        if self.branch.is_none() {
+        if !self.source_branch.is_empty() {}
+        if self.target_branch.is_empty() {
             violations
                 .push(::protovalidate_buffa::Violation {
                     field: ::protovalidate_buffa::FieldPath {
                         elements: ::std::vec![
                             ::protovalidate_buffa::FieldPathElement { field_number :
                             Some(3i32), field_name :
-                            Some(::std::borrow::Cow::Borrowed("branch")), field_type :
+                            Some(::std::borrow::Cow::Borrowed("target_branch")),
+                            field_type : Some(::protovalidate_buffa::FieldType::String),
+                            key_type : None, value_type : None, subscript : None, },
+                        ],
+                    },
+                    rule: ::protovalidate_buffa::FieldPath {
+                        elements: ::std::vec![
+                            ::protovalidate_buffa::FieldPathElement { field_number :
+                            Some(25i32), field_name :
+                            Some(::std::borrow::Cow::Borrowed("required")), field_type :
+                            Some(::protovalidate_buffa::FieldType::Bool), key_type :
+                            None, value_type : None, subscript : None, },
+                        ],
+                    },
+                    rule_id: ::std::borrow::Cow::Borrowed("required"),
+                    message: ::std::borrow::Cow::Borrowed("value is required"),
+                    for_key: false,
+                });
+        }
+        if !self.target_branch.is_empty() {}
+        if self.files.is_empty() {
+            violations
+                .push(::protovalidate_buffa::Violation {
+                    field: ::protovalidate_buffa::FieldPath {
+                        elements: ::std::vec![
+                            ::protovalidate_buffa::FieldPathElement { field_number :
+                            Some(4i32), field_name :
+                            Some(::std::borrow::Cow::Borrowed("files")), field_type :
+                            Some(::protovalidate_buffa::FieldType::Message), key_type :
+                            None, value_type : None, subscript : None, },
+                        ],
+                    },
+                    rule: ::protovalidate_buffa::FieldPath {
+                        elements: ::std::vec![
+                            ::protovalidate_buffa::FieldPathElement { field_number :
+                            Some(25i32), field_name :
+                            Some(::std::borrow::Cow::Borrowed("required")), field_type :
+                            Some(::protovalidate_buffa::FieldType::Bool), key_type :
+                            None, value_type : None, subscript : None, },
+                        ],
+                    },
+                    rule_id: ::std::borrow::Cow::Borrowed("required"),
+                    message: ::std::borrow::Cow::Borrowed("value is required"),
+                    for_key: false,
+                });
+        }
+        if !self.files.is_empty() {
+            for (idx, elem) in self.files.iter().enumerate() {
+                if let Err(sub) = elem.validate() {
+                    violations
+                        .extend(
+                            sub
+                                .violations
+                                .into_iter()
+                                .map(|mut v| {
+                                    v.field
+                                        .elements
+                                        .insert(
+                                            0,
+                                            ::protovalidate_buffa::FieldPathElement {
+                                                field_number: Some(4i32),
+                                                field_name: Some(::std::borrow::Cow::Borrowed("files")),
+                                                field_type: Some(::protovalidate_buffa::FieldType::Message),
+                                                key_type: None,
+                                                value_type: None,
+                                                subscript: Some(
+                                                    ::protovalidate_buffa::Subscript::Index(idx as u64),
+                                                ),
+                                            },
+                                        );
+                                    v
+                                }),
+                        );
+                }
+            }
+        }
+        if self.message.is_empty() {
+            violations
+                .push(::protovalidate_buffa::Violation {
+                    field: ::protovalidate_buffa::FieldPath {
+                        elements: ::std::vec![
+                            ::protovalidate_buffa::FieldPathElement { field_number :
+                            Some(5i32), field_name :
+                            Some(::std::borrow::Cow::Borrowed("message")), field_type :
                             Some(::protovalidate_buffa::FieldType::String), key_type :
                             None, value_type : None, subscript : None, },
                         ],
@@ -3673,7 +3756,61 @@ impl ::protovalidate_buffa::Validate for RevertCommitRequest {
                     for_key: false,
                 });
         }
-        if self.branch.is_some() {}
+        if !self.message.is_empty() {}
+        if !self.author.is_set() {
+            violations
+                .push(::protovalidate_buffa::Violation {
+                    field: ::protovalidate_buffa::FieldPath {
+                        elements: ::std::vec![
+                            ::protovalidate_buffa::FieldPathElement { field_number :
+                            Some(6i32), field_name :
+                            Some(::std::borrow::Cow::Borrowed("author")), field_type :
+                            Some(::protovalidate_buffa::FieldType::Message), key_type :
+                            None, value_type : None, subscript : None, },
+                        ],
+                    },
+                    rule: ::protovalidate_buffa::FieldPath {
+                        elements: ::std::vec![
+                            ::protovalidate_buffa::FieldPathElement { field_number :
+                            Some(25i32), field_name :
+                            Some(::std::borrow::Cow::Borrowed("required")), field_type :
+                            Some(::protovalidate_buffa::FieldType::Bool), key_type :
+                            None, value_type : None, subscript : None, },
+                        ],
+                    },
+                    rule_id: ::std::borrow::Cow::Borrowed("required"),
+                    message: ::std::borrow::Cow::Borrowed("value is required"),
+                    for_key: false,
+                });
+        }
+        if self.author.is_set() {
+            if let Some(inner) = self.author.as_option() {
+                if let Err(sub) = inner.validate() {
+                    violations
+                        .extend(
+                            sub
+                                .violations
+                                .into_iter()
+                                .map(|mut v| {
+                                    v.field
+                                        .elements
+                                        .insert(
+                                            0,
+                                            ::protovalidate_buffa::FieldPathElement {
+                                                field_number: Some(6i32),
+                                                field_name: Some(::std::borrow::Cow::Borrowed("author")),
+                                                field_type: Some(::protovalidate_buffa::FieldType::Message),
+                                                key_type: None,
+                                                value_type: None,
+                                                subscript: None,
+                                            },
+                                        );
+                                    v
+                                }),
+                        );
+                }
+            }
+        }
         let (
             rt_violation,
             violations,
@@ -3717,11 +3854,39 @@ impl ::protovalidate_buffa::Validate for RevertCommitRequest {
     unreachable_patterns,
     reason = "protovalidate-buffa generated validators — codegen emits uniform scaffolding regardless of which rules apply"
 )]
-impl ::protovalidate_buffa::Validate for RevertCommitResponse {
+impl ::protovalidate_buffa::Validate for ResolveConflictsResponse {
     fn validate(
         &self,
     ) -> ::core::result::Result<(), ::protovalidate_buffa::ValidationError> {
         let mut violations: ::std::vec::Vec<::protovalidate_buffa::Violation> = ::std::vec::Vec::new();
+        for (idx, elem) in self.conflicts.iter().enumerate() {
+            if let Err(sub) = elem.validate() {
+                violations
+                    .extend(
+                        sub
+                            .violations
+                            .into_iter()
+                            .map(|mut v| {
+                                v.field
+                                    .elements
+                                    .insert(
+                                        0,
+                                        ::protovalidate_buffa::FieldPathElement {
+                                            field_number: Some(2i32),
+                                            field_name: Some(::std::borrow::Cow::Borrowed("conflicts")),
+                                            field_type: Some(::protovalidate_buffa::FieldType::Message),
+                                            key_type: None,
+                                            value_type: None,
+                                            subscript: Some(
+                                                ::protovalidate_buffa::Subscript::Index(idx as u64),
+                                            ),
+                                        },
+                                    );
+                                v
+                            }),
+                    );
+            }
+        }
         let (
             rt_violation,
             violations,

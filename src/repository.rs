@@ -218,20 +218,7 @@ impl Repository {
         for (path, contents) in files {
             let blob_id = self.repo.blob(&contents)?;
 
-            let entry = IndexEntry {
-                ctime: IndexTime::new(0, 0),
-                mtime: IndexTime::new(0, 0),
-                dev: 0,
-                ino: 0,
-                mode: 0o100644,
-                uid: 0,
-                gid: 0,
-                file_size: contents.len() as u32,
-                id: blob_id,
-                flags: 0,
-                flags_extended: 0,
-                path: path.as_os_str().as_encoded_bytes().to_vec(),
-            };
+            let entry = new_index_entry(blob_id, &path, &contents);
             index.add(&entry)?;
         }
         let tree_id = index.write_tree_to(&self.repo)?;
@@ -293,6 +280,69 @@ impl Repository {
                 .commit(Some("HEAD"), &sig, &sig, &msg, &tree, &[&target_commit])?;
 
         Ok(Merge::Ok(Some(merge_commit)))
+    }
+
+    pub fn resolve_conflicts(
+        &self,
+        source_branch: &str,
+        target_branch: &str,
+        files: impl Iterator<Item = (PathBuf, Vec<u8>)>,
+        author: &Author,
+        message: &str,
+    ) -> Result<Merge> {
+        let source_commit = self
+            .repo
+            .find_branch(source_branch, git2::BranchType::Local)?
+            .into_reference()
+            .peel_to_commit()?;
+        let target_commit = self
+            .repo
+            .find_branch(target_branch, git2::BranchType::Local)?
+            .into_reference()
+            .peel_to_commit()?;
+
+        let mut opts = MergeOptions::new();
+        opts.fail_on_conflict(false);
+
+        let mut idx = self
+            .repo
+            .merge_commits(&source_commit, &target_commit, Some(&opts))?;
+
+        for (path, contents) in files {
+            let blob_id = self.repo.blob(&contents)?;
+            idx.conflict_remove(&path)?;
+
+            let entry = new_index_entry(blob_id, &path, &contents);
+            idx.add(&entry)?;
+        }
+
+        if idx.has_conflicts() {
+            let conflicts = conflict_diffs(&self.repo, &idx)?;
+            return Ok(Merge::Conflicts(conflicts));
+        }
+
+        let tree_id = idx.write_tree_to(&self.repo)?;
+        let tree = self.repo.find_tree(tree_id)?;
+
+        let sig = Signature::now(&author.name, &author.email)?;
+
+        let commit = self.repo.commit(
+            None,
+            &sig,
+            &sig,
+            message,
+            &tree,
+            &[&source_commit, &target_commit],
+        )?;
+
+        self.repo.reference(
+            &format!("refs/heads/{}", source_branch),
+            commit,
+            true,
+            message,
+        )?;
+
+        Ok(Merge::Ok(Some(commit)))
     }
 
     pub fn log(
@@ -672,4 +722,21 @@ pub struct Tag {
     pub commit: String,
     pub time: Timestamp,
     pub author: Author,
+}
+
+fn new_index_entry(blob_id: Oid, path: &Path, contents: &[u8]) -> IndexEntry {
+    IndexEntry {
+        ctime: IndexTime::new(0, 0),
+        mtime: IndexTime::new(0, 0),
+        dev: 0,
+        ino: 0,
+        mode: 0o100644,
+        uid: 0,
+        gid: 0,
+        file_size: contents.len() as u32,
+        id: blob_id,
+        flags: 0,
+        flags_extended: 0,
+        path: path.as_os_str().as_encoded_bytes().to_vec(),
+    }
 }

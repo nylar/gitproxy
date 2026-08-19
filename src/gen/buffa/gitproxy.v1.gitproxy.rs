@@ -6220,7 +6220,7 @@ pub const __LIST_BLOBS_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry =
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
-pub struct RevertCommitRequest {
+pub struct ResolveConflictsRequest {
     /// Field 1: `namespace`
     #[serde(
         rename = "namespace",
@@ -6228,81 +6228,119 @@ pub struct RevertCommitRequest {
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
     )]
     pub namespace: ::buffa::alloc::string::String,
-    /// Field 2: `commit`
+    /// Field 2: `source_branch`
     #[serde(
-        rename = "commit",
+        rename = "sourceBranch",
+        alias = "source_branch",
         with = "::buffa::json_helpers::proto_string",
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
     )]
-    pub commit: ::buffa::alloc::string::String,
-    /// Field 3: `branch`
-    #[serde(rename = "branch", skip_serializing_if = "::core::option::Option::is_none")]
-    pub branch: ::core::option::Option<::buffa::alloc::string::String>,
+    pub source_branch: ::buffa::alloc::string::String,
+    /// Field 3: `target_branch`
+    #[serde(
+        rename = "targetBranch",
+        alias = "target_branch",
+        with = "::buffa::json_helpers::proto_string",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
+    )]
+    pub target_branch: ::buffa::alloc::string::String,
+    /// Field 4: `files`
+    #[serde(
+        rename = "files",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
+    )]
+    pub files: ::buffa::alloc::vec::Vec<File>,
+    /// Field 5: `message`
+    #[serde(
+        rename = "message",
+        with = "::buffa::json_helpers::proto_string",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
+    )]
+    pub message: ::buffa::alloc::string::String,
+    /// Field 6: `author`
+    #[serde(
+        rename = "author",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+    )]
+    pub author: ::buffa::MessageField<CommitAuthor>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
 }
-impl ::core::fmt::Debug for RevertCommitRequest {
+impl ::core::fmt::Debug for ResolveConflictsRequest {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        f.debug_struct("RevertCommitRequest")
+        f.debug_struct("ResolveConflictsRequest")
             .field("namespace", &self.namespace)
-            .field("commit", &self.commit)
-            .field("branch", &self.branch)
+            .field("source_branch", &self.source_branch)
+            .field("target_branch", &self.target_branch)
+            .field("files", &self.files)
+            .field("message", &self.message)
+            .field("author", &self.author)
             .finish()
     }
 }
-impl RevertCommitRequest {
+impl ResolveConflictsRequest {
     /// Protobuf type URL for this message, for use with `Any::pack` and
     /// `Any::unpack_if`.
     ///
     /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
-    pub const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.RevertCommitRequest";
+    pub const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.ResolveConflictsRequest";
 }
-impl RevertCommitRequest {
-    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
-    #[inline]
-    ///Sets [`Self::branch`] to `Some(value)`, consuming and returning `self`.
-    pub fn with_branch(
-        mut self,
-        value: impl Into<::buffa::alloc::string::String>,
-    ) -> Self {
-        self.branch = Some(value.into());
-        self
-    }
-}
-::buffa::impl_default_instance!(RevertCommitRequest);
-impl ::buffa::MessageName for RevertCommitRequest {
+::buffa::impl_default_instance!(ResolveConflictsRequest);
+impl ::buffa::MessageName for ResolveConflictsRequest {
     const PACKAGE: &'static str = "gitproxy.v1";
-    const NAME: &'static str = "RevertCommitRequest";
-    const FULL_NAME: &'static str = "gitproxy.v1.RevertCommitRequest";
-    const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.RevertCommitRequest";
+    const NAME: &'static str = "ResolveConflictsRequest";
+    const FULL_NAME: &'static str = "gitproxy.v1.ResolveConflictsRequest";
+    const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.ResolveConflictsRequest";
 }
-impl ::buffa::Message for RevertCommitRequest {
+impl ::buffa::Message for ResolveConflictsRequest {
     /// Returns the total encoded size in bytes.
     ///
     /// The result is a `u32`; the protobuf specification requires all
     /// messages to fit within 2 GiB (2,147,483,647 bytes), so a
     /// compliant message will never overflow this type.
     #[allow(clippy::let_and_return)]
-    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         let mut size = 0u32;
         if !self.namespace.is_empty() {
             size += 1u32 + ::buffa::types::string_encoded_len(&self.namespace) as u32;
         }
-        if !self.commit.is_empty() {
-            size += 1u32 + ::buffa::types::string_encoded_len(&self.commit) as u32;
+        if !self.source_branch.is_empty() {
+            size
+                += 1u32 + ::buffa::types::string_encoded_len(&self.source_branch) as u32;
         }
-        if let Some(ref v) = self.branch {
-            size += 1u32 + ::buffa::types::string_encoded_len(v) as u32;
+        if !self.target_branch.is_empty() {
+            size
+                += 1u32 + ::buffa::types::string_encoded_len(&self.target_branch) as u32;
+        }
+        for v in &self.files {
+            let __slot = __cache.reserve();
+            let inner_size = v.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                    + inner_size;
+        }
+        if !self.message.is_empty() {
+            size += 1u32 + ::buffa::types::string_encoded_len(&self.message) as u32;
+        }
+        if self.author.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.author.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                    + inner_size;
         }
         size += self.__buffa_unknown_fields.encoded_len() as u32;
         size
     }
     fn write_to(
         &self,
-        _cache: &mut ::buffa::SizeCache,
+        __cache: &mut ::buffa::SizeCache,
         buf: &mut impl ::buffa::bytes::BufMut,
     ) {
         #[allow(unused_imports)]
@@ -6310,11 +6348,22 @@ impl ::buffa::Message for RevertCommitRequest {
         if !self.namespace.is_empty() {
             ::buffa::types::put_string_field(1u32, &self.namespace, buf);
         }
-        if !self.commit.is_empty() {
-            ::buffa::types::put_string_field(2u32, &self.commit, buf);
+        if !self.source_branch.is_empty() {
+            ::buffa::types::put_string_field(2u32, &self.source_branch, buf);
         }
-        if let Some(ref v) = self.branch {
-            ::buffa::types::put_string_field(3u32, v, buf);
+        if !self.target_branch.is_empty() {
+            ::buffa::types::put_string_field(3u32, &self.target_branch, buf);
+        }
+        for v in &self.files {
+            ::buffa::types::put_len_delimited_header(4u32, __cache.consume_next(), buf);
+            v.write_to(__cache, buf);
+        }
+        if !self.message.is_empty() {
+            ::buffa::types::put_string_field(5u32, &self.message, buf);
+        }
+        if self.author.is_set() {
+            ::buffa::types::put_len_delimited_header(6u32, __cache.consume_next(), buf);
+            self.author.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -6341,16 +6390,40 @@ impl ::buffa::Message for RevertCommitRequest {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
-                ::buffa::types::merge_string(&mut self.commit, buf)?;
+                ::buffa::types::merge_string(&mut self.source_branch, buf)?;
             }
             3u32 => {
                 ::buffa::encoding::check_wire_type(
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
-                ::buffa::types::merge_string(
-                    self.branch.get_or_insert_with(::buffa::alloc::string::String::new),
+                ::buffa::types::merge_string(&mut self.target_branch, buf)?;
+            }
+            4u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let mut elem = ::core::default::Default::default();
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.files.push(elem);
+            }
+            5u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(&mut self.message, buf)?;
+            }
+            6u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::Message::merge_length_delimited(
+                    self.author.get_or_insert_default(),
                     buf,
+                    ctx,
                 )?;
             }
             _ => {
@@ -6362,13 +6435,16 @@ impl ::buffa::Message for RevertCommitRequest {
     }
     fn clear(&mut self) {
         self.namespace.clear();
-        self.commit.clear();
-        self.branch = ::core::option::Option::None;
+        self.source_branch.clear();
+        self.target_branch.clear();
+        self.files.clear();
+        self.message.clear();
+        self.author = ::buffa::MessageField::none();
         self.__buffa_unknown_fields.clear();
     }
 }
-impl ::buffa::ExtensionSet for RevertCommitRequest {
-    const PROTO_FQN: &'static str = "gitproxy.v1.RevertCommitRequest";
+impl ::buffa::ExtensionSet for ResolveConflictsRequest {
+    const PROTO_FQN: &'static str = "gitproxy.v1.ResolveConflictsRequest";
     fn unknown_fields(&self) -> &::buffa::UnknownFields {
         &self.__buffa_unknown_fields
     }
@@ -6376,7 +6452,7 @@ impl ::buffa::ExtensionSet for RevertCommitRequest {
         &mut self.__buffa_unknown_fields
     }
 }
-impl ::buffa::json_helpers::ProtoElemJson for RevertCommitRequest {
+impl ::buffa::json_helpers::ProtoElemJson for ResolveConflictsRequest {
     fn serialize_proto_json<S: ::serde::Serializer>(
         v: &Self,
         s: S,
@@ -6390,72 +6466,102 @@ impl ::buffa::json_helpers::ProtoElemJson for RevertCommitRequest {
     }
 }
 #[doc(hidden)]
-pub const __REVERT_COMMIT_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
-    type_url: "type.googleapis.com/gitproxy.v1.RevertCommitRequest",
-    to_json: ::buffa::type_registry::any_to_json::<RevertCommitRequest>,
-    from_json: ::buffa::type_registry::any_from_json::<RevertCommitRequest>,
+pub const __RESOLVE_CONFLICTS_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/gitproxy.v1.ResolveConflictsRequest",
+    to_json: ::buffa::type_registry::any_to_json::<ResolveConflictsRequest>,
+    from_json: ::buffa::type_registry::any_from_json::<ResolveConflictsRequest>,
     is_wkt: false,
 };
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
-pub struct RevertCommitResponse {
+pub struct ResolveConflictsResponse {
     /// Field 1: `commit`
+    #[serde(rename = "commit", skip_serializing_if = "::core::option::Option::is_none")]
+    pub commit: ::core::option::Option<::buffa::alloc::string::String>,
+    /// Field 2: `conflicts`
     #[serde(
-        rename = "commit",
-        with = "::buffa::json_helpers::proto_string",
-        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
+        rename = "conflicts",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
     )]
-    pub commit: ::buffa::alloc::string::String,
+    pub conflicts: ::buffa::alloc::vec::Vec<ConflictDiff>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
 }
-impl ::core::fmt::Debug for RevertCommitResponse {
+impl ::core::fmt::Debug for ResolveConflictsResponse {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        f.debug_struct("RevertCommitResponse").field("commit", &self.commit).finish()
+        f.debug_struct("ResolveConflictsResponse")
+            .field("commit", &self.commit)
+            .field("conflicts", &self.conflicts)
+            .finish()
     }
 }
-impl RevertCommitResponse {
+impl ResolveConflictsResponse {
     /// Protobuf type URL for this message, for use with `Any::pack` and
     /// `Any::unpack_if`.
     ///
     /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
-    pub const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.RevertCommitResponse";
+    pub const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.ResolveConflictsResponse";
 }
-::buffa::impl_default_instance!(RevertCommitResponse);
-impl ::buffa::MessageName for RevertCommitResponse {
+impl ResolveConflictsResponse {
+    #[must_use = "with_* setters return `self` by value; assign or chain the result"]
+    #[inline]
+    ///Sets [`Self::commit`] to `Some(value)`, consuming and returning `self`.
+    pub fn with_commit(
+        mut self,
+        value: impl Into<::buffa::alloc::string::String>,
+    ) -> Self {
+        self.commit = Some(value.into());
+        self
+    }
+}
+::buffa::impl_default_instance!(ResolveConflictsResponse);
+impl ::buffa::MessageName for ResolveConflictsResponse {
     const PACKAGE: &'static str = "gitproxy.v1";
-    const NAME: &'static str = "RevertCommitResponse";
-    const FULL_NAME: &'static str = "gitproxy.v1.RevertCommitResponse";
-    const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.RevertCommitResponse";
+    const NAME: &'static str = "ResolveConflictsResponse";
+    const FULL_NAME: &'static str = "gitproxy.v1.ResolveConflictsResponse";
+    const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.ResolveConflictsResponse";
 }
-impl ::buffa::Message for RevertCommitResponse {
+impl ::buffa::Message for ResolveConflictsResponse {
     /// Returns the total encoded size in bytes.
     ///
     /// The result is a `u32`; the protobuf specification requires all
     /// messages to fit within 2 GiB (2,147,483,647 bytes), so a
     /// compliant message will never overflow this type.
     #[allow(clippy::let_and_return)]
-    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         let mut size = 0u32;
-        if !self.commit.is_empty() {
-            size += 1u32 + ::buffa::types::string_encoded_len(&self.commit) as u32;
+        if let Some(ref v) = self.commit {
+            size += 1u32 + ::buffa::types::string_encoded_len(v) as u32;
+        }
+        for v in &self.conflicts {
+            let __slot = __cache.reserve();
+            let inner_size = v.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                    + inner_size;
         }
         size += self.__buffa_unknown_fields.encoded_len() as u32;
         size
     }
     fn write_to(
         &self,
-        _cache: &mut ::buffa::SizeCache,
+        __cache: &mut ::buffa::SizeCache,
         buf: &mut impl ::buffa::bytes::BufMut,
     ) {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
-        if !self.commit.is_empty() {
-            ::buffa::types::put_string_field(1u32, &self.commit, buf);
+        if let Some(ref v) = self.commit {
+            ::buffa::types::put_string_field(1u32, v, buf);
+        }
+        for v in &self.conflicts {
+            ::buffa::types::put_len_delimited_header(2u32, __cache.consume_next(), buf);
+            v.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -6475,7 +6581,19 @@ impl ::buffa::Message for RevertCommitResponse {
                     tag,
                     ::buffa::encoding::WireType::LengthDelimited,
                 )?;
-                ::buffa::types::merge_string(&mut self.commit, buf)?;
+                ::buffa::types::merge_string(
+                    self.commit.get_or_insert_with(::buffa::alloc::string::String::new),
+                    buf,
+                )?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let mut elem = ::core::default::Default::default();
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.conflicts.push(elem);
             }
             _ => {
                 self.__buffa_unknown_fields
@@ -6485,12 +6603,13 @@ impl ::buffa::Message for RevertCommitResponse {
         ::core::result::Result::Ok(())
     }
     fn clear(&mut self) {
-        self.commit.clear();
+        self.commit = ::core::option::Option::None;
+        self.conflicts.clear();
         self.__buffa_unknown_fields.clear();
     }
 }
-impl ::buffa::ExtensionSet for RevertCommitResponse {
-    const PROTO_FQN: &'static str = "gitproxy.v1.RevertCommitResponse";
+impl ::buffa::ExtensionSet for ResolveConflictsResponse {
+    const PROTO_FQN: &'static str = "gitproxy.v1.ResolveConflictsResponse";
     fn unknown_fields(&self) -> &::buffa::UnknownFields {
         &self.__buffa_unknown_fields
     }
@@ -6498,7 +6617,7 @@ impl ::buffa::ExtensionSet for RevertCommitResponse {
         &mut self.__buffa_unknown_fields
     }
 }
-impl ::buffa::json_helpers::ProtoElemJson for RevertCommitResponse {
+impl ::buffa::json_helpers::ProtoElemJson for ResolveConflictsResponse {
     fn serialize_proto_json<S: ::serde::Serializer>(
         v: &Self,
         s: S,
@@ -6512,10 +6631,10 @@ impl ::buffa::json_helpers::ProtoElemJson for RevertCommitResponse {
     }
 }
 #[doc(hidden)]
-pub const __REVERT_COMMIT_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
-    type_url: "type.googleapis.com/gitproxy.v1.RevertCommitResponse",
-    to_json: ::buffa::type_registry::any_to_json::<RevertCommitResponse>,
-    from_json: ::buffa::type_registry::any_from_json::<RevertCommitResponse>,
+pub const __RESOLVE_CONFLICTS_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/gitproxy.v1.ResolveConflictsResponse",
+    to_json: ::buffa::type_registry::any_to_json::<ResolveConflictsResponse>,
+    from_json: ::buffa::type_registry::any_from_json::<ResolveConflictsResponse>,
     is_wkt: false,
 };
 #[derive(Clone, PartialEq, Default)]

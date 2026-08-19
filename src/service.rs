@@ -179,6 +179,32 @@ impl Service {
             .collect();
         Ok(blobs)
     }
+
+    pub fn resolve_conflicts(
+        &self,
+        source_branch: String,
+        target_branch: String,
+        files: Vec<File>,
+        author: Author,
+        message: String,
+    ) -> Result<Merge> {
+        let commit_author = Author {
+            name: author.name.to_owned(),
+            email: author.email.to_owned(),
+        };
+
+        let repo = Repository::open(&self.repo_dir, &self.author)?;
+        let merge = repo.resolve_conflicts(
+            &source_branch,
+            &target_branch,
+            files
+                .into_iter()
+                .map(|f| (Path::new(&f.path).to_path_buf(), f.contents)),
+            &commit_author,
+            &message,
+        )?;
+        Ok(merge)
+    }
 }
 
 impl From<&PatchDiff> for v1::DiffFile {
@@ -325,6 +351,25 @@ impl From<Merge> for v1::MergeResponse {
 impl From<Merge> for v1::RevertResponse {
     fn from(value: Merge) -> Self {
         let mut resp = v1::RevertResponse {
+            commit: None,
+            conflicts: Vec::new(),
+            ..Default::default()
+        };
+
+        match value {
+            Merge::Ok(oid) => resp.commit = oid.map(|oid| oid.to_string()),
+            Merge::Conflicts(conflict_diffs) => {
+                resp.conflicts = conflict_diffs.iter().map(Into::into).collect()
+            }
+        }
+
+        resp
+    }
+}
+
+impl From<Merge> for v1::ResolveConflictsResponse {
+    fn from(value: Merge) -> Self {
+        let mut resp = v1::ResolveConflictsResponse {
             commit: None,
             conflicts: Vec::new(),
             ..Default::default()

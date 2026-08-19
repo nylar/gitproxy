@@ -150,6 +150,14 @@ pub type OwnedListBlobsRequestView = ::buffa::view::OwnedView<
 pub type OwnedListBlobsResponseView = ::buffa::view::OwnedView<
     crate::proto::gitproxy::v1::__buffa::view::ListBlobsResponseView<'static>,
 >;
+///Shorthand for `OwnedView<ResolveConflictsRequestView<'static>>`.
+pub type OwnedResolveConflictsRequestView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::ResolveConflictsRequestView<'static>,
+>;
+///Shorthand for `OwnedView<ResolveConflictsResponseView<'static>>`.
+pub type OwnedResolveConflictsResponseView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::ResolveConflictsResponseView<'static>,
+>;
 impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::ListRepositoriesResponse>
 for crate::proto::gitproxy::v1::__buffa::view::ListRepositoriesResponseView<'_> {
     fn encode(
@@ -530,6 +538,26 @@ for ::buffa::view::OwnedView<
         ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
     }
 }
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::ResolveConflictsResponse>
+for crate::proto::gitproxy::v1::__buffa::view::ResolveConflictsResponseView<'_> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self, codec)
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::ResolveConflictsResponse>
+for ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::ResolveConflictsResponseView<'static>,
+> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
+    }
+}
 /// Full service name for this service.
 pub const GIT_PROXY_SERVICE_SERVICE_NAME: &str = "gitproxy.v1.GitProxyService";
 /// Static [`Spec`](::connectrpc::Spec) for the server-side `ListRepositories` RPC.
@@ -700,6 +728,15 @@ pub const GIT_PROXY_SERVICE_GET_BLOB_SPEC: ::connectrpc::Spec = ::connectrpc::Sp
 /// [`RequestContext::spec`](::connectrpc::RequestContext::spec).
 pub const GIT_PROXY_SERVICE_LIST_BLOBS_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
         "/gitproxy.v1.GitProxyService/ListBlobs",
+        ::connectrpc::StreamType::Unary,
+    )
+    .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
+/// Static [`Spec`](::connectrpc::Spec) for the server-side `ResolveConflicts` RPC.
+///
+/// The dispatcher surfaces this on
+/// [`RequestContext::spec`](::connectrpc::RequestContext::spec).
+pub const GIT_PROXY_SERVICE_RESOLVE_CONFLICTS_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
+        "/gitproxy.v1.GitProxyService/ResolveConflicts",
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
@@ -1181,6 +1218,29 @@ pub trait GitProxyService: Send + Sync + 'static {
         Output = ::connectrpc::ServiceResult<
             impl ::connectrpc::Encodable<
                 crate::proto::gitproxy::v1::ListBlobsResponse,
+            > + Send + use<'a, Self>,
+        >,
+    > + Send;
+    /// Handle the ResolveConflicts RPC.
+    ///
+    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
+    ///
+    /// `request` is borrowed from the request body and is valid for the
+    /// duration of the call; message fields are read directly on it
+    /// (zero-copy). The response cannot borrow from `request` — use
+    /// `.to_owned_message()` (or copy the specific fields) for anything
+    /// returned, stored, or moved into `tokio::spawn`.
+    fn resolve_conflicts<'a>(
+        &'a self,
+        ctx: ::connectrpc::RequestContext,
+        request: ::connectrpc::ServiceRequest<
+            '_,
+            crate::proto::gitproxy::v1::ResolveConflictsRequest,
+        >,
+    ) -> impl ::std::future::Future<
+        Output = ::connectrpc::ServiceResult<
+            impl ::connectrpc::Encodable<
+                crate::proto::gitproxy::v1::ResolveConflictsResponse,
             > + Send + use<'a, Self>,
         >,
     > + Send;
@@ -1753,6 +1813,35 @@ impl<S: GitProxyService> GitProxyServiceExt for S {
                 },
             )
             .with_spec(GIT_PROXY_SERVICE_LIST_BLOBS_SPEC)
+            .route_view(
+                GIT_PROXY_SERVICE_SERVICE_NAME,
+                "ResolveConflicts",
+                {
+                    let svc = ::std::sync::Arc::clone(&self);
+                    ::connectrpc::view_handler_fn(move |
+                        ctx,
+                        req: ::buffa::view::OwnedView<
+                            crate::proto::gitproxy::v1::__buffa::view::ResolveConflictsRequestView<
+                                'static,
+                            >,
+                        >,
+                        format|
+                    {
+                        let svc = ::std::sync::Arc::clone(&svc);
+                        async move {
+                            let sreq = ::connectrpc::ServiceRequest::<
+                                crate::proto::gitproxy::v1::ResolveConflictsRequest,
+                            >::from_parts(req.reborrow(), req.bytes());
+                            svc.resolve_conflicts(ctx, sreq)
+                                .await?
+                                .encode::<
+                                    crate::proto::gitproxy::v1::ResolveConflictsResponse,
+                                >(format)
+                        }
+                    })
+                },
+            )
+            .with_spec(GIT_PROXY_SERVICE_RESOLVE_CONFLICTS_SPEC)
     }
 }
 /// Type-inference marker used by [`Router::add_service`](::connectrpc::Router::add_service).
@@ -1919,6 +2008,12 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                 Some(
                     ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
                         .with_spec(GIT_PROXY_SERVICE_LIST_BLOBS_SPEC),
+                )
+            }
+            "ResolveConflicts" => {
+                Some(
+                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
+                        .with_spec(GIT_PROXY_SERVICE_RESOLVE_CONFLICTS_SPEC),
                 )
             }
             _ => None,
@@ -2290,6 +2385,27 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                     svc.list_blobs(ctx, req)
                         .await?
                         .encode::<crate::proto::gitproxy::v1::ListBlobsResponse>(format)
+                })
+            }
+            "ResolveConflicts" => {
+                let svc = ::std::sync::Arc::clone(&self.inner);
+                Box::pin(async move {
+                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
+                        crate::proto::gitproxy::v1::ResolveConflictsRequest,
+                    >(request.encoded()?, format)?;
+                    let req: crate::proto::gitproxy::v1::__buffa::view::ResolveConflictsRequestView<
+                        '_,
+                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
+                        &body,
+                    )?;
+                    let req = ::connectrpc::ServiceRequest::<
+                        crate::proto::gitproxy::v1::ResolveConflictsRequest,
+                    >::from_parts(&req, &body);
+                    svc.resolve_conflicts(ctx, req)
+                        .await?
+                        .encode::<
+                            crate::proto::gitproxy::v1::ResolveConflictsResponse,
+                        >(format)
                 })
             }
             _ => ::connectrpc::dispatcher::codegen::unimplemented_unary(path),
@@ -3212,6 +3328,51 @@ where
                 &self.config,
                 GIT_PROXY_SERVICE_SERVICE_NAME,
                 "ListBlobs",
+                request,
+                options,
+            )
+            .await
+    }
+    /// Call the ResolveConflicts RPC. Sends a request to /gitproxy.v1.GitProxyService/ResolveConflicts.
+    pub async fn resolve_conflicts(
+        &self,
+        request: crate::proto::gitproxy::v1::ResolveConflictsRequest,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::gitproxy::v1::__buffa::view::ResolveConflictsResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        self.resolve_conflicts_with_options(
+                request,
+                ::connectrpc::client::CallOptions::default(),
+            )
+            .await
+    }
+    /// Call the ResolveConflicts RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
+    pub async fn resolve_conflicts_with_options(
+        &self,
+        request: crate::proto::gitproxy::v1::ResolveConflictsRequest,
+        options: ::connectrpc::client::CallOptions,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::gitproxy::v1::__buffa::view::ResolveConflictsResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        ::connectrpc::client::call_unary(
+                &self.transport,
+                &self.config,
+                GIT_PROXY_SERVICE_SERVICE_NAME,
+                "ResolveConflicts",
                 request,
                 options,
             )
