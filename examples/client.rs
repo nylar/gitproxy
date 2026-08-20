@@ -7,7 +7,8 @@ use gitproxy::{
     proto::gitproxy::v1::{
         CommitAuthor, CommitRequest, CreateBranchRequest, CreateRepositoryRequest,
         CreateTagRequest, DeleteRepositoryRequest, DiffRequest, DiffView, File,
-        ListRepositoriesRequest, LogRequest, LogView, MergeRequest, RevertRequest, StatusRequest,
+        ListRepositoriesRequest, LogRequest, LogView, MaintenanceRequest, MergeRequest,
+        RevertRequest, StatusRequest,
         commit_request::{Files, Metadata, Payload},
         diff_patch::OperationView,
     },
@@ -226,6 +227,14 @@ async fn main() {
                 ..Default::default()
             }),
             overwrite: false,
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    client
+        .maintenance(MaintenanceRequest {
+            namespace: NAMESPACE.to_owned(),
             ..Default::default()
         })
         .await

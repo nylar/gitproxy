@@ -26,8 +26,9 @@ use crate::{
         GetRepositoryRequest, GetRepositoryResponse, ListBlobsRequest, ListBlobsResponse,
         ListBranchesRequest, ListBranchesResponse, ListRepositoriesRequest,
         ListRepositoriesResponse, ListTagsRequest, ListTagsResponse, Log, LogRequest, LogResponse,
-        MergeRequest, MergeResponse, Repository, ResolveConflictsRequest, ResolveConflictsResponse,
-        RevertRequest, RevertResponse, StatusRequest, StatusResponse,
+        MaintenanceRequest, MaintenanceResponse, MergeRequest, MergeResponse, Repository,
+        ResolveConflictsRequest, ResolveConflictsResponse, RevertRequest, RevertResponse,
+        StatusRequest, StatusResponse,
         commit_request::{Metadata, Payload},
         log_request::Order,
     },
@@ -571,5 +572,21 @@ impl GitProxyService for Server {
         .map_err(Error::TokioTask)??;
 
         Response::ok(merge.into())
+    }
+
+    async fn maintenance(
+        &self,
+        _ctx: RequestContext,
+        request: ServiceRequest<'_, MaintenanceRequest>,
+    ) -> ServiceResult<MaintenanceResponse> {
+        let service = self.write_service(request.namespace).await;
+
+        spawn_blocking(move || service.maintenance())
+            .await
+            .map_err(Error::TokioTask)??;
+
+        Response::ok(MaintenanceResponse {
+            ..Default::default()
+        })
     }
 }

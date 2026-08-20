@@ -158,6 +158,14 @@ pub type OwnedResolveConflictsRequestView = ::buffa::view::OwnedView<
 pub type OwnedResolveConflictsResponseView = ::buffa::view::OwnedView<
     crate::proto::gitproxy::v1::__buffa::view::ResolveConflictsResponseView<'static>,
 >;
+///Shorthand for `OwnedView<MaintenanceRequestView<'static>>`.
+pub type OwnedMaintenanceRequestView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::MaintenanceRequestView<'static>,
+>;
+///Shorthand for `OwnedView<MaintenanceResponseView<'static>>`.
+pub type OwnedMaintenanceResponseView = ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::MaintenanceResponseView<'static>,
+>;
 impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::ListRepositoriesResponse>
 for crate::proto::gitproxy::v1::__buffa::view::ListRepositoriesResponseView<'_> {
     fn encode(
@@ -558,6 +566,26 @@ for ::buffa::view::OwnedView<
         ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
     }
 }
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::MaintenanceResponse>
+for crate::proto::gitproxy::v1::__buffa::view::MaintenanceResponseView<'_> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self, codec)
+    }
+}
+impl ::connectrpc::Encodable<crate::proto::gitproxy::v1::MaintenanceResponse>
+for ::buffa::view::OwnedView<
+    crate::proto::gitproxy::v1::__buffa::view::MaintenanceResponseView<'static>,
+> {
+    fn encode(
+        &self,
+        codec: ::connectrpc::CodecFormat,
+    ) -> ::std::result::Result<::buffa::bytes::Bytes, ::connectrpc::ConnectError> {
+        ::connectrpc::__codegen::encode_view_body(self.reborrow(), codec)
+    }
+}
 /// Full service name for this service.
 pub const GIT_PROXY_SERVICE_SERVICE_NAME: &str = "gitproxy.v1.GitProxyService";
 /// Static [`Spec`](::connectrpc::Spec) for the server-side `ListRepositories` RPC.
@@ -737,6 +765,15 @@ pub const GIT_PROXY_SERVICE_LIST_BLOBS_SPEC: ::connectrpc::Spec = ::connectrpc::
 /// [`RequestContext::spec`](::connectrpc::RequestContext::spec).
 pub const GIT_PROXY_SERVICE_RESOLVE_CONFLICTS_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
         "/gitproxy.v1.GitProxyService/ResolveConflicts",
+        ::connectrpc::StreamType::Unary,
+    )
+    .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
+/// Static [`Spec`](::connectrpc::Spec) for the server-side `Maintenance` RPC.
+///
+/// The dispatcher surfaces this on
+/// [`RequestContext::spec`](::connectrpc::RequestContext::spec).
+pub const GIT_PROXY_SERVICE_MAINTENANCE_SPEC: ::connectrpc::Spec = ::connectrpc::Spec::server(
+        "/gitproxy.v1.GitProxyService/Maintenance",
         ::connectrpc::StreamType::Unary,
     )
     .with_idempotency_level(::connectrpc::IdempotencyLevel::Unknown);
@@ -1241,6 +1278,29 @@ pub trait GitProxyService: Send + Sync + 'static {
         Output = ::connectrpc::ServiceResult<
             impl ::connectrpc::Encodable<
                 crate::proto::gitproxy::v1::ResolveConflictsResponse,
+            > + Send + use<'a, Self>,
+        >,
+    > + Send;
+    /// Handle the Maintenance RPC.
+    ///
+    /// `'a` lets the response body borrow from `&self` (e.g. server-resident state).
+    ///
+    /// `request` is borrowed from the request body and is valid for the
+    /// duration of the call; message fields are read directly on it
+    /// (zero-copy). The response cannot borrow from `request` — use
+    /// `.to_owned_message()` (or copy the specific fields) for anything
+    /// returned, stored, or moved into `tokio::spawn`.
+    fn maintenance<'a>(
+        &'a self,
+        ctx: ::connectrpc::RequestContext,
+        request: ::connectrpc::ServiceRequest<
+            '_,
+            crate::proto::gitproxy::v1::MaintenanceRequest,
+        >,
+    ) -> impl ::std::future::Future<
+        Output = ::connectrpc::ServiceResult<
+            impl ::connectrpc::Encodable<
+                crate::proto::gitproxy::v1::MaintenanceResponse,
             > + Send + use<'a, Self>,
         >,
     > + Send;
@@ -1842,6 +1902,35 @@ impl<S: GitProxyService> GitProxyServiceExt for S {
                 },
             )
             .with_spec(GIT_PROXY_SERVICE_RESOLVE_CONFLICTS_SPEC)
+            .route_view(
+                GIT_PROXY_SERVICE_SERVICE_NAME,
+                "Maintenance",
+                {
+                    let svc = ::std::sync::Arc::clone(&self);
+                    ::connectrpc::view_handler_fn(move |
+                        ctx,
+                        req: ::buffa::view::OwnedView<
+                            crate::proto::gitproxy::v1::__buffa::view::MaintenanceRequestView<
+                                'static,
+                            >,
+                        >,
+                        format|
+                    {
+                        let svc = ::std::sync::Arc::clone(&svc);
+                        async move {
+                            let sreq = ::connectrpc::ServiceRequest::<
+                                crate::proto::gitproxy::v1::MaintenanceRequest,
+                            >::from_parts(req.reborrow(), req.bytes());
+                            svc.maintenance(ctx, sreq)
+                                .await?
+                                .encode::<
+                                    crate::proto::gitproxy::v1::MaintenanceResponse,
+                                >(format)
+                        }
+                    })
+                },
+            )
+            .with_spec(GIT_PROXY_SERVICE_MAINTENANCE_SPEC)
     }
 }
 /// Type-inference marker used by [`Router::add_service`](::connectrpc::Router::add_service).
@@ -2014,6 +2103,12 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                 Some(
                     ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
                         .with_spec(GIT_PROXY_SERVICE_RESOLVE_CONFLICTS_SPEC),
+                )
+            }
+            "Maintenance" => {
+                Some(
+                    ::connectrpc::dispatcher::codegen::MethodDescriptor::unary(false)
+                        .with_spec(GIT_PROXY_SERVICE_MAINTENANCE_SPEC),
                 )
             }
             _ => None,
@@ -2405,6 +2500,27 @@ impl<T: GitProxyService> ::connectrpc::Dispatcher for GitProxyServiceServer<T> {
                         .await?
                         .encode::<
                             crate::proto::gitproxy::v1::ResolveConflictsResponse,
+                        >(format)
+                })
+            }
+            "Maintenance" => {
+                let svc = ::std::sync::Arc::clone(&self.inner);
+                Box::pin(async move {
+                    let body = ::connectrpc::dispatcher::codegen::request_proto_bytes::<
+                        crate::proto::gitproxy::v1::MaintenanceRequest,
+                    >(request.encoded()?, format)?;
+                    let req: crate::proto::gitproxy::v1::__buffa::view::MaintenanceRequestView<
+                        '_,
+                    > = ::connectrpc::dispatcher::codegen::decode_borrowed_request_view(
+                        &body,
+                    )?;
+                    let req = ::connectrpc::ServiceRequest::<
+                        crate::proto::gitproxy::v1::MaintenanceRequest,
+                    >::from_parts(&req, &body);
+                    svc.maintenance(ctx, req)
+                        .await?
+                        .encode::<
+                            crate::proto::gitproxy::v1::MaintenanceResponse,
                         >(format)
                 })
             }
@@ -3373,6 +3489,51 @@ where
                 &self.config,
                 GIT_PROXY_SERVICE_SERVICE_NAME,
                 "ResolveConflicts",
+                request,
+                options,
+            )
+            .await
+    }
+    /// Call the Maintenance RPC. Sends a request to /gitproxy.v1.GitProxyService/Maintenance.
+    pub async fn maintenance(
+        &self,
+        request: crate::proto::gitproxy::v1::MaintenanceRequest,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::gitproxy::v1::__buffa::view::MaintenanceResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        self.maintenance_with_options(
+                request,
+                ::connectrpc::client::CallOptions::default(),
+            )
+            .await
+    }
+    /// Call the Maintenance RPC with explicit per-call options. Options override [`ClientConfig`](::connectrpc::client::ClientConfig) defaults.
+    pub async fn maintenance_with_options(
+        &self,
+        request: crate::proto::gitproxy::v1::MaintenanceRequest,
+        options: ::connectrpc::client::CallOptions,
+    ) -> Result<
+        ::connectrpc::client::UnaryResponse<
+            ::buffa::view::OwnedView<
+                crate::proto::gitproxy::v1::__buffa::view::MaintenanceResponseView<
+                    'static,
+                >,
+            >,
+        >,
+        ::connectrpc::ConnectError,
+    > {
+        ::connectrpc::client::call_unary(
+                &self.transport,
+                &self.config,
+                GIT_PROXY_SERVICE_SERVICE_NAME,
+                "Maintenance",
                 request,
                 options,
             )

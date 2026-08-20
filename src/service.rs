@@ -1,4 +1,7 @@
-use std::path::{Path, PathBuf};
+use std::{
+    path::{Path, PathBuf},
+    process::Command,
+};
 
 use buffa::{EnumValue, MessageField};
 use buffa_types::Timestamp;
@@ -225,6 +228,38 @@ impl WriteService {
             &message,
         )?;
         Ok(merge)
+    }
+
+    pub fn maintenance(&self) -> Result<()> {
+        let refs = Command::new("git")
+            .arg("-C")
+            .arg(&self.repo_dir)
+            .arg("pack-refs")
+            .arg("--all")
+            .status()?;
+
+        if !refs.success() {
+            return Err(Error::IO(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "git pack-refs failed",
+            )));
+        }
+
+        let gc = Command::new("git")
+            .arg("-C")
+            .arg(&self.repo_dir)
+            .arg("gc")
+            .arg("--auto")
+            .status()?;
+
+        if !gc.success() {
+            return Err(Error::IO(std::io::Error::new(
+                std::io::ErrorKind::Other,
+                "git gc failed",
+            )));
+        }
+
+        Ok(())
     }
 }
 

@@ -86,6 +86,9 @@ const (
 	// GitProxyServiceResolveConflictsProcedure is the fully-qualified name of the GitProxyService's
 	// ResolveConflicts RPC.
 	GitProxyServiceResolveConflictsProcedure = "/gitproxy.v1.GitProxyService/ResolveConflicts"
+	// GitProxyServiceMaintenanceProcedure is the fully-qualified name of the GitProxyService's
+	// Maintenance RPC.
+	GitProxyServiceMaintenanceProcedure = "/gitproxy.v1.GitProxyService/Maintenance"
 )
 
 // GitProxyServiceClient is a client for the gitproxy.v1.GitProxyService service.
@@ -110,6 +113,7 @@ type GitProxyServiceClient interface {
 	GetBlob(context.Context, *connect.Request[v1.GetBlobRequest]) (*connect.Response[v1.GetBlobResponse], error)
 	ListBlobs(context.Context, *connect.Request[v1.ListBlobsRequest]) (*connect.Response[v1.ListBlobsResponse], error)
 	ResolveConflicts(context.Context, *connect.Request[v1.ResolveConflictsRequest]) (*connect.Response[v1.ResolveConflictsResponse], error)
+	Maintenance(context.Context, *connect.Request[v1.MaintenanceRequest]) (*connect.Response[v1.MaintenanceResponse], error)
 }
 
 // NewGitProxyServiceClient constructs a client for the gitproxy.v1.GitProxyService service. By
@@ -243,6 +247,12 @@ func NewGitProxyServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(gitProxyServiceMethods.ByName("ResolveConflicts")),
 			connect.WithClientOptions(opts...),
 		),
+		maintenance: connect.NewClient[v1.MaintenanceRequest, v1.MaintenanceResponse](
+			httpClient,
+			baseURL+GitProxyServiceMaintenanceProcedure,
+			connect.WithSchema(gitProxyServiceMethods.ByName("Maintenance")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -268,6 +278,7 @@ type gitProxyServiceClient struct {
 	getBlob          *connect.Client[v1.GetBlobRequest, v1.GetBlobResponse]
 	listBlobs        *connect.Client[v1.ListBlobsRequest, v1.ListBlobsResponse]
 	resolveConflicts *connect.Client[v1.ResolveConflictsRequest, v1.ResolveConflictsResponse]
+	maintenance      *connect.Client[v1.MaintenanceRequest, v1.MaintenanceResponse]
 }
 
 // ListRepositories calls gitproxy.v1.GitProxyService.ListRepositories.
@@ -370,6 +381,11 @@ func (c *gitProxyServiceClient) ResolveConflicts(ctx context.Context, req *conne
 	return c.resolveConflicts.CallUnary(ctx, req)
 }
 
+// Maintenance calls gitproxy.v1.GitProxyService.Maintenance.
+func (c *gitProxyServiceClient) Maintenance(ctx context.Context, req *connect.Request[v1.MaintenanceRequest]) (*connect.Response[v1.MaintenanceResponse], error) {
+	return c.maintenance.CallUnary(ctx, req)
+}
+
 // GitProxyServiceHandler is an implementation of the gitproxy.v1.GitProxyService service.
 type GitProxyServiceHandler interface {
 	ListRepositories(context.Context, *connect.Request[v1.ListRepositoriesRequest]) (*connect.Response[v1.ListRepositoriesResponse], error)
@@ -392,6 +408,7 @@ type GitProxyServiceHandler interface {
 	GetBlob(context.Context, *connect.Request[v1.GetBlobRequest]) (*connect.Response[v1.GetBlobResponse], error)
 	ListBlobs(context.Context, *connect.Request[v1.ListBlobsRequest]) (*connect.Response[v1.ListBlobsResponse], error)
 	ResolveConflicts(context.Context, *connect.Request[v1.ResolveConflictsRequest]) (*connect.Response[v1.ResolveConflictsResponse], error)
+	Maintenance(context.Context, *connect.Request[v1.MaintenanceRequest]) (*connect.Response[v1.MaintenanceResponse], error)
 }
 
 // NewGitProxyServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -521,6 +538,12 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 		connect.WithSchema(gitProxyServiceMethods.ByName("ResolveConflicts")),
 		connect.WithHandlerOptions(opts...),
 	)
+	gitProxyServiceMaintenanceHandler := connect.NewUnaryHandler(
+		GitProxyServiceMaintenanceProcedure,
+		svc.Maintenance,
+		connect.WithSchema(gitProxyServiceMethods.ByName("Maintenance")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/gitproxy.v1.GitProxyService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case GitProxyServiceListRepositoriesProcedure:
@@ -563,6 +586,8 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 			gitProxyServiceListBlobsHandler.ServeHTTP(w, r)
 		case GitProxyServiceResolveConflictsProcedure:
 			gitProxyServiceResolveConflictsHandler.ServeHTTP(w, r)
+		case GitProxyServiceMaintenanceProcedure:
+			gitProxyServiceMaintenanceHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -650,4 +675,8 @@ func (UnimplementedGitProxyServiceHandler) ListBlobs(context.Context, *connect.R
 
 func (UnimplementedGitProxyServiceHandler) ResolveConflicts(context.Context, *connect.Request[v1.ResolveConflictsRequest]) (*connect.Response[v1.ResolveConflictsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.ResolveConflicts is not implemented"))
+}
+
+func (UnimplementedGitProxyServiceHandler) Maintenance(context.Context, *connect.Request[v1.MaintenanceRequest]) (*connect.Response[v1.MaintenanceResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.Maintenance is not implemented"))
 }

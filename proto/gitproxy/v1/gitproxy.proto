@@ -27,6 +27,7 @@ service GitProxyService {
     rpc GetBlob(GetBlobRequest) returns (GetBlobResponse) {}
     rpc ListBlobs(ListBlobsRequest) returns (ListBlobsResponse) {}
     rpc ResolveConflicts(ResolveConflictsRequest) returns (ResolveConflictsResponse) {}
+    rpc Maintenance(MaintenanceRequest) returns (MaintenanceResponse) {}
 }
 
 message ListRepositoriesRequest {
@@ -241,6 +242,12 @@ message ResolveConflictsResponse {
     optional string commit = 1;
     repeated ConflictDiff conflicts = 2;
 }
+
+message MaintenanceRequest {
+    string namespace = 1 [(buf.validate.field).required = true];
+}
+
+message MaintenanceResponse {}
 
 message CommitAuthor {
     string name = 1 [(buf.validate.field).required = true];
