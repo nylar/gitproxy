@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use buffa::{EnumValue, MessageField};
 use buffa_types::Timestamp;
 use git2::Oid;
-use tokio::sync::mpsc::Receiver;
+use tokio::sync::{OwnedRwLockReadGuard, OwnedRwLockWriteGuard, mpsc::Receiver};
 
 use crate::{
     error::{Error, Result},
@@ -13,14 +13,19 @@ use crate::{
     },
 };
 
-pub struct Service {
+pub struct ReadService {
     repo_dir: PathBuf,
     author: Author,
+    _guard: OwnedRwLockReadGuard<()>,
 }
 
-impl Service {
-    pub fn new(repo_dir: PathBuf, author: Author) -> Self {
-        Self { repo_dir, author }
+impl ReadService {
+    pub fn new(repo_dir: PathBuf, author: Author, guard: OwnedRwLockReadGuard<()>) -> Self {
+        Self {
+            repo_dir,
+            author,
+            _guard: guard,
+        }
     }
 
     pub fn fetch_repository_head_commit(&self) -> Result<Oid> {
@@ -29,16 +34,86 @@ impl Service {
         Ok(head)
     }
 
-    pub fn remove_repository(&self) -> Result<()> {
-        let repo = Repository::open(&self.repo_dir, &self.author)?;
-        repo.remove()?;
-        Ok(())
-    }
-
     pub fn list_branches(&self) -> Result<Vec<String>> {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
         let branches = repo.list_branches()?;
         Ok(branches.collect())
+    }
+
+    pub fn list_tags(&self) -> Result<Vec<v1::Tag>> {
+        let repo = Repository::open(&self.repo_dir, &self.author)?;
+        let tags = repo.list_tags()?.iter().map(Into::into).collect();
+        Ok(tags)
+    }
+
+    pub fn log(
+        &self,
+        source_branch: String,
+        order: LogOrder,
+        target_branch: Option<String>,
+    ) -> Result<Vec<LogEntry>> {
+        let repo = Repository::open(&self.repo_dir, &self.author)?;
+        Ok(repo
+            .log(order, &source_branch, target_branch.as_deref())?
+            .collect())
+    }
+
+    pub fn diff(&self, base_reference: String, target_reference: String) -> Result<Vec<PatchDiff>> {
+        let repo = Repository::open(&self.repo_dir, &self.author)?;
+        let diff = repo.diff(&base_reference, &target_reference)?;
+        Ok(diff)
+    }
+
+    pub fn status(&self, source_branch: String, target_branch: String) -> Result<bool> {
+        let repo = Repository::open(&self.repo_dir, &self.author)?;
+        let clean = repo.clean(&source_branch, &target_branch)?;
+        Ok(clean)
+    }
+
+    pub fn get_blob(&self, commit: String, path: String) -> Result<File> {
+        let repo = Repository::open(&self.repo_dir, &self.author)?;
+        let blob = repo.blob(&commit, &path)?;
+        Ok(File {
+            path,
+            contents: blob.to_vec(),
+            ..Default::default()
+        })
+    }
+
+    pub fn list_blobs(&self, commit: String) -> Result<Vec<File>> {
+        let repo = Repository::open(&self.repo_dir, &self.author)?;
+        let blobs = repo
+            .all_blobs(&commit)?
+            .iter()
+            .map(|(path, contents)| File {
+                path: path.display().to_string(),
+                contents: contents.to_vec(),
+                ..Default::default()
+            })
+            .collect();
+        Ok(blobs)
+    }
+}
+
+pub struct WriteService {
+    repo_dir: PathBuf,
+    author: Author,
+    _guard: OwnedRwLockWriteGuard<()>,
+}
+
+impl WriteService {
+    pub fn new(repo_dir: PathBuf, author: Author, guard: OwnedRwLockWriteGuard<()>) -> Self {
+        Self {
+            repo_dir,
+            author,
+            _guard: guard,
+        }
+    }
+
+    pub fn remove_repository(&self) -> Result<()> {
+        let repo = Repository::open(&self.repo_dir, &self.author)?;
+        repo.remove()?;
+        Ok(())
     }
 
     pub fn create_branch(&self, branch: String) -> Result<()> {
@@ -57,12 +132,6 @@ impl Service {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
         repo.delete_branch(&branch)?;
         Ok(())
-    }
-
-    pub fn list_tags(&self) -> Result<Vec<v1::Tag>> {
-        let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let tags = repo.list_tags()?.iter().map(Into::into).collect();
-        Ok(tags)
     }
 
     pub fn create_tag(
@@ -120,18 +189,6 @@ impl Service {
         Ok(merge)
     }
 
-    pub fn log(
-        &self,
-        source_branch: String,
-        order: LogOrder,
-        target_branch: Option<String>,
-    ) -> Result<Vec<LogEntry>> {
-        let repo = Repository::open(&self.repo_dir, &self.author)?;
-        Ok(repo
-            .log(order, &source_branch, target_branch.as_deref())?
-            .collect())
-    }
-
     pub fn revert_merge(
         &self,
         target_branch: String,
@@ -142,42 +199,6 @@ impl Service {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
         let merge = repo.revert(&target_branch, &commit, strategy.map(Into::into), dry_run)?;
         Ok(merge)
-    }
-
-    pub fn diff(&self, base_reference: String, target_reference: String) -> Result<Vec<PatchDiff>> {
-        let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let diff = repo.diff(&base_reference, &target_reference)?;
-        Ok(diff)
-    }
-
-    pub fn status(&self, source_branch: String, target_branch: String) -> Result<bool> {
-        let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let clean = repo.clean(&source_branch, &target_branch)?;
-        Ok(clean)
-    }
-
-    pub fn get_blob(&self, commit: String, path: String) -> Result<File> {
-        let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let blob = repo.blob(&commit, &path)?;
-        Ok(File {
-            path,
-            contents: blob.to_vec(),
-            ..Default::default()
-        })
-    }
-
-    pub fn list_blobs(&self, commit: String) -> Result<Vec<File>> {
-        let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let blobs = repo
-            .all_blobs(&commit)?
-            .iter()
-            .map(|(path, contents)| File {
-                path: path.display().to_string(),
-                contents: contents.to_vec(),
-                ..Default::default()
-            })
-            .collect();
-        Ok(blobs)
     }
 
     pub fn resolve_conflicts(

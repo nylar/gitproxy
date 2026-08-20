@@ -11,7 +11,8 @@ use gitproxy::{
     connect::gitproxy::v1::GitProxyServiceClient,
     proto::gitproxy::v1::{
         CommitAuthor, CommitRequest, ConflictDiff, CreateBranchRequest, CreateRepositoryRequest,
-        DeleteRepositoryRequest, File, MergeRequest, ResolveConflictsRequest,
+        DeleteRepositoryRequest, File, ListRepositoriesRequest, MergeRequest,
+        ResolveConflictsRequest,
         commit_request::{Files, Metadata, Payload},
         diff_patch::Operation,
     },
@@ -28,21 +29,7 @@ async fn main() {
     let config = ClientConfig::new(base_uri);
     let client = GitProxyServiceClient::new(HttpClient::plaintext(), config);
 
-    client
-        .delete_repository(DeleteRepositoryRequest {
-            namespace: NAMESPACE.to_owned(),
-            ..Default::default()
-        })
-        .await
-        .unwrap();
-
-    client
-        .create_repository(CreateRepositoryRequest {
-            namespace: NAMESPACE.to_owned(),
-            ..Default::default()
-        })
-        .await
-        .unwrap();
+    ensure_repo(&client).await;
 
     let mut menu_foo = Menu {
         id: "foo".to_owned(),
@@ -370,4 +357,33 @@ fn commit_request(
     }
 
     requests.into_iter()
+}
+
+async fn ensure_repo(client: &GitProxyServiceClient<HttpClient>) {
+    let resp = client
+        .list_repositories(ListRepositoriesRequest {
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    for repo in &resp.view().repositories {
+        if repo.namespace == NAMESPACE {
+            client
+                .delete_repository(DeleteRepositoryRequest {
+                    namespace: NAMESPACE.to_owned(),
+                    ..Default::default()
+                })
+                .await
+                .unwrap();
+        }
+    }
+
+    client
+        .create_repository(CreateRepositoryRequest {
+            namespace: NAMESPACE.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
 }

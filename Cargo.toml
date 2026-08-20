@@ -10,6 +10,7 @@ axum = { version = "0.8.9", features = ["tokio", "http1"] }
 buffa = { version = "0.8", features = ["json"] }
 buffa-types = { version = "0.8", features = ["json"] }
 connectrpc = { version = "0.8", features = ["axum", "client"] }
+dashmap = "6.2.1"
 envy = "0.4.2"
 futures = "0.3.34"
 git2 = { version = "0.21.0", features = ["vendored-libgit2"] }

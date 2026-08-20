@@ -6,8 +6,8 @@ use gitproxy::{
     connect::gitproxy::v1::GitProxyServiceClient,
     proto::gitproxy::v1::{
         CommitAuthor, CommitRequest, CreateBranchRequest, CreateRepositoryRequest,
-        CreateTagRequest, DeleteRepositoryRequest, DiffRequest, DiffView, File, LogRequest,
-        LogView, MergeRequest, RevertRequest, StatusRequest,
+        CreateTagRequest, DeleteRepositoryRequest, DiffRequest, DiffView, File,
+        ListRepositoriesRequest, LogRequest, LogView, MergeRequest, RevertRequest, StatusRequest,
         commit_request::{Files, Metadata, Payload},
         diff_patch::OperationView,
     },
@@ -23,22 +23,7 @@ async fn main() {
     let config = ClientConfig::new(base_uri);
     let client = GitProxyServiceClient::new(HttpClient::plaintext(), config);
 
-    client
-        .delete_repository(DeleteRepositoryRequest {
-            namespace: NAMESPACE.to_owned(),
-            ..Default::default()
-        })
-        .await
-        .unwrap();
-
-    client
-        .create_repository(CreateRepositoryRequest {
-            namespace: NAMESPACE.to_owned(),
-            ..Default::default()
-        })
-        .await
-        .unwrap();
-    println!("Repo created: {}", NAMESPACE);
+    ensure_repo(&client).await;
 
     let branch1 = "branch-1";
     client
@@ -347,4 +332,33 @@ async fn dirty(client: &GitProxyServiceClient<HttpClient>, namespace: &str, bran
         .await
         .unwrap();
     resp.view().dirty
+}
+
+async fn ensure_repo(client: &GitProxyServiceClient<HttpClient>) {
+    let resp = client
+        .list_repositories(ListRepositoriesRequest {
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    for repo in &resp.view().repositories {
+        if repo.namespace == NAMESPACE {
+            client
+                .delete_repository(DeleteRepositoryRequest {
+                    namespace: NAMESPACE.to_owned(),
+                    ..Default::default()
+                })
+                .await
+                .unwrap();
+        }
+    }
+
+    client
+        .create_repository(CreateRepositoryRequest {
+            namespace: NAMESPACE.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
 }

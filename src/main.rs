@@ -17,7 +17,7 @@ async fn main() -> Result<()> {
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", config.port)).await?;
     tracing::info!(target: "Serving app", port = config.port, root_dir = config.root_dir.to_str());
-    axum::serve(listener, gitproxy::app(&config))
+    axum::serve(listener, gitproxy::app(&config).await?)
         .with_graceful_shutdown(shutdown_signal())
         .await?;
     Ok(())

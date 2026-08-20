@@ -1,18 +1,22 @@
-use std::path::PathBuf;
+use std::{path::PathBuf, sync::Arc};
 
 use buffa::MessageField;
 use buffa_types::Timestamp;
 use connectrpc::{
     ConnectError, InboundStream, RequestContext, Response, ServiceRequest, ServiceResult,
 };
+use dashmap::DashMap;
 use futures::StreamExt;
 use protovalidate_buffa::Validate;
-use tokio::{sync::mpsc, task::spawn_blocking};
+use tokio::{
+    sync::{RwLock, mpsc},
+    task::spawn_blocking,
+};
 
 use crate::{
     config::Config,
     connect::gitproxy::v1::GitProxyService,
-    error::Error,
+    error::{Error, Result},
     proto::gitproxy::v1::{
         Branch, CommitAuthor, CommitRequest, CommitResponse, CreateBranchRequest,
         CreateBranchResponse, CreateRepositoryRequest, CreateRepositoryResponse, CreateTagRequest,
@@ -28,32 +32,55 @@ use crate::{
         log_request::Order,
     },
     repository::{Author, LogOrder},
-    service::Service,
+    service::{ReadService, WriteService},
 };
 
 pub struct Server {
     root_dir: PathBuf,
     default_author: Author,
+    repo_locks: Arc<DashMap<String, Arc<RwLock<()>>>>,
 }
 
 impl Server {
-    pub fn new(config: &Config) -> Self {
-        Self {
+    pub async fn new(config: &Config) -> Result<Self> {
+        let repo_locks = Arc::new(DashMap::new());
+
+        let mut entries = tokio::fs::read_dir(&config.root_dir).await?;
+
+        while let Some(entry) = entries.next_entry().await? {
+            let path = entry.path();
+            if path.is_dir()
+                && let Some(repo_id) = path.file_name().and_then(|s| s.to_str())
+                && path.join(".git/HEAD").exists()
+            {
+                repo_locks.insert(repo_id.to_string(), Arc::new(RwLock::new(())));
+            }
+        }
+
+        Ok(Self {
             root_dir: config.root_dir.to_owned(),
             default_author: Author {
                 name: config.git_user_name.to_owned(),
                 email: config.git_user_email.to_owned(),
             },
-        }
+            repo_locks,
+        })
     }
 
-    fn service(&self, namespace: &str) -> Service {
-        let repo_dir = self.root_dir.join(namespace);
-        Service::new(repo_dir, self.default_author.clone())
+    async fn write_service(&self, namespace: &str) -> WriteService {
+        let lock_ref = self.repo_locks.get(namespace).unwrap();
+        let lock_arc = lock_ref.value().clone();
+        let guard = lock_arc.write_owned().await;
+
+        WriteService::new(self.repo_dir(namespace), self.default_author.clone(), guard)
     }
 
-    fn service_with_repo_dir(&self, repo_dir: PathBuf) -> Service {
-        Service::new(repo_dir, self.default_author.clone())
+    async fn read_service(&self, namespace: &str) -> ReadService {
+        let lock_ref = self.repo_locks.get(namespace).unwrap();
+        let lock_arc = lock_ref.value().clone();
+        let guard = lock_arc.read_owned().await;
+
+        ReadService::new(self.repo_dir(namespace), self.default_author.clone(), guard)
     }
 
     fn repo_dir(&self, namespace: &str) -> PathBuf {
@@ -73,17 +100,22 @@ impl GitProxyService for Server {
 
         for dir in std::fs::read_dir(&self.root_dir)? {
             let dir = dir?;
-            let service = self.service_with_repo_dir(self.root_dir.join(dir.path()));
 
-            let head = spawn_blocking(move || service.fetch_repository_head_commit())
-                .await
-                .map_err(Error::TokioTask)??;
+            if let Some(namespace) = dir.path().file_name() {
+                println!("{:?}", namespace);
 
-            repositories.push(crate::proto::gitproxy::v1::Repository {
-                namespace: dir.file_name().into_string().unwrap(),
-                head_commit: head.to_string(),
-                ..Default::default()
-            });
+                let service = self.read_service(&namespace.display().to_string()).await;
+
+                let head = spawn_blocking(move || service.fetch_repository_head_commit())
+                    .await
+                    .map_err(Error::TokioTask)??;
+
+                repositories.push(crate::proto::gitproxy::v1::Repository {
+                    namespace: dir.file_name().into_string().unwrap(),
+                    head_commit: head.to_string(),
+                    ..Default::default()
+                });
+            }
         }
 
         Response::ok(ListRepositoriesResponse {
@@ -97,7 +129,7 @@ impl GitProxyService for Server {
         _ctx: RequestContext,
         request: ServiceRequest<'_, GetRepositoryRequest>,
     ) -> ServiceResult<GetRepositoryResponse> {
-        let service = self.service(request.namespace);
+        let service = self.read_service(request.namespace).await;
 
         let head = spawn_blocking(move || service.fetch_repository_head_commit())
             .await
@@ -126,7 +158,10 @@ impl GitProxyService for Server {
                 request.namespace,
             )));
         }
-        let service = self.service_with_repo_dir(repo_dir);
+        self.repo_locks
+            .insert(request.namespace.to_owned(), Arc::new(RwLock::new(())));
+
+        let service = self.read_service(request.namespace).await;
 
         let head = spawn_blocking(move || service.fetch_repository_head_commit())
             .await
@@ -147,11 +182,13 @@ impl GitProxyService for Server {
         _ctx: RequestContext,
         request: ServiceRequest<'_, DeleteRepositoryRequest>,
     ) -> ServiceResult<DeleteRepositoryResponse> {
-        let service = self.service(request.namespace);
+        let service = self.write_service(request.namespace).await;
 
         spawn_blocking(move || service.remove_repository())
             .await
             .map_err(Error::TokioTask)??;
+
+        self.repo_locks.remove(request.namespace);
 
         Response::ok(DeleteRepositoryResponse {
             ..Default::default()
@@ -163,7 +200,7 @@ impl GitProxyService for Server {
         _ctx: RequestContext,
         request: ServiceRequest<'_, ListBranchesRequest>,
     ) -> ServiceResult<ListBranchesResponse> {
-        let service = self.service(request.namespace);
+        let service = self.read_service(request.namespace).await;
 
         let branches = spawn_blocking(move || service.list_branches())
             .await
@@ -188,7 +225,7 @@ impl GitProxyService for Server {
         _ctx: RequestContext,
         request: ServiceRequest<'_, GetBranchRequest>,
     ) -> ServiceResult<GetBranchResponse> {
-        let service = self.service(request.namespace);
+        let service = self.read_service(request.namespace).await;
 
         let branches = spawn_blocking(move || service.list_branches())
             .await
@@ -216,7 +253,7 @@ impl GitProxyService for Server {
         request: ServiceRequest<'_, CreateBranchRequest>,
     ) -> ServiceResult<CreateBranchResponse> {
         let req = request.to_owned_message();
-        let service = self.service(request.namespace);
+        let service = self.write_service(request.namespace).await;
 
         spawn_blocking(move || service.create_branch(req.branch))
             .await
@@ -237,7 +274,7 @@ impl GitProxyService for Server {
         request: ServiceRequest<'_, DeleteBranchRequest>,
     ) -> ServiceResult<DeleteBranchResponse> {
         let req = request.to_owned_message();
-        let service = self.service(request.namespace);
+        let service = self.write_service(request.namespace).await;
 
         spawn_blocking(move || service.delete_branch(req.branch))
             .await
@@ -253,7 +290,7 @@ impl GitProxyService for Server {
         _ctx: RequestContext,
         request: ServiceRequest<'_, ListTagsRequest>,
     ) -> ServiceResult<ListTagsResponse> {
-        let service = self.service(request.namespace);
+        let service = self.read_service(request.namespace).await;
 
         let tags = spawn_blocking(move || service.list_tags())
             .await
@@ -271,7 +308,7 @@ impl GitProxyService for Server {
         request: ServiceRequest<'_, CreateTagRequest>,
     ) -> ServiceResult<CreateTagResponse> {
         let req = request.to_owned_message();
-        let service = self.service(request.namespace);
+        let service = self.write_service(request.namespace).await;
 
         let tag = spawn_blocking(move || {
             service.create_tag(
@@ -300,7 +337,7 @@ impl GitProxyService for Server {
         request: ServiceRequest<'_, DeleteTagRequest>,
     ) -> ServiceResult<DeleteTagResponse> {
         let req = request.to_owned_message();
-        let service = self.service(request.namespace);
+        let service = self.write_service(request.namespace).await;
 
         spawn_blocking(move || service.delete_tag(req.name))
             .await
@@ -330,7 +367,7 @@ impl GitProxyService for Server {
 
         metadata.validate().map_err(Error::Validation)?;
 
-        let service = self.service(&metadata.namespace);
+        let service = self.write_service(&metadata.namespace).await;
 
         let worker = spawn_blocking(move || service.commit(metadata, &mut rx));
 
@@ -361,7 +398,7 @@ impl GitProxyService for Server {
         request: ServiceRequest<'_, MergeRequest>,
     ) -> ServiceResult<MergeResponse> {
         let req = request.to_owned_message();
-        let service = self.service(request.namespace);
+        let service = self.write_service(request.namespace).await;
 
         let merge = spawn_blocking(move || {
             service.merge(req.source_branch, req.target_branch, req.dry_run)
@@ -378,7 +415,7 @@ impl GitProxyService for Server {
         request: ServiceRequest<'_, LogRequest>,
     ) -> ServiceResult<LogResponse> {
         let req = request.to_owned_message();
-        let service = self.service(request.namespace);
+        let service = self.read_service(request.namespace).await;
 
         let order = match request.order.as_known() {
             Some(Order::ORDER_REVERSE) => LogOrder::Reverse,
@@ -417,7 +454,7 @@ impl GitProxyService for Server {
         request: ServiceRequest<'_, RevertRequest>,
     ) -> ServiceResult<RevertResponse> {
         let req = request.to_owned_message();
-        let service = self.service(request.namespace);
+        let service = self.write_service(request.namespace).await;
 
         let merge = spawn_blocking(move || {
             let strategy = match req.strategy {
@@ -439,7 +476,7 @@ impl GitProxyService for Server {
         request: ServiceRequest<'_, DiffRequest>,
     ) -> ServiceResult<DiffResponse> {
         let req = request.to_owned_message();
-        let service = self.service(request.namespace);
+        let service = self.read_service(request.namespace).await;
 
         let diff = spawn_blocking(move || service.diff(req.base_reference, req.target_reference))
             .await
@@ -462,7 +499,7 @@ impl GitProxyService for Server {
         request: ServiceRequest<'_, StatusRequest>,
     ) -> ServiceResult<StatusResponse> {
         let req = request.to_owned_message();
-        let service = self.service(request.namespace);
+        let service = self.read_service(request.namespace).await;
 
         let clean = spawn_blocking(move || service.status(req.source_branch, req.target_branch))
             .await
@@ -480,7 +517,7 @@ impl GitProxyService for Server {
         request: ServiceRequest<'_, GetBlobRequest>,
     ) -> ServiceResult<GetBlobResponse> {
         let req = request.to_owned_message();
-        let service = self.service(request.namespace);
+        let service = self.read_service(request.namespace).await;
 
         let blob = spawn_blocking(move || service.get_blob(req.commit, req.path))
             .await
@@ -498,7 +535,7 @@ impl GitProxyService for Server {
         request: ServiceRequest<'_, ListBlobsRequest>,
     ) -> ServiceResult<ListBlobsResponse> {
         let req = request.to_owned_message();
-        let service = self.service(request.namespace);
+        let service = self.read_service(request.namespace).await;
 
         let blobs = spawn_blocking(move || service.list_blobs(req.commit))
             .await
@@ -516,7 +553,7 @@ impl GitProxyService for Server {
         request: ServiceRequest<'_, ResolveConflictsRequest>,
     ) -> ServiceResult<ResolveConflictsResponse> {
         let req = request.to_owned_message();
-        let service = self.service(request.namespace);
+        let service = self.write_service(request.namespace).await;
 
         let merge = spawn_blocking(move || {
             service.resolve_conflicts(

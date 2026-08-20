@@ -4,7 +4,7 @@ use axum::Router;
 use connectrpc::Router as ConnectRouter;
 use tower_http::trace::TraceLayer;
 
-use crate::{config::Config, interceptor::Logging, server::Server};
+use crate::{config::Config, error::Result, interceptor::Logging, server::Server};
 
 pub mod config;
 #[rustfmt::skip]
@@ -22,11 +22,11 @@ pub mod server;
 pub mod validate;
 pub mod service;
 
-pub fn app(config: &Config) -> Router {
-    let router = ConnectRouter::new().add_service(Arc::new(Server::new(config)));
+pub async fn app(config: &Config) -> Result<Router> {
+    let router = ConnectRouter::new().add_service(Arc::new(Server::new(config).await?));
 
-    Router::new()
+    Ok(Router::new()
         .route("/health", axum::routing::get(|| async { "OK" }))
         .layer(TraceLayer::new_for_http())
-        .fallback_service(router.into_axum_service().with_interceptor(Logging))
+        .fallback_service(router.into_axum_service().with_interceptor(Logging)))
 }
