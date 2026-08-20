@@ -239,10 +239,7 @@ impl WriteService {
             .status()?;
 
         if !refs.success() {
-            return Err(Error::IO(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "git pack-refs failed",
-            )));
+            return Err(Error::IO(std::io::Error::other("git pack-refs failed")));
         }
 
         let gc = Command::new("git")
@@ -253,10 +250,7 @@ impl WriteService {
             .status()?;
 
         if !gc.success() {
-            return Err(Error::IO(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "git gc failed",
-            )));
+            return Err(Error::IO(std::io::Error::other("git gc failed")));
         }
 
         Ok(())
