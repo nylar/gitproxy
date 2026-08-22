@@ -103,8 +103,6 @@ impl GitProxyService for Server {
             let dir = dir?;
 
             if let Some(namespace) = dir.path().file_name() {
-                println!("{:?}", namespace);
-
                 let service = self.read_service(&namespace.display().to_string()).await;
 
                 let head = spawn_blocking(move || service.fetch_repository_head_commit())

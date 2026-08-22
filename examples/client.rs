@@ -63,12 +63,13 @@ async fn main() {
 
     let resp = client.commit(requests).await.unwrap();
     println!("Commit A: {}", resp.view().commit);
+    let commit_a = resp.view().commit.to_owned();
 
     let diff = client
         .diff(DiffRequest {
             namespace: NAMESPACE.to_owned(),
-            base_reference: branch1.to_owned(),
-            target_reference: "main".to_owned(),
+            base_reference: "main".to_owned(),
+            target_reference: branch1.to_owned(),
             ..Default::default()
         })
         .await
@@ -93,12 +94,13 @@ async fn main() {
 
     let resp = client.commit(requests).await.unwrap();
     println!("Commit B: {}", resp.view().commit);
+    let commit_b = resp.view().commit.to_owned();
 
     let diff = client
         .diff(DiffRequest {
             namespace: NAMESPACE.to_owned(),
-            base_reference: "main".to_owned(),
-            target_reference: branch1.to_owned(),
+            base_reference: commit_a,
+            target_reference: commit_b,
             ..Default::default()
         })
         .await
