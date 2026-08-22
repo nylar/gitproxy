@@ -11,7 +11,7 @@ use gitproxy::{
     connect::gitproxy::v1::GitProxyServiceClient,
     proto::gitproxy::v1::{
         CommitAuthor, CommitRequest, ConflictDiff, CreateBranchRequest, CreateRepositoryRequest,
-        DeleteRepositoryRequest, File, ListRepositoriesRequest, MergeRequest,
+        DeleteRepositoryRequest, File, ListBlobsRequest, ListRepositoriesRequest, MergeRequest,
         ResolveConflictsRequest,
         commit_request::{Files, Metadata, Payload},
         diff_patch::Operation,
@@ -202,6 +202,19 @@ async fn main() {
         .unwrap();
 
     println!("Merge commit: {}", resp.view().commit.unwrap());
+
+    let resp = client
+        .list_blobs(ListBlobsRequest {
+            namespace: NAMESPACE.to_owned(),
+            commit: resp.view().commit.unwrap().to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    for file in &resp.view().files {
+        println!("{} - {}", file.path, String::from_utf8_lossy(file.contents));
+    }
 }
 
 fn resolve_conflicts(conflicts: &[ConflictDiff]) -> Vec<(PathBuf, Vec<u8>)> {
