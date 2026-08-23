@@ -210,9 +210,11 @@ impl Repository {
 
         let signature = Signature::now(&author.name, &author.email)?;
 
-        let mut index = Index::new()?;
-        if let Some(tree) = parent_tree {
-            index.read_tree(&tree)?;
+        let mut index = self.repo.index()?;
+        index.clear()?;
+
+        if let Some(tree) = &parent_tree {
+            index.read_tree(tree)?;
         }
 
         for (path, contents) in files {
@@ -222,6 +224,14 @@ impl Repository {
             index.add(&entry)?;
         }
         let tree_id = index.write_tree_to(&self.repo)?;
+
+        // Return current id if we didn't mutate the tree
+        if let Some(old_tree) = &parent_tree
+            && old_tree.id() == tree_id
+        {
+            return Ok(parent_commits[0].id());
+        }
+
         let tree = self.repo.find_tree(tree_id)?;
         let oid = self.repo.commit(
             Some(&format!("refs/heads/{}", branch)),
@@ -236,16 +246,18 @@ impl Repository {
     }
 
     pub fn merge(&self, source_branch: &str, target_branch: &str, dry_run: bool) -> Result<Merge> {
-        let source_branch = self
+        let source_commit = self
             .repo
-            .find_branch(source_branch, git2::BranchType::Local)?;
-        let source_commit = source_branch.into_reference().peel_to_commit()?;
+            .find_branch(source_branch, git2::BranchType::Local)?
+            .into_reference()
+            .peel_to_commit()?;
         let source_tree = source_commit.tree()?;
 
-        let target_branch = self
+        let target_commit = self
             .repo
-            .find_branch(target_branch, git2::BranchType::Local)?;
-        let target_commit = target_branch.into_reference().peel_to_commit()?;
+            .find_branch(target_branch, git2::BranchType::Local)?
+            .into_reference()
+            .peel_to_commit()?;
         let target_tree = target_commit.tree()?;
 
         let msg = self.build_squash_merge(&source_commit, &target_commit)?;
@@ -275,9 +287,14 @@ impl Repository {
         let tree = self.repo.find_tree(squashed_tree_commit)?;
 
         let sig = Signature::now(&self.default_author.name, &self.default_author.email)?;
-        let merge_commit =
-            self.repo
-                .commit(Some("HEAD"), &sig, &sig, &msg, &tree, &[&target_commit])?;
+        let merge_commit = self.repo.commit(
+            Some(&format!("refs/heads/{}", target_branch)),
+            &sig,
+            &sig,
+            &msg,
+            &tree,
+            &[&target_commit],
+        )?;
 
         Ok(Merge::Ok(Some(merge_commit)))
     }
@@ -368,8 +385,6 @@ impl Repository {
             LogOrder::Normal => revwalk.set_sorting(Sort::TOPOLOGICAL)?,
             LogOrder::Reverse => revwalk.set_sorting(Sort::TOPOLOGICAL | Sort::REVERSE)?,
         }
-
-        revwalk.set_sorting(Sort::TOPOLOGICAL)?;
 
         Ok(revwalk
             .flatten()
