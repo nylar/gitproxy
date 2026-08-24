@@ -23,12 +23,12 @@ use crate::{
         CreateTagResponse, DeleteBranchRequest, DeleteBranchResponse, DeleteRepositoryRequest,
         DeleteRepositoryResponse, DeleteTagRequest, DeleteTagResponse, Diff, DiffRequest,
         DiffResponse, File, GetBlobRequest, GetBlobResponse, GetBranchRequest, GetBranchResponse,
-        GetRepositoryRequest, GetRepositoryResponse, ListBlobsRequest, ListBlobsResponse,
-        ListBranchesRequest, ListBranchesResponse, ListRepositoriesRequest,
-        ListRepositoriesResponse, ListTagsRequest, ListTagsResponse, Log, LogRequest, LogResponse,
-        MaintenanceRequest, MaintenanceResponse, MergeRequest, MergeResponse, Repository,
-        ResolveConflictsRequest, ResolveConflictsResponse, RevertRequest, RevertResponse,
-        StatusRequest, StatusResponse,
+        GetRepositoryRequest, GetRepositoryResponse, GraphStatusRequest, GraphStatusResponse,
+        ListBlobsRequest, ListBlobsResponse, ListBranchesRequest, ListBranchesResponse,
+        ListRepositoriesRequest, ListRepositoriesResponse, ListTagsRequest, ListTagsResponse, Log,
+        LogRequest, LogResponse, MaintenanceRequest, MaintenanceResponse, MergeRequest,
+        MergeResponse, Repository, ResolveConflictsRequest, ResolveConflictsResponse,
+        RevertRequest, RevertResponse, StatusRequest, StatusResponse,
         commit_request::{Metadata, Payload},
         log_request::Order,
     },
@@ -584,6 +584,27 @@ impl GitProxyService for Server {
             .map_err(Error::TokioTask)??;
 
         Response::ok(MaintenanceResponse {
+            ..Default::default()
+        })
+    }
+
+    async fn graph_status(
+        &self,
+        _ctx: RequestContext,
+        request: ServiceRequest<'_, GraphStatusRequest>,
+    ) -> ServiceResult<GraphStatusResponse> {
+        let req = request.to_owned_message();
+        let service = self.read_service(request.namespace).await;
+
+        let graph_status =
+            spawn_blocking(move || service.graph_status(req.source_branch, req.target_branch))
+                .await
+                .map_err(Error::TokioTask)??;
+
+        Response::ok(GraphStatusResponse {
+            common_ancestor_commit: graph_status.common_ancestor_commit,
+            commits_ahead: graph_status.commits_ahead,
+            commits_behind: graph_status.commits_behind,
             ..Default::default()
         })
     }

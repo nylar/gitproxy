@@ -577,6 +577,31 @@ impl Repository {
         Ok(blobs)
     }
 
+    pub fn graph_status(&self, source_branch: &str, target_branch: &str) -> Result<GraphStatus> {
+        let source_commit = self
+            .repo
+            .resolve_reference_from_short_name(source_branch)?
+            .peel_to_commit()?;
+        let target_commit = self
+            .repo
+            .resolve_reference_from_short_name(target_branch)?
+            .peel_to_commit()?;
+
+        let common_ancesotr = self
+            .repo
+            .merge_base(source_commit.id(), target_commit.id())?;
+
+        let (ahead, behind) = self
+            .repo
+            .graph_ahead_behind(source_commit.id(), target_commit.id())?;
+
+        Ok(GraphStatus {
+            common_ancestor_commit: common_ancesotr.to_string(),
+            commits_ahead: ahead as i32,
+            commits_behind: behind as i32,
+        })
+    }
+
     fn build_squash_merge(
         &self,
         source: &git2::Commit<'_>,
@@ -737,6 +762,13 @@ pub struct Tag {
     pub commit: String,
     pub time: Timestamp,
     pub author: Author,
+}
+
+#[derive(Debug)]
+pub struct GraphStatus {
+    pub common_ancestor_commit: String,
+    pub commits_ahead: i32,
+    pub commits_behind: i32,
 }
 
 fn new_index_entry(blob_id: Oid, path: &Path, contents: &[u8]) -> IndexEntry {

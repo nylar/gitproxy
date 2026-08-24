@@ -28,6 +28,7 @@ service GitProxyService {
     rpc ListBlobs(ListBlobsRequest) returns (ListBlobsResponse) {}
     rpc ResolveConflicts(ResolveConflictsRequest) returns (ResolveConflictsResponse) {}
     rpc Maintenance(MaintenanceRequest) returns (MaintenanceResponse) {}
+    rpc GraphStatus(GraphStatusRequest) returns (GraphStatusResponse) {}
 }
 
 message ListRepositoriesRequest {
@@ -248,6 +249,18 @@ message MaintenanceRequest {
 }
 
 message MaintenanceResponse {}
+
+message GraphStatusRequest {
+    string namespace = 1 [(buf.validate.field).required = true];
+    string source_branch = 2 [(buf.validate.field).required = true];
+    string target_branch = 3 [(buf.validate.field).required = true];
+}
+
+message GraphStatusResponse {
+    string common_ancestor_commit = 1;
+    int32 commits_ahead = 2;
+    int32 commits_behind = 3;
+}
 
 message CommitAuthor {
     string name = 1 [(buf.validate.field).required = true];

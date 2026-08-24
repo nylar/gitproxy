@@ -76,6 +76,8 @@ pub mod __buffa {
         reg.register_json_any(super::__RESOLVE_CONFLICTS_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__MAINTENANCE_REQUEST_JSON_ANY);
         reg.register_json_any(super::__MAINTENANCE_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__GRAPH_STATUS_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__GRAPH_STATUS_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__COMMIT_AUTHOR_JSON_ANY);
         reg.register_json_any(super::__LOG_JSON_ANY);
         reg.register_json_any(super::__REPOSITORY_JSON_ANY);
@@ -262,6 +264,14 @@ pub use self::__buffa::view::MaintenanceRequestOwnedView;
 pub use self::__buffa::view::MaintenanceResponseView;
 #[doc(inline)]
 pub use self::__buffa::view::MaintenanceResponseOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::GraphStatusRequestView;
+#[doc(inline)]
+pub use self::__buffa::view::GraphStatusRequestOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::GraphStatusResponseView;
+#[doc(inline)]
+pub use self::__buffa::view::GraphStatusResponseOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::CommitAuthorView;
 #[doc(inline)]

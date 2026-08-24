@@ -89,6 +89,9 @@ const (
 	// GitProxyServiceMaintenanceProcedure is the fully-qualified name of the GitProxyService's
 	// Maintenance RPC.
 	GitProxyServiceMaintenanceProcedure = "/gitproxy.v1.GitProxyService/Maintenance"
+	// GitProxyServiceGraphStatusProcedure is the fully-qualified name of the GitProxyService's
+	// GraphStatus RPC.
+	GitProxyServiceGraphStatusProcedure = "/gitproxy.v1.GitProxyService/GraphStatus"
 )
 
 // GitProxyServiceClient is a client for the gitproxy.v1.GitProxyService service.
@@ -114,6 +117,7 @@ type GitProxyServiceClient interface {
 	ListBlobs(context.Context, *connect.Request[v1.ListBlobsRequest]) (*connect.Response[v1.ListBlobsResponse], error)
 	ResolveConflicts(context.Context, *connect.Request[v1.ResolveConflictsRequest]) (*connect.Response[v1.ResolveConflictsResponse], error)
 	Maintenance(context.Context, *connect.Request[v1.MaintenanceRequest]) (*connect.Response[v1.MaintenanceResponse], error)
+	GraphStatus(context.Context, *connect.Request[v1.GraphStatusRequest]) (*connect.Response[v1.GraphStatusResponse], error)
 }
 
 // NewGitProxyServiceClient constructs a client for the gitproxy.v1.GitProxyService service. By
@@ -253,6 +257,12 @@ func NewGitProxyServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(gitProxyServiceMethods.ByName("Maintenance")),
 			connect.WithClientOptions(opts...),
 		),
+		graphStatus: connect.NewClient[v1.GraphStatusRequest, v1.GraphStatusResponse](
+			httpClient,
+			baseURL+GitProxyServiceGraphStatusProcedure,
+			connect.WithSchema(gitProxyServiceMethods.ByName("GraphStatus")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -279,6 +289,7 @@ type gitProxyServiceClient struct {
 	listBlobs        *connect.Client[v1.ListBlobsRequest, v1.ListBlobsResponse]
 	resolveConflicts *connect.Client[v1.ResolveConflictsRequest, v1.ResolveConflictsResponse]
 	maintenance      *connect.Client[v1.MaintenanceRequest, v1.MaintenanceResponse]
+	graphStatus      *connect.Client[v1.GraphStatusRequest, v1.GraphStatusResponse]
 }
 
 // ListRepositories calls gitproxy.v1.GitProxyService.ListRepositories.
@@ -386,6 +397,11 @@ func (c *gitProxyServiceClient) Maintenance(ctx context.Context, req *connect.Re
 	return c.maintenance.CallUnary(ctx, req)
 }
 
+// GraphStatus calls gitproxy.v1.GitProxyService.GraphStatus.
+func (c *gitProxyServiceClient) GraphStatus(ctx context.Context, req *connect.Request[v1.GraphStatusRequest]) (*connect.Response[v1.GraphStatusResponse], error) {
+	return c.graphStatus.CallUnary(ctx, req)
+}
+
 // GitProxyServiceHandler is an implementation of the gitproxy.v1.GitProxyService service.
 type GitProxyServiceHandler interface {
 	ListRepositories(context.Context, *connect.Request[v1.ListRepositoriesRequest]) (*connect.Response[v1.ListRepositoriesResponse], error)
@@ -409,6 +425,7 @@ type GitProxyServiceHandler interface {
 	ListBlobs(context.Context, *connect.Request[v1.ListBlobsRequest]) (*connect.Response[v1.ListBlobsResponse], error)
 	ResolveConflicts(context.Context, *connect.Request[v1.ResolveConflictsRequest]) (*connect.Response[v1.ResolveConflictsResponse], error)
 	Maintenance(context.Context, *connect.Request[v1.MaintenanceRequest]) (*connect.Response[v1.MaintenanceResponse], error)
+	GraphStatus(context.Context, *connect.Request[v1.GraphStatusRequest]) (*connect.Response[v1.GraphStatusResponse], error)
 }
 
 // NewGitProxyServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -544,6 +561,12 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 		connect.WithSchema(gitProxyServiceMethods.ByName("Maintenance")),
 		connect.WithHandlerOptions(opts...),
 	)
+	gitProxyServiceGraphStatusHandler := connect.NewUnaryHandler(
+		GitProxyServiceGraphStatusProcedure,
+		svc.GraphStatus,
+		connect.WithSchema(gitProxyServiceMethods.ByName("GraphStatus")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/gitproxy.v1.GitProxyService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case GitProxyServiceListRepositoriesProcedure:
@@ -588,6 +611,8 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 			gitProxyServiceResolveConflictsHandler.ServeHTTP(w, r)
 		case GitProxyServiceMaintenanceProcedure:
 			gitProxyServiceMaintenanceHandler.ServeHTTP(w, r)
+		case GitProxyServiceGraphStatusProcedure:
+			gitProxyServiceGraphStatusHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -679,4 +704,8 @@ func (UnimplementedGitProxyServiceHandler) ResolveConflicts(context.Context, *co
 
 func (UnimplementedGitProxyServiceHandler) Maintenance(context.Context, *connect.Request[v1.MaintenanceRequest]) (*connect.Response[v1.MaintenanceResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.Maintenance is not implemented"))
+}
+
+func (UnimplementedGitProxyServiceHandler) GraphStatus(context.Context, *connect.Request[v1.GraphStatusRequest]) (*connect.Response[v1.GraphStatusResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.GraphStatus is not implemented"))
 }

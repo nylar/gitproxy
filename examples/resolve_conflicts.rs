@@ -11,8 +11,8 @@ use gitproxy::{
     connect::gitproxy::v1::GitProxyServiceClient,
     proto::gitproxy::v1::{
         CommitAuthor, CommitRequest, ConflictDiff, CreateBranchRequest, CreateRepositoryRequest,
-        DeleteRepositoryRequest, File, ListBlobsRequest, ListRepositoriesRequest, MergeRequest,
-        ResolveConflictsRequest,
+        DeleteRepositoryRequest, File, GraphStatusRequest, ListBlobsRequest,
+        ListRepositoriesRequest, MergeRequest, ResolveConflictsRequest,
         commit_request::{Files, Metadata, Payload},
         diff_patch::Operation,
     },
@@ -142,6 +142,16 @@ async fn main() {
 
     client.commit(requests).await.unwrap();
 
+    let graph_status = client
+        .graph_status(GraphStatusRequest {
+            namespace: NAMESPACE.to_owned(),
+            source_branch: branch.to_owned(),
+            target_branch: "main".to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
     let resp = client
         .merge(MergeRequest {
             namespace: NAMESPACE.to_owned(),
@@ -153,6 +163,33 @@ async fn main() {
         .unwrap();
 
     cliclack::clear_screen().unwrap();
+    cliclack::intro(
+        style(format!(
+            " Common ancestor: {} ",
+            graph_status.view().common_ancestor_commit
+        ))
+        .on_blue()
+        .black(),
+    )
+    .unwrap();
+    cliclack::intro(
+        style(format!(
+            " Commits ahead: {} ",
+            graph_status.view().commits_ahead
+        ))
+        .on_green()
+        .black(),
+    )
+    .unwrap();
+    cliclack::intro(
+        style(format!(
+            " Commits behind: {} ",
+            graph_status.view().commits_behind
+        ))
+        .on_red()
+        .black(),
+    )
+    .unwrap();
     cliclack::intro(style(" Resolve conflicts ").on_magenta().black()).unwrap();
 
     let files = resolve_conflicts(&resp.view().to_owned_message().unwrap().conflicts);

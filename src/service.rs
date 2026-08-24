@@ -12,7 +12,8 @@ use crate::{
     error::{Error, Result},
     proto::gitproxy::v1::{self, CommitAuthor, File, commit_request::Metadata},
     repository::{
-        Author, ConflictDiff, LogEntry, LogOrder, Merge, PatchDiff, Repository, Strategy, Tag,
+        Author, ConflictDiff, GraphStatus, LogEntry, LogOrder, Merge, PatchDiff, Repository,
+        Strategy, Tag,
     },
 };
 
@@ -95,6 +96,15 @@ impl ReadService {
             })
             .collect();
         Ok(blobs)
+    }
+
+    pub fn graph_status(
+        &self,
+        source_branch: String,
+        target_branch: String,
+    ) -> Result<GraphStatus> {
+        let repo = Repository::open(&self.repo_dir, &self.author)?;
+        repo.graph_status(&source_branch, &target_branch)
     }
 }
 
