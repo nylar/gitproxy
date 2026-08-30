@@ -29,6 +29,7 @@ service GitProxyService {
     rpc ResolveConflicts(ResolveConflictsRequest) returns (ResolveConflictsResponse) {}
     rpc Maintenance(MaintenanceRequest) returns (MaintenanceResponse) {}
     rpc GraphStatus(GraphStatusRequest) returns (GraphStatusResponse) {}
+    rpc Blame(BlameRequest) returns (BlameResponse) {}
 }
 
 message ListRepositoriesRequest {
@@ -260,6 +261,29 @@ message GraphStatusResponse {
     string common_ancestor_commit = 1;
     int32 commits_ahead = 2;
     int32 commits_behind = 3;
+}
+
+message BlameRequest {
+    string namespace = 1 [(buf.validate.field).required = true];
+    string path = 2 [(buf.validate.field).required = true];
+    string reference = 3 [(buf.validate.field).required = true];
+}
+
+message BlameResponse {
+    message Hunk {
+        message Metadata {
+            CommitAuthor author = 1;
+            google.protobuf.Timestamp time = 2;
+            string summary = 3;
+        }
+
+        string commit = 1;
+        int32 start_line = 2;
+        int32 end_line = 3;
+        Metadata metadata = 4;
+    }
+
+    repeated Hunk hunks = 1;
 }
 
 message CommitAuthor {

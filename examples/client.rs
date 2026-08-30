@@ -46,14 +46,14 @@ async fn main() {
         vec![
             (
                 Path::new("my-dir/foo.json").to_path_buf(),
-                serde_json::to_vec(&serde_json::json!({
+                serde_json::to_vec_pretty(&serde_json::json!({
                     "a": "foo"
                 }))
                 .unwrap(),
             ),
             (
                 Path::new("my-dir/bar.json").to_path_buf(),
-                serde_json::to_vec(&serde_json::json!({
+                serde_json::to_vec_pretty(&serde_json::json!({
                     "b": "bar"
                 }))
                 .unwrap(),
@@ -85,7 +85,7 @@ async fn main() {
         "change B",
         vec![(
             Path::new("my-dir/foo.json").to_path_buf(),
-            serde_json::to_vec(&serde_json::json!({
+            serde_json::to_vec_pretty(&serde_json::json!({
                 "a": "baz"
             }))
             .unwrap(),
@@ -140,7 +140,7 @@ async fn main() {
         "change C",
         vec![(
             Path::new("my-dir/foo.json").to_path_buf(),
-            serde_json::to_vec(&serde_json::json!({
+            serde_json::to_vec_pretty(&serde_json::json!({
                 "a": "quux"
             }))
             .unwrap(),

@@ -1,8 +1,9 @@
 use std::path::{Path, PathBuf};
 
 use git2::{
-    Commit, Delta, DiffFindOptions, DiffOptions, Index, IndexEntry, IndexTime, MergeOptions,
-    ObjectType, Oid, Repository as GitRepository, Signature, Sort, Tree, TreeWalkResult,
+    BlameOptions, Commit, Delta, DiffFindOptions, DiffOptions, Index, IndexEntry, IndexTime,
+    MergeOptions, ObjectType, Oid, Repository as GitRepository, Signature, Sort, Tree,
+    TreeWalkResult,
 };
 use jiff::Timestamp;
 use json_patch::Patch;
@@ -602,6 +603,45 @@ impl Repository {
         })
     }
 
+    pub fn blame(&self, path: &Path, reference: &str) -> Result<Vec<BlameHunk>> {
+        let object = self.repo.revparse_single(reference)?;
+        let commit = object
+            .into_commit()
+            .map_err(|_| Error::InvalidCommit(reference.to_owned()))?;
+
+        let mut opts = BlameOptions::new();
+        opts.newest_commit(commit.id());
+
+        let blame = self.repo.blame_file(path, Some(&mut opts))?;
+
+        let mut hunks = Vec::new();
+
+        for hunk in blame.iter() {
+            let mut blame_hunk = BlameHunk {
+                commit: hunk.final_commit_id().to_string(),
+                start_line: hunk.final_start_line() as i32,
+                end_line: (hunk.lines_in_hunk() - 1) as i32,
+                metadata: None,
+            };
+
+            if let Some(sig) = hunk.final_signature()
+                && let Some(summary) = hunk.summary()?
+            {
+                blame_hunk.metadata = Some(BlameHunkMetadata {
+                    author: Author {
+                        name: sig.name()?.to_owned(),
+                        email: sig.email()?.to_owned(),
+                    },
+                    time: Timestamp::from_second(sig.when().seconds())?,
+                    summary: summary.to_owned(),
+                })
+            }
+            hunks.push(blame_hunk);
+        }
+
+        Ok(hunks)
+    }
+
     fn build_squash_merge(
         &self,
         source: &git2::Commit<'_>,
@@ -769,6 +809,21 @@ pub struct GraphStatus {
     pub common_ancestor_commit: String,
     pub commits_ahead: i32,
     pub commits_behind: i32,
+}
+
+#[derive(Debug)]
+pub struct BlameHunk {
+    pub commit: String,
+    pub start_line: i32,
+    pub end_line: i32,
+    pub metadata: Option<BlameHunkMetadata>,
+}
+
+#[derive(Debug)]
+pub struct BlameHunkMetadata {
+    pub author: Author,
+    pub time: Timestamp,
+    pub summary: String,
 }
 
 fn new_index_entry(blob_id: Oid, path: &Path, contents: &[u8]) -> IndexEntry {

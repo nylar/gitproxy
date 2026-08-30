@@ -10,9 +10,9 @@ use console::style;
 use gitproxy::{
     connect::gitproxy::v1::GitProxyServiceClient,
     proto::gitproxy::v1::{
-        CommitAuthor, CommitRequest, ConflictDiff, CreateBranchRequest, CreateRepositoryRequest,
-        DeleteRepositoryRequest, File, GraphStatusRequest, ListBlobsRequest,
-        ListRepositoriesRequest, MergeRequest, ResolveConflictsRequest,
+        BlameRequest, CommitAuthor, CommitRequest, ConflictDiff, CreateBranchRequest,
+        CreateRepositoryRequest, DeleteRepositoryRequest, File, GraphStatusRequest,
+        ListBlobsRequest, ListRepositoriesRequest, MergeRequest, ResolveConflictsRequest,
         commit_request::{Files, Metadata, Payload},
         diff_patch::Operation,
     },
@@ -60,15 +60,15 @@ async fn main() {
         vec![
             (
                 Path::new("menus/foo.json").to_path_buf(),
-                serde_json::to_vec(&menu_foo).unwrap(),
+                serde_json::to_vec_pretty(&menu_foo).unwrap(),
             ),
             (
                 Path::new("pages/bar.json").to_path_buf(),
-                serde_json::to_vec(&page_bar).unwrap(),
+                serde_json::to_vec_pretty(&page_bar).unwrap(),
             ),
             (
                 Path::new("pages/baz.json").to_path_buf(),
-                serde_json::to_vec(&page_baz).unwrap(),
+                serde_json::to_vec_pretty(&page_baz).unwrap(),
             ),
         ],
     );
@@ -99,15 +99,15 @@ async fn main() {
         vec![
             (
                 Path::new("menus/foo.json").to_path_buf(),
-                serde_json::to_vec(&menu_foo).unwrap(),
+                serde_json::to_vec_pretty(&menu_foo).unwrap(),
             ),
             (
                 Path::new("pages/bar.json").to_path_buf(),
-                serde_json::to_vec(&page_bar).unwrap(),
+                serde_json::to_vec_pretty(&page_bar).unwrap(),
             ),
             (
                 Path::new("pages/baz.json").to_path_buf(),
-                serde_json::to_vec(&page_baz).unwrap(),
+                serde_json::to_vec_pretty(&page_baz).unwrap(),
             ),
         ],
     );
@@ -131,11 +131,11 @@ async fn main() {
         vec![
             (
                 Path::new("menus/foo.json").to_path_buf(),
-                serde_json::to_vec(&menu_foo).unwrap(),
+                serde_json::to_vec_pretty(&menu_foo).unwrap(),
             ),
             (
                 Path::new("pages/bar.json").to_path_buf(),
-                serde_json::to_vec(&page_bar).unwrap(),
+                serde_json::to_vec_pretty(&page_bar).unwrap(),
             ),
         ],
     );
@@ -238,12 +238,14 @@ async fn main() {
         .await
         .unwrap();
 
-    println!("Merge commit: {}", resp.view().commit.unwrap());
+    let merge_commit = resp.view().commit.unwrap();
+
+    println!("Merge commit: {}", merge_commit);
 
     let resp = client
         .list_blobs(ListBlobsRequest {
             namespace: NAMESPACE.to_owned(),
-            commit: resp.view().commit.unwrap().to_owned(),
+            commit: merge_commit.to_owned(),
             ..Default::default()
         })
         .await
@@ -252,6 +254,16 @@ async fn main() {
     for file in &resp.view().files {
         println!("{} - {}", file.path, String::from_utf8_lossy(file.contents));
     }
+
+    client
+        .blame(BlameRequest {
+            namespace: NAMESPACE.to_owned(),
+            path: "menus/foo.json".to_owned(),
+            reference: merge_commit.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
 }
 
 fn resolve_conflicts(conflicts: &[ConflictDiff]) -> Vec<(PathBuf, Vec<u8>)> {
@@ -283,7 +295,7 @@ fn resolve_conflicts(conflicts: &[ConflictDiff]) -> Vec<(PathBuf, Vec<u8>)> {
         )
         .unwrap();
 
-        let data = serde_json::to_vec(&value).unwrap();
+        let data = serde_json::to_vec_pretty(&value).unwrap();
 
         files.push((Path::new(&conflict.path).to_path_buf(), data));
     }

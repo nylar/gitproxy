@@ -92,6 +92,8 @@ const (
 	// GitProxyServiceGraphStatusProcedure is the fully-qualified name of the GitProxyService's
 	// GraphStatus RPC.
 	GitProxyServiceGraphStatusProcedure = "/gitproxy.v1.GitProxyService/GraphStatus"
+	// GitProxyServiceBlameProcedure is the fully-qualified name of the GitProxyService's Blame RPC.
+	GitProxyServiceBlameProcedure = "/gitproxy.v1.GitProxyService/Blame"
 )
 
 // GitProxyServiceClient is a client for the gitproxy.v1.GitProxyService service.
@@ -118,6 +120,7 @@ type GitProxyServiceClient interface {
 	ResolveConflicts(context.Context, *connect.Request[v1.ResolveConflictsRequest]) (*connect.Response[v1.ResolveConflictsResponse], error)
 	Maintenance(context.Context, *connect.Request[v1.MaintenanceRequest]) (*connect.Response[v1.MaintenanceResponse], error)
 	GraphStatus(context.Context, *connect.Request[v1.GraphStatusRequest]) (*connect.Response[v1.GraphStatusResponse], error)
+	Blame(context.Context, *connect.Request[v1.BlameRequest]) (*connect.Response[v1.BlameResponse], error)
 }
 
 // NewGitProxyServiceClient constructs a client for the gitproxy.v1.GitProxyService service. By
@@ -263,6 +266,12 @@ func NewGitProxyServiceClient(httpClient connect.HTTPClient, baseURL string, opt
 			connect.WithSchema(gitProxyServiceMethods.ByName("GraphStatus")),
 			connect.WithClientOptions(opts...),
 		),
+		blame: connect.NewClient[v1.BlameRequest, v1.BlameResponse](
+			httpClient,
+			baseURL+GitProxyServiceBlameProcedure,
+			connect.WithSchema(gitProxyServiceMethods.ByName("Blame")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -290,6 +299,7 @@ type gitProxyServiceClient struct {
 	resolveConflicts *connect.Client[v1.ResolveConflictsRequest, v1.ResolveConflictsResponse]
 	maintenance      *connect.Client[v1.MaintenanceRequest, v1.MaintenanceResponse]
 	graphStatus      *connect.Client[v1.GraphStatusRequest, v1.GraphStatusResponse]
+	blame            *connect.Client[v1.BlameRequest, v1.BlameResponse]
 }
 
 // ListRepositories calls gitproxy.v1.GitProxyService.ListRepositories.
@@ -402,6 +412,11 @@ func (c *gitProxyServiceClient) GraphStatus(ctx context.Context, req *connect.Re
 	return c.graphStatus.CallUnary(ctx, req)
 }
 
+// Blame calls gitproxy.v1.GitProxyService.Blame.
+func (c *gitProxyServiceClient) Blame(ctx context.Context, req *connect.Request[v1.BlameRequest]) (*connect.Response[v1.BlameResponse], error) {
+	return c.blame.CallUnary(ctx, req)
+}
+
 // GitProxyServiceHandler is an implementation of the gitproxy.v1.GitProxyService service.
 type GitProxyServiceHandler interface {
 	ListRepositories(context.Context, *connect.Request[v1.ListRepositoriesRequest]) (*connect.Response[v1.ListRepositoriesResponse], error)
@@ -426,6 +441,7 @@ type GitProxyServiceHandler interface {
 	ResolveConflicts(context.Context, *connect.Request[v1.ResolveConflictsRequest]) (*connect.Response[v1.ResolveConflictsResponse], error)
 	Maintenance(context.Context, *connect.Request[v1.MaintenanceRequest]) (*connect.Response[v1.MaintenanceResponse], error)
 	GraphStatus(context.Context, *connect.Request[v1.GraphStatusRequest]) (*connect.Response[v1.GraphStatusResponse], error)
+	Blame(context.Context, *connect.Request[v1.BlameRequest]) (*connect.Response[v1.BlameResponse], error)
 }
 
 // NewGitProxyServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -567,6 +583,12 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 		connect.WithSchema(gitProxyServiceMethods.ByName("GraphStatus")),
 		connect.WithHandlerOptions(opts...),
 	)
+	gitProxyServiceBlameHandler := connect.NewUnaryHandler(
+		GitProxyServiceBlameProcedure,
+		svc.Blame,
+		connect.WithSchema(gitProxyServiceMethods.ByName("Blame")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/gitproxy.v1.GitProxyService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case GitProxyServiceListRepositoriesProcedure:
@@ -613,6 +635,8 @@ func NewGitProxyServiceHandler(svc GitProxyServiceHandler, opts ...connect.Handl
 			gitProxyServiceMaintenanceHandler.ServeHTTP(w, r)
 		case GitProxyServiceGraphStatusProcedure:
 			gitProxyServiceGraphStatusHandler.ServeHTTP(w, r)
+		case GitProxyServiceBlameProcedure:
+			gitProxyServiceBlameHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -708,4 +732,8 @@ func (UnimplementedGitProxyServiceHandler) Maintenance(context.Context, *connect
 
 func (UnimplementedGitProxyServiceHandler) GraphStatus(context.Context, *connect.Request[v1.GraphStatusRequest]) (*connect.Response[v1.GraphStatusResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.GraphStatus is not implemented"))
+}
+
+func (UnimplementedGitProxyServiceHandler) Blame(context.Context, *connect.Request[v1.BlameRequest]) (*connect.Response[v1.BlameResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("gitproxy.v1.GitProxyService.Blame is not implemented"))
 }

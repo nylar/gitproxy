@@ -7209,6 +7209,723 @@ pub const __GRAPH_STATUS_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry
 #[derive(Clone, PartialEq, Default)]
 #[derive(::serde::Serialize, ::serde::Deserialize)]
 #[serde(default)]
+pub struct BlameRequest {
+    /// Field 1: `namespace`
+    #[serde(
+        rename = "namespace",
+        with = "::buffa::json_helpers::proto_string",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
+    )]
+    pub namespace: ::buffa::alloc::string::String,
+    /// Field 2: `path`
+    #[serde(
+        rename = "path",
+        with = "::buffa::json_helpers::proto_string",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
+    )]
+    pub path: ::buffa::alloc::string::String,
+    /// Field 3: `reference`
+    #[serde(
+        rename = "reference",
+        with = "::buffa::json_helpers::proto_string",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
+    )]
+    pub reference: ::buffa::alloc::string::String,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for BlameRequest {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("BlameRequest")
+            .field("namespace", &self.namespace)
+            .field("path", &self.path)
+            .field("reference", &self.reference)
+            .finish()
+    }
+}
+impl BlameRequest {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.BlameRequest";
+}
+::buffa::impl_default_instance!(BlameRequest);
+impl ::buffa::MessageName for BlameRequest {
+    const PACKAGE: &'static str = "gitproxy.v1";
+    const NAME: &'static str = "BlameRequest";
+    const FULL_NAME: &'static str = "gitproxy.v1.BlameRequest";
+    const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.BlameRequest";
+}
+impl ::buffa::Message for BlameRequest {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// The result is a `u32`; the protobuf specification requires all
+    /// messages to fit within 2 GiB (2,147,483,647 bytes), so a
+    /// compliant message will never overflow this type.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u32;
+        if !self.namespace.is_empty() {
+            size += 1u32 + ::buffa::types::string_encoded_len(&self.namespace) as u32;
+        }
+        if !self.path.is_empty() {
+            size += 1u32 + ::buffa::types::string_encoded_len(&self.path) as u32;
+        }
+        if !self.reference.is_empty() {
+            size += 1u32 + ::buffa::types::string_encoded_len(&self.reference) as u32;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u32;
+        size
+    }
+    fn write_to(
+        &self,
+        _cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::bytes::BufMut,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        if !self.namespace.is_empty() {
+            ::buffa::types::put_string_field(1u32, &self.namespace, buf);
+        }
+        if !self.path.is_empty() {
+            ::buffa::types::put_string_field(2u32, &self.path, buf);
+        }
+        if !self.reference.is_empty() {
+            ::buffa::types::put_string_field(3u32, &self.reference, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(&mut self.namespace, buf)?;
+            }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(&mut self.path, buf)?;
+            }
+            3u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(&mut self.reference, buf)?;
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.namespace.clear();
+        self.path.clear();
+        self.reference.clear();
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for BlameRequest {
+    const PROTO_FQN: &'static str = "gitproxy.v1.BlameRequest";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for BlameRequest {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __BLAME_REQUEST_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/gitproxy.v1.BlameRequest",
+    to_json: ::buffa::type_registry::any_to_json::<BlameRequest>,
+    from_json: ::buffa::type_registry::any_from_json::<BlameRequest>,
+    is_wkt: false,
+};
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
+pub struct BlameResponse {
+    /// Field 1: `hunks`
+    #[serde(
+        rename = "hunks",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_vec",
+        deserialize_with = "::buffa::json_helpers::null_as_default"
+    )]
+    pub hunks: ::buffa::alloc::vec::Vec<blame_response::Hunk>,
+    #[serde(skip)]
+    #[doc(hidden)]
+    pub __buffa_unknown_fields: ::buffa::UnknownFields,
+}
+impl ::core::fmt::Debug for BlameResponse {
+    fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+        f.debug_struct("BlameResponse").field("hunks", &self.hunks).finish()
+    }
+}
+impl BlameResponse {
+    /// Protobuf type URL for this message, for use with `Any::pack` and
+    /// `Any::unpack_if`.
+    ///
+    /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+    pub const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.BlameResponse";
+}
+::buffa::impl_default_instance!(BlameResponse);
+impl ::buffa::MessageName for BlameResponse {
+    const PACKAGE: &'static str = "gitproxy.v1";
+    const NAME: &'static str = "BlameResponse";
+    const FULL_NAME: &'static str = "gitproxy.v1.BlameResponse";
+    const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.BlameResponse";
+}
+impl ::buffa::Message for BlameResponse {
+    /// Returns the total encoded size in bytes.
+    ///
+    /// The result is a `u32`; the protobuf specification requires all
+    /// messages to fit within 2 GiB (2,147,483,647 bytes), so a
+    /// compliant message will never overflow this type.
+    #[allow(clippy::let_and_return)]
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        let mut size = 0u32;
+        for v in &self.hunks {
+            let __slot = __cache.reserve();
+            let inner_size = v.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                    + inner_size;
+        }
+        size += self.__buffa_unknown_fields.encoded_len() as u32;
+        size
+    }
+    fn write_to(
+        &self,
+        __cache: &mut ::buffa::SizeCache,
+        buf: &mut impl ::buffa::bytes::BufMut,
+    ) {
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        for v in &self.hunks {
+            ::buffa::types::put_len_delimited_header(1u32, __cache.consume_next(), buf);
+            v.write_to(__cache, buf);
+        }
+        self.__buffa_unknown_fields.write_to(buf);
+    }
+    fn merge_field(
+        &mut self,
+        tag: ::buffa::encoding::Tag,
+        buf: &mut impl ::buffa::bytes::Buf,
+        ctx: ::buffa::DecodeContext<'_>,
+    ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+        #[allow(unused_imports)]
+        use ::buffa::bytes::Buf as _;
+        #[allow(unused_imports)]
+        use ::buffa::Enumeration as _;
+        match tag.field_number() {
+            1u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let mut elem = ::core::default::Default::default();
+                ::buffa::Message::merge_length_delimited(&mut elem, buf, ctx)?;
+                self.hunks.push(elem);
+            }
+            _ => {
+                self.__buffa_unknown_fields
+                    .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+            }
+        }
+        ::core::result::Result::Ok(())
+    }
+    fn clear(&mut self) {
+        self.hunks.clear();
+        self.__buffa_unknown_fields.clear();
+    }
+}
+impl ::buffa::ExtensionSet for BlameResponse {
+    const PROTO_FQN: &'static str = "gitproxy.v1.BlameResponse";
+    fn unknown_fields(&self) -> &::buffa::UnknownFields {
+        &self.__buffa_unknown_fields
+    }
+    fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+        &mut self.__buffa_unknown_fields
+    }
+}
+impl ::buffa::json_helpers::ProtoElemJson for BlameResponse {
+    fn serialize_proto_json<S: ::serde::Serializer>(
+        v: &Self,
+        s: S,
+    ) -> ::core::result::Result<S::Ok, S::Error> {
+        ::serde::Serialize::serialize(v, s)
+    }
+    fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+        d: D,
+    ) -> ::core::result::Result<Self, D::Error> {
+        <Self as ::serde::Deserialize>::deserialize(d)
+    }
+}
+#[doc(hidden)]
+pub const __BLAME_RESPONSE_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+    type_url: "type.googleapis.com/gitproxy.v1.BlameResponse",
+    to_json: ::buffa::type_registry::any_to_json::<BlameResponse>,
+    from_json: ::buffa::type_registry::any_from_json::<BlameResponse>,
+    is_wkt: false,
+};
+pub mod blame_response {
+    #[allow(unused_imports)]
+    use super::*;
+    #[derive(Clone, PartialEq, Default)]
+    #[derive(::serde::Serialize, ::serde::Deserialize)]
+    #[serde(default)]
+    pub struct Hunk {
+        /// Field 1: `commit`
+        #[serde(
+            rename = "commit",
+            with = "::buffa::json_helpers::proto_string",
+            skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
+        )]
+        pub commit: ::buffa::alloc::string::String,
+        /// Field 2: `start_line`
+        #[serde(
+            rename = "startLine",
+            alias = "start_line",
+            with = "::buffa::json_helpers::int32",
+            skip_serializing_if = "::buffa::json_helpers::skip_if::is_zero_i32"
+        )]
+        pub start_line: i32,
+        /// Field 3: `end_line`
+        #[serde(
+            rename = "endLine",
+            alias = "end_line",
+            with = "::buffa::json_helpers::int32",
+            skip_serializing_if = "::buffa::json_helpers::skip_if::is_zero_i32"
+        )]
+        pub end_line: i32,
+        /// Field 4: `metadata`
+        #[serde(
+            rename = "metadata",
+            skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+        )]
+        pub metadata: ::buffa::MessageField<super::blame_response::hunk::Metadata>,
+        #[serde(skip)]
+        #[doc(hidden)]
+        pub __buffa_unknown_fields: ::buffa::UnknownFields,
+    }
+    impl ::core::fmt::Debug for Hunk {
+        fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+            f.debug_struct("Hunk")
+                .field("commit", &self.commit)
+                .field("start_line", &self.start_line)
+                .field("end_line", &self.end_line)
+                .field("metadata", &self.metadata)
+                .finish()
+        }
+    }
+    impl Hunk {
+        /// Protobuf type URL for this message, for use with `Any::pack` and
+        /// `Any::unpack_if`.
+        ///
+        /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+        pub const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.BlameResponse.Hunk";
+    }
+    ::buffa::impl_default_instance!(Hunk);
+    impl ::buffa::MessageName for Hunk {
+        const PACKAGE: &'static str = "gitproxy.v1";
+        const NAME: &'static str = "BlameResponse.Hunk";
+        const FULL_NAME: &'static str = "gitproxy.v1.BlameResponse.Hunk";
+        const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.BlameResponse.Hunk";
+    }
+    impl ::buffa::Message for Hunk {
+        /// Returns the total encoded size in bytes.
+        ///
+        /// The result is a `u32`; the protobuf specification requires all
+        /// messages to fit within 2 GiB (2,147,483,647 bytes), so a
+        /// compliant message will never overflow this type.
+        #[allow(clippy::let_and_return)]
+        fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+            #[allow(unused_imports)]
+            use ::buffa::Enumeration as _;
+            let mut size = 0u32;
+            if !self.commit.is_empty() {
+                size += 1u32 + ::buffa::types::string_encoded_len(&self.commit) as u32;
+            }
+            if self.start_line != 0i32 {
+                size += 1u32 + ::buffa::types::int32_encoded_len(self.start_line) as u32;
+            }
+            if self.end_line != 0i32 {
+                size += 1u32 + ::buffa::types::int32_encoded_len(self.end_line) as u32;
+            }
+            if self.metadata.is_set() {
+                let __slot = __cache.reserve();
+                let inner_size = self.metadata.compute_size(__cache);
+                __cache.set(__slot, inner_size);
+                size
+                    += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                        + inner_size;
+            }
+            size += self.__buffa_unknown_fields.encoded_len() as u32;
+            size
+        }
+        fn write_to(
+            &self,
+            __cache: &mut ::buffa::SizeCache,
+            buf: &mut impl ::buffa::bytes::BufMut,
+        ) {
+            #[allow(unused_imports)]
+            use ::buffa::Enumeration as _;
+            if !self.commit.is_empty() {
+                ::buffa::types::put_string_field(1u32, &self.commit, buf);
+            }
+            if self.start_line != 0i32 {
+                ::buffa::types::put_int32_field(2u32, self.start_line, buf);
+            }
+            if self.end_line != 0i32 {
+                ::buffa::types::put_int32_field(3u32, self.end_line, buf);
+            }
+            if self.metadata.is_set() {
+                ::buffa::types::put_len_delimited_header(
+                    4u32,
+                    __cache.consume_next(),
+                    buf,
+                );
+                self.metadata.write_to(__cache, buf);
+            }
+            self.__buffa_unknown_fields.write_to(buf);
+        }
+        fn merge_field(
+            &mut self,
+            tag: ::buffa::encoding::Tag,
+            buf: &mut impl ::buffa::bytes::Buf,
+            ctx: ::buffa::DecodeContext<'_>,
+        ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+            #[allow(unused_imports)]
+            use ::buffa::bytes::Buf as _;
+            #[allow(unused_imports)]
+            use ::buffa::Enumeration as _;
+            match tag.field_number() {
+                1u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::LengthDelimited,
+                    )?;
+                    ::buffa::types::merge_string(&mut self.commit, buf)?;
+                }
+                2u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::Varint,
+                    )?;
+                    self.start_line = ::buffa::types::decode_int32(buf)?;
+                }
+                3u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::Varint,
+                    )?;
+                    self.end_line = ::buffa::types::decode_int32(buf)?;
+                }
+                4u32 => {
+                    ::buffa::encoding::check_wire_type(
+                        tag,
+                        ::buffa::encoding::WireType::LengthDelimited,
+                    )?;
+                    ::buffa::Message::merge_length_delimited(
+                        self.metadata.get_or_insert_default(),
+                        buf,
+                        ctx,
+                    )?;
+                }
+                _ => {
+                    self.__buffa_unknown_fields
+                        .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
+                }
+            }
+            ::core::result::Result::Ok(())
+        }
+        fn clear(&mut self) {
+            self.commit.clear();
+            self.start_line = 0i32;
+            self.end_line = 0i32;
+            self.metadata = ::buffa::MessageField::none();
+            self.__buffa_unknown_fields.clear();
+        }
+    }
+    impl ::buffa::ExtensionSet for Hunk {
+        const PROTO_FQN: &'static str = "gitproxy.v1.BlameResponse.Hunk";
+        fn unknown_fields(&self) -> &::buffa::UnknownFields {
+            &self.__buffa_unknown_fields
+        }
+        fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+            &mut self.__buffa_unknown_fields
+        }
+    }
+    impl ::buffa::json_helpers::ProtoElemJson for Hunk {
+        fn serialize_proto_json<S: ::serde::Serializer>(
+            v: &Self,
+            s: S,
+        ) -> ::core::result::Result<S::Ok, S::Error> {
+            ::serde::Serialize::serialize(v, s)
+        }
+        fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+            d: D,
+        ) -> ::core::result::Result<Self, D::Error> {
+            <Self as ::serde::Deserialize>::deserialize(d)
+        }
+    }
+    #[doc(hidden)]
+    pub const __HUNK_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+        type_url: "type.googleapis.com/gitproxy.v1.BlameResponse.Hunk",
+        to_json: ::buffa::type_registry::any_to_json::<Hunk>,
+        from_json: ::buffa::type_registry::any_from_json::<Hunk>,
+        is_wkt: false,
+    };
+    pub mod hunk {
+        #[allow(unused_imports)]
+        use super::*;
+        #[derive(Clone, PartialEq, Default)]
+        #[derive(::serde::Serialize, ::serde::Deserialize)]
+        #[serde(default)]
+        pub struct Metadata {
+            /// Field 1: `author`
+            #[serde(
+                rename = "author",
+                skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+            )]
+            pub author: ::buffa::MessageField<super::super::CommitAuthor>,
+            /// Field 2: `time`
+            #[serde(
+                rename = "time",
+                skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+            )]
+            pub time: ::buffa::MessageField<::buffa_types::google::protobuf::Timestamp>,
+            /// Field 3: `summary`
+            #[serde(
+                rename = "summary",
+                with = "::buffa::json_helpers::proto_string",
+                skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
+            )]
+            pub summary: ::buffa::alloc::string::String,
+            #[serde(skip)]
+            #[doc(hidden)]
+            pub __buffa_unknown_fields: ::buffa::UnknownFields,
+        }
+        impl ::core::fmt::Debug for Metadata {
+            fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
+                f.debug_struct("Metadata")
+                    .field("author", &self.author)
+                    .field("time", &self.time)
+                    .field("summary", &self.summary)
+                    .finish()
+            }
+        }
+        impl Metadata {
+            /// Protobuf type URL for this message, for use with `Any::pack` and
+            /// `Any::unpack_if`.
+            ///
+            /// Format: `type.googleapis.com/<fully.qualified.TypeName>`
+            pub const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.BlameResponse.Hunk.Metadata";
+        }
+        ::buffa::impl_default_instance!(Metadata);
+        impl ::buffa::MessageName for Metadata {
+            const PACKAGE: &'static str = "gitproxy.v1";
+            const NAME: &'static str = "BlameResponse.Hunk.Metadata";
+            const FULL_NAME: &'static str = "gitproxy.v1.BlameResponse.Hunk.Metadata";
+            const TYPE_URL: &'static str = "type.googleapis.com/gitproxy.v1.BlameResponse.Hunk.Metadata";
+        }
+        impl ::buffa::Message for Metadata {
+            /// Returns the total encoded size in bytes.
+            ///
+            /// The result is a `u32`; the protobuf specification requires all
+            /// messages to fit within 2 GiB (2,147,483,647 bytes), so a
+            /// compliant message will never overflow this type.
+            #[allow(clippy::let_and_return)]
+            fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
+                #[allow(unused_imports)]
+                use ::buffa::Enumeration as _;
+                let mut size = 0u32;
+                if self.author.is_set() {
+                    let __slot = __cache.reserve();
+                    let inner_size = self.author.compute_size(__cache);
+                    __cache.set(__slot, inner_size);
+                    size
+                        += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                            + inner_size;
+                }
+                if self.time.is_set() {
+                    let __slot = __cache.reserve();
+                    let inner_size = self.time.compute_size(__cache);
+                    __cache.set(__slot, inner_size);
+                    size
+                        += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                            + inner_size;
+                }
+                if !self.summary.is_empty() {
+                    size
+                        += 1u32
+                            + ::buffa::types::string_encoded_len(&self.summary) as u32;
+                }
+                size += self.__buffa_unknown_fields.encoded_len() as u32;
+                size
+            }
+            fn write_to(
+                &self,
+                __cache: &mut ::buffa::SizeCache,
+                buf: &mut impl ::buffa::bytes::BufMut,
+            ) {
+                #[allow(unused_imports)]
+                use ::buffa::Enumeration as _;
+                if self.author.is_set() {
+                    ::buffa::types::put_len_delimited_header(
+                        1u32,
+                        __cache.consume_next(),
+                        buf,
+                    );
+                    self.author.write_to(__cache, buf);
+                }
+                if self.time.is_set() {
+                    ::buffa::types::put_len_delimited_header(
+                        2u32,
+                        __cache.consume_next(),
+                        buf,
+                    );
+                    self.time.write_to(__cache, buf);
+                }
+                if !self.summary.is_empty() {
+                    ::buffa::types::put_string_field(3u32, &self.summary, buf);
+                }
+                self.__buffa_unknown_fields.write_to(buf);
+            }
+            fn merge_field(
+                &mut self,
+                tag: ::buffa::encoding::Tag,
+                buf: &mut impl ::buffa::bytes::Buf,
+                ctx: ::buffa::DecodeContext<'_>,
+            ) -> ::core::result::Result<(), ::buffa::DecodeError> {
+                #[allow(unused_imports)]
+                use ::buffa::bytes::Buf as _;
+                #[allow(unused_imports)]
+                use ::buffa::Enumeration as _;
+                match tag.field_number() {
+                    1u32 => {
+                        ::buffa::encoding::check_wire_type(
+                            tag,
+                            ::buffa::encoding::WireType::LengthDelimited,
+                        )?;
+                        ::buffa::Message::merge_length_delimited(
+                            self.author.get_or_insert_default(),
+                            buf,
+                            ctx,
+                        )?;
+                    }
+                    2u32 => {
+                        ::buffa::encoding::check_wire_type(
+                            tag,
+                            ::buffa::encoding::WireType::LengthDelimited,
+                        )?;
+                        ::buffa::Message::merge_length_delimited(
+                            self.time.get_or_insert_default(),
+                            buf,
+                            ctx,
+                        )?;
+                    }
+                    3u32 => {
+                        ::buffa::encoding::check_wire_type(
+                            tag,
+                            ::buffa::encoding::WireType::LengthDelimited,
+                        )?;
+                        ::buffa::types::merge_string(&mut self.summary, buf)?;
+                    }
+                    _ => {
+                        self.__buffa_unknown_fields
+                            .push(
+                                ::buffa::encoding::decode_unknown_field(tag, buf, ctx)?,
+                            );
+                    }
+                }
+                ::core::result::Result::Ok(())
+            }
+            fn clear(&mut self) {
+                self.author = ::buffa::MessageField::none();
+                self.time = ::buffa::MessageField::none();
+                self.summary.clear();
+                self.__buffa_unknown_fields.clear();
+            }
+        }
+        impl ::buffa::ExtensionSet for Metadata {
+            const PROTO_FQN: &'static str = "gitproxy.v1.BlameResponse.Hunk.Metadata";
+            fn unknown_fields(&self) -> &::buffa::UnknownFields {
+                &self.__buffa_unknown_fields
+            }
+            fn unknown_fields_mut(&mut self) -> &mut ::buffa::UnknownFields {
+                &mut self.__buffa_unknown_fields
+            }
+        }
+        impl ::buffa::json_helpers::ProtoElemJson for Metadata {
+            fn serialize_proto_json<S: ::serde::Serializer>(
+                v: &Self,
+                s: S,
+            ) -> ::core::result::Result<S::Ok, S::Error> {
+                ::serde::Serialize::serialize(v, s)
+            }
+            fn deserialize_proto_json<'de, D: ::serde::Deserializer<'de>>(
+                d: D,
+            ) -> ::core::result::Result<Self, D::Error> {
+                <Self as ::serde::Deserialize>::deserialize(d)
+            }
+        }
+        #[doc(hidden)]
+        pub const __METADATA_JSON_ANY: ::buffa::type_registry::JsonAnyEntry = ::buffa::type_registry::JsonAnyEntry {
+            type_url: "type.googleapis.com/gitproxy.v1.BlameResponse.Hunk.Metadata",
+            to_json: ::buffa::type_registry::any_to_json::<Metadata>,
+            from_json: ::buffa::type_registry::any_from_json::<Metadata>,
+            is_wkt: false,
+        };
+        #[doc(inline)]
+        pub use super::super::__buffa::view::blame_response::hunk::MetadataView;
+        #[doc(inline)]
+        pub use super::super::__buffa::view::blame_response::hunk::MetadataOwnedView;
+    }
+    #[doc(inline)]
+    pub use super::__buffa::view::blame_response::HunkView;
+    #[doc(inline)]
+    pub use super::__buffa::view::blame_response::HunkOwnedView;
+}
+#[derive(Clone, PartialEq, Default)]
+#[derive(::serde::Serialize, ::serde::Deserialize)]
+#[serde(default)]
 pub struct CommitAuthor {
     /// Field 1: `name`
     #[serde(

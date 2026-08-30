@@ -78,6 +78,10 @@ pub mod __buffa {
         reg.register_json_any(super::__MAINTENANCE_RESPONSE_JSON_ANY);
         reg.register_json_any(super::__GRAPH_STATUS_REQUEST_JSON_ANY);
         reg.register_json_any(super::__GRAPH_STATUS_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::__BLAME_REQUEST_JSON_ANY);
+        reg.register_json_any(super::__BLAME_RESPONSE_JSON_ANY);
+        reg.register_json_any(super::blame_response::__HUNK_JSON_ANY);
+        reg.register_json_any(super::blame_response::hunk::__METADATA_JSON_ANY);
         reg.register_json_any(super::__COMMIT_AUTHOR_JSON_ANY);
         reg.register_json_any(super::__LOG_JSON_ANY);
         reg.register_json_any(super::__REPOSITORY_JSON_ANY);
@@ -272,6 +276,14 @@ pub use self::__buffa::view::GraphStatusRequestOwnedView;
 pub use self::__buffa::view::GraphStatusResponseView;
 #[doc(inline)]
 pub use self::__buffa::view::GraphStatusResponseOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::BlameRequestView;
+#[doc(inline)]
+pub use self::__buffa::view::BlameRequestOwnedView;
+#[doc(inline)]
+pub use self::__buffa::view::BlameResponseView;
+#[doc(inline)]
+pub use self::__buffa::view::BlameResponseOwnedView;
 #[doc(inline)]
 pub use self::__buffa::view::CommitAuthorView;
 #[doc(inline)]

@@ -299,7 +299,7 @@ async fn test_branch_merges_yields_conflicts() {
         "Initial commit",
         vec![(
             Path::new("my_file.json").to_path_buf(),
-            serde_json::to_vec(&serde_json::json!({
+            serde_json::to_vec_pretty(&serde_json::json!({
                 "a": "Initial content"
             }))
             .unwrap(),
@@ -327,7 +327,7 @@ async fn test_branch_merges_yields_conflicts() {
         "Change in my-branch",
         vec![(
             Path::new("my_file.json").to_path_buf(),
-            serde_json::to_vec(&serde_json::json!({
+            serde_json::to_vec_pretty(&serde_json::json!({
                 "a": "Change from my-branch"
             }))
             .unwrap(),
@@ -344,7 +344,7 @@ async fn test_branch_merges_yields_conflicts() {
         "Change in main",
         vec![(
             Path::new("my_file.json").to_path_buf(),
-            serde_json::to_vec(&serde_json::json!({
+            serde_json::to_vec_pretty(&serde_json::json!({
                 "a": "Change from main branch"
             }))
             .unwrap(),
@@ -365,7 +365,7 @@ async fn test_branch_merges_yields_conflicts() {
 
     let expected_diff = vec![ConflictDiff {
         path: "my_file.json".to_owned(),
-        contents: serde_json::to_vec(&serde_json::json!({
+        contents: serde_json::to_vec_pretty(&serde_json::json!({
             "a": "Change from main branch"
         }))
         .unwrap(),
@@ -400,7 +400,7 @@ async fn test_branch_merges_yields_conflicts() {
             target_branch: "main".to_owned(),
             files: vec![File {
                 path: "my_file.json".to_owned(),
-                contents: serde_json::to_vec(&serde_json::json!({
+                contents: serde_json::to_vec_pretty(&serde_json::json!({
                     "a": "Change from my-branch"
                 }))
                 .unwrap(),

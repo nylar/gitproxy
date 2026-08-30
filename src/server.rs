@@ -18,17 +18,18 @@ use crate::{
     connect::gitproxy::v1::GitProxyService,
     error::{Error, Result},
     proto::gitproxy::v1::{
-        Branch, CommitAuthor, CommitRequest, CommitResponse, CreateBranchRequest,
-        CreateBranchResponse, CreateRepositoryRequest, CreateRepositoryResponse, CreateTagRequest,
-        CreateTagResponse, DeleteBranchRequest, DeleteBranchResponse, DeleteRepositoryRequest,
-        DeleteRepositoryResponse, DeleteTagRequest, DeleteTagResponse, Diff, DiffRequest,
-        DiffResponse, File, GetBlobRequest, GetBlobResponse, GetBranchRequest, GetBranchResponse,
-        GetRepositoryRequest, GetRepositoryResponse, GraphStatusRequest, GraphStatusResponse,
-        ListBlobsRequest, ListBlobsResponse, ListBranchesRequest, ListBranchesResponse,
-        ListRepositoriesRequest, ListRepositoriesResponse, ListTagsRequest, ListTagsResponse, Log,
-        LogRequest, LogResponse, MaintenanceRequest, MaintenanceResponse, MergeRequest,
-        MergeResponse, Repository, ResolveConflictsRequest, ResolveConflictsResponse,
-        RevertRequest, RevertResponse, StatusRequest, StatusResponse,
+        BlameRequest, BlameResponse, Branch, CommitAuthor, CommitRequest, CommitResponse,
+        CreateBranchRequest, CreateBranchResponse, CreateRepositoryRequest,
+        CreateRepositoryResponse, CreateTagRequest, CreateTagResponse, DeleteBranchRequest,
+        DeleteBranchResponse, DeleteRepositoryRequest, DeleteRepositoryResponse, DeleteTagRequest,
+        DeleteTagResponse, Diff, DiffRequest, DiffResponse, File, GetBlobRequest, GetBlobResponse,
+        GetBranchRequest, GetBranchResponse, GetRepositoryRequest, GetRepositoryResponse,
+        GraphStatusRequest, GraphStatusResponse, ListBlobsRequest, ListBlobsResponse,
+        ListBranchesRequest, ListBranchesResponse, ListRepositoriesRequest,
+        ListRepositoriesResponse, ListTagsRequest, ListTagsResponse, Log, LogRequest, LogResponse,
+        MaintenanceRequest, MaintenanceResponse, MergeRequest, MergeResponse, Repository,
+        ResolveConflictsRequest, ResolveConflictsResponse, RevertRequest, RevertResponse,
+        StatusRequest, StatusResponse,
         commit_request::{Metadata, Payload},
         log_request::Order,
     },
@@ -605,6 +606,24 @@ impl GitProxyService for Server {
             common_ancestor_commit: graph_status.common_ancestor_commit,
             commits_ahead: graph_status.commits_ahead,
             commits_behind: graph_status.commits_behind,
+            ..Default::default()
+        })
+    }
+
+    async fn blame(
+        &self,
+        _ctx: RequestContext,
+        request: ServiceRequest<'_, BlameRequest>,
+    ) -> ServiceResult<BlameResponse> {
+        let req = request.to_owned_message();
+        let service = self.read_service(request.namespace).await;
+
+        let hunks = spawn_blocking(move || service.blame(req.path, req.reference))
+            .await
+            .map_err(Error::TokioTask)??;
+
+        Response::ok(BlameResponse {
+            hunks: hunks.into_iter().map(Into::into).collect(),
             ..Default::default()
         })
     }

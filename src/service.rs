@@ -12,8 +12,8 @@ use crate::{
     error::{Error, Result},
     proto::gitproxy::v1::{self, CommitAuthor, File, commit_request::Metadata},
     repository::{
-        Author, ConflictDiff, GraphStatus, LogEntry, LogOrder, Merge, PatchDiff, Repository,
-        Strategy, Tag,
+        Author, BlameHunk, ConflictDiff, GraphStatus, LogEntry, LogOrder, Merge, PatchDiff,
+        Repository, Strategy, Tag,
     },
 };
 
@@ -105,6 +105,11 @@ impl ReadService {
     ) -> Result<GraphStatus> {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
         repo.graph_status(&source_branch, &target_branch)
+    }
+
+    pub fn blame(&self, path: String, reference: String) -> Result<Vec<BlameHunk>> {
+        let repo = Repository::open(&self.repo_dir, &self.author)?;
+        repo.blame(Path::new(&path), &reference)
     }
 }
 
@@ -467,6 +472,32 @@ impl From<&Tag> for v1::Tag {
                 email: value.author.email.to_owned(),
                 ..Default::default()
             }),
+            ..Default::default()
+        }
+    }
+}
+
+impl From<BlameHunk> for v1::blame_response::Hunk {
+    fn from(value: BlameHunk) -> Self {
+        let metadata = match value.metadata {
+            Some(metadata) => MessageField::some(v1::blame_response::hunk::Metadata {
+                author: MessageField::some(CommitAuthor {
+                    name: metadata.author.name,
+                    email: metadata.author.email,
+                    ..Default::default()
+                }),
+                time: MessageField::some(Timestamp::from_unix_secs(metadata.time.as_second())),
+                summary: metadata.summary,
+                ..Default::default()
+            }),
+            None => MessageField::none(),
+        };
+
+        Self {
+            commit: value.commit,
+            start_line: value.start_line,
+            end_line: value.end_line,
+            metadata,
             ..Default::default()
         }
     }
