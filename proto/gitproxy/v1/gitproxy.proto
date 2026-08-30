@@ -1,393 +1,393 @@
 syntax = "proto3";
 
 package gitproxy.v1;
-import "google/protobuf/timestamp.proto";
+
 import "buf/validate/validate.proto";
+import "google/protobuf/timestamp.proto";
 
 option go_package = "github.com/nylar/gitproxy/go/gen/gitproxy/v1;gitproxy";
 
 service GitProxyService {
-    rpc ListRepositories(ListRepositoriesRequest) returns (ListRepositoriesResponse) {}
-    rpc GetRepository(GetRepositoryRequest) returns (GetRepositoryResponse) {}
-    rpc CreateRepository(CreateRepositoryRequest) returns (CreateRepositoryResponse) {}
-    rpc DeleteRepository(DeleteRepositoryRequest) returns (DeleteRepositoryResponse) {}
-    rpc ListBranches(ListBranchesRequest) returns (ListBranchesResponse) {}
-    rpc GetBranch(GetBranchRequest) returns (GetBranchResponse) {}
-    rpc CreateBranch(CreateBranchRequest) returns (CreateBranchResponse) {}
-    rpc DeleteBranch(DeleteBranchRequest) returns (DeleteBranchResponse) {}
-    rpc ListTags(ListTagsRequest) returns (ListTagsResponse) {}
-    rpc CreateTag(CreateTagRequest) returns (CreateTagResponse) {}
-    rpc DeleteTag(DeleteTagRequest) returns (DeleteTagResponse) {}
-    rpc Commit(stream CommitRequest) returns (CommitResponse) {}
-    rpc Merge(MergeRequest) returns (MergeResponse) {}
-    rpc Log(LogRequest) returns (LogResponse) {}
-    rpc Revert(RevertRequest) returns (RevertResponse) {}
-    rpc Diff(DiffRequest) returns (DiffResponse) {}
-    rpc Status(StatusRequest) returns (StatusResponse) {}
-    rpc GetBlob(GetBlobRequest) returns (GetBlobResponse) {}
-    rpc ListBlobs(ListBlobsRequest) returns (ListBlobsResponse) {}
-    rpc ResolveConflicts(ResolveConflictsRequest) returns (ResolveConflictsResponse) {}
-    rpc Maintenance(MaintenanceRequest) returns (MaintenanceResponse) {}
-    rpc GraphStatus(GraphStatusRequest) returns (GraphStatusResponse) {}
-    rpc Blame(BlameRequest) returns (BlameResponse) {}
+  rpc ListRepositories(ListRepositoriesRequest) returns (ListRepositoriesResponse) {}
+  rpc GetRepository(GetRepositoryRequest) returns (GetRepositoryResponse) {}
+  rpc CreateRepository(CreateRepositoryRequest) returns (CreateRepositoryResponse) {}
+  rpc DeleteRepository(DeleteRepositoryRequest) returns (DeleteRepositoryResponse) {}
+  rpc ListBranches(ListBranchesRequest) returns (ListBranchesResponse) {}
+  rpc GetBranch(GetBranchRequest) returns (GetBranchResponse) {}
+  rpc CreateBranch(CreateBranchRequest) returns (CreateBranchResponse) {}
+  rpc DeleteBranch(DeleteBranchRequest) returns (DeleteBranchResponse) {}
+  rpc ListTags(ListTagsRequest) returns (ListTagsResponse) {}
+  rpc CreateTag(CreateTagRequest) returns (CreateTagResponse) {}
+  rpc DeleteTag(DeleteTagRequest) returns (DeleteTagResponse) {}
+  rpc Commit(stream CommitRequest) returns (CommitResponse) {}
+  rpc Merge(MergeRequest) returns (MergeResponse) {}
+  rpc Log(LogRequest) returns (LogResponse) {}
+  rpc Revert(RevertRequest) returns (RevertResponse) {}
+  rpc Diff(DiffRequest) returns (DiffResponse) {}
+  rpc Status(StatusRequest) returns (StatusResponse) {}
+  rpc GetBlob(GetBlobRequest) returns (GetBlobResponse) {}
+  rpc ListBlobs(ListBlobsRequest) returns (ListBlobsResponse) {}
+  rpc ResolveConflicts(ResolveConflictsRequest) returns (ResolveConflictsResponse) {}
+  rpc Maintenance(MaintenanceRequest) returns (MaintenanceResponse) {}
+  rpc GraphStatus(GraphStatusRequest) returns (GraphStatusResponse) {}
+  rpc Blame(BlameRequest) returns (BlameResponse) {}
 }
 
-message ListRepositoriesRequest {
-}
+message ListRepositoriesRequest {}
 
 message ListRepositoriesResponse {
-    repeated Repository repositories = 1;
+  repeated Repository repositories = 1;
 }
 
 message GetRepositoryRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
+  string namespace = 1 [(buf.validate.field).required = true];
 }
 
 message GetRepositoryResponse {
-    Repository repository = 1;
+  Repository repository = 1;
 }
 
 message CreateRepositoryRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
+  string namespace = 1 [(buf.validate.field).required = true];
 }
 
 message CreateRepositoryResponse {
-    Repository repository = 1;
+  Repository repository = 1;
 }
 
 message DeleteRepositoryRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
+  string namespace = 1 [(buf.validate.field).required = true];
 }
 
 message DeleteRepositoryResponse {}
 
 message ListBranchesRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
+  string namespace = 1 [(buf.validate.field).required = true];
 }
 
 message ListBranchesResponse {
-    repeated Branch branches = 1;
+  repeated Branch branches = 1;
 }
 
 message GetBranchRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
-    string branch = 2 [(buf.validate.field).required = true];
+  string namespace = 1 [(buf.validate.field).required = true];
+  string branch = 2 [(buf.validate.field).required = true];
 }
 
 message GetBranchResponse {
-    Branch branch = 1;
+  Branch branch = 1;
 }
 
 message CreateBranchRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
-    string branch = 2 [(buf.validate.field).required = true];
+  string namespace = 1 [(buf.validate.field).required = true];
+  string branch = 2 [(buf.validate.field).required = true];
 }
 
 message CreateBranchResponse {
-    Branch branch = 1 [(buf.validate.field).required = true];
+  Branch branch = 1 [(buf.validate.field).required = true];
 }
 
 message DeleteBranchRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
-    string branch = 2 [(buf.validate.field).required = true];
+  string namespace = 1 [(buf.validate.field).required = true];
+  string branch = 2 [(buf.validate.field).required = true];
 }
 
 message DeleteBranchResponse {}
 
 message ListTagsRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
+  string namespace = 1 [(buf.validate.field).required = true];
 }
 
 message ListTagsResponse {
-    repeated Tag tags = 1;
+  repeated Tag tags = 1;
 }
 
 message CreateTagRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
-    string name = 2 [(buf.validate.field).required = true];
-    string commit = 3 [(buf.validate.field).required = true];
-    string message = 4 [(buf.validate.field).required = true];
-    bool overwrite = 5 [(buf.validate.field).required = true];
-    CommitAuthor author = 6 [(buf.validate.field).required = true];
+  string namespace = 1 [(buf.validate.field).required = true];
+  string name = 2 [(buf.validate.field).required = true];
+  string commit = 3 [(buf.validate.field).required = true];
+  string message = 4 [(buf.validate.field).required = true];
+  bool overwrite = 5 [(buf.validate.field).required = true];
+  CommitAuthor author = 6 [(buf.validate.field).required = true];
 }
 
 message CreateTagResponse {
-    Tag tag = 1;
+  Tag tag = 1;
 }
 
 message DeleteTagRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
-    string name = 2 [(buf.validate.field).required = true];
+  string namespace = 1 [(buf.validate.field).required = true];
+  string name = 2 [(buf.validate.field).required = true];
 }
 
 message DeleteTagResponse {}
 
 message CommitRequest {
-    message Metadata {
-        string namespace = 1 [(buf.validate.field).required = true];
-        string branch = 2 [(buf.validate.field).required = true];
-        string message = 3 [(buf.validate.field).required = true];
-        CommitAuthor author = 4 [(buf.validate.field).required = true];
-    }
+  message Metadata {
+    string namespace = 1 [(buf.validate.field).required = true];
+    string branch = 2 [(buf.validate.field).required = true];
+    string message = 3 [(buf.validate.field).required = true];
+    CommitAuthor author = 4 [(buf.validate.field).required = true];
+  }
 
-    message Files {
-        repeated File files = 1 [(buf.validate.field).required = true];
-    }
+  message Files {
+    repeated File files = 1 [(buf.validate.field).required = true];
+  }
 
-    oneof payload {
-        Metadata metadata = 1;
-        Files files = 2;
-    }
+  oneof payload {
+    Metadata metadata = 1;
+    Files files = 2;
+  }
 }
 
 message CommitResponse {
-    string commit = 1;
+  string commit = 1;
 }
 
 message MergeRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
-    string source_branch = 2 [(buf.validate.field).required = true];
-    string target_branch = 3 [(buf.validate.field).required = true];
-    bool dry_run = 4 [(buf.validate.field).required = true];
+  string namespace = 1 [(buf.validate.field).required = true];
+  string source_branch = 2 [(buf.validate.field).required = true];
+  string target_branch = 3 [(buf.validate.field).required = true];
+  bool dry_run = 4 [(buf.validate.field).required = true];
 }
 
 message MergeResponse {
-    optional string commit = 1;
-    repeated ConflictDiff conflicts = 2;
+  optional string commit = 1;
+  repeated ConflictDiff conflicts = 2;
 }
 
 message RevertRequest {
-    enum Strategy {
-        STRATEGY_UNSPECIFIED = 0;
-        STRATEGY_KEEP_MAINLINE = 1;
-        STRATEGY_KEEP_OTHER = 2;
-    }
+  enum Strategy {
+    STRATEGY_UNSPECIFIED = 0;
+    STRATEGY_KEEP_MAINLINE = 1;
+    STRATEGY_KEEP_OTHER = 2;
+  }
 
-    string namespace = 1 [(buf.validate.field).required = true];
-    string target_branch = 2 [(buf.validate.field).required = true];
-    string commit = 3 [(buf.validate.field).required = true];
-    optional Strategy strategy = 4;
-    bool dry_run = 5 [(buf.validate.field).required = true];
+  string namespace = 1 [(buf.validate.field).required = true];
+  string target_branch = 2 [(buf.validate.field).required = true];
+  string commit = 3 [(buf.validate.field).required = true];
+  optional Strategy strategy = 4;
+  bool dry_run = 5 [(buf.validate.field).required = true];
 }
 
 message RevertResponse {
-    optional string commit = 1;
-    repeated ConflictDiff conflicts = 2;
+  optional string commit = 1;
+  repeated ConflictDiff conflicts = 2;
 }
 
 message LogRequest {
-    enum Order {
-        ORDER_UNSPECIFIED = 0;
-        ORDER_NORMAL = 1;
-        ORDER_REVERSE = 2;
-    }
+  enum Order {
+    ORDER_UNSPECIFIED = 0;
+    ORDER_NORMAL = 1;
+    ORDER_REVERSE = 2;
+  }
 
-    string namespace = 1 [(buf.validate.field).required = true];
-    string source_branch = 2;
-    Order order = 3;
-    optional string target_branch = 4;
+  string namespace = 1 [(buf.validate.field).required = true];
+  string source_branch = 2;
+  Order order = 3;
+  optional string target_branch = 4;
 }
 
 message LogResponse {
-    repeated Log logs = 1;
+  repeated Log logs = 1;
 }
 
 message DiffRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
-    string base_reference = 2 [(buf.validate.field).required = true];
-    string target_reference = 3 [(buf.validate.field).required = true];
+  string namespace = 1 [(buf.validate.field).required = true];
+  string base_reference = 2 [(buf.validate.field).required = true];
+  string target_reference = 3 [(buf.validate.field).required = true];
 }
 
 message DiffResponse {
-    Diff diff = 1;
+  Diff diff = 1;
 }
 
 message StatusRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
-    string source_branch = 2 [(buf.validate.field).required = true];
-    string target_branch = 3 [(buf.validate.field).required = true];
+  string namespace = 1 [(buf.validate.field).required = true];
+  string source_branch = 2 [(buf.validate.field).required = true];
+  string target_branch = 3 [(buf.validate.field).required = true];
 }
 
 message StatusResponse {
-    bool dirty = 1;
+  bool dirty = 1;
 }
 
 message GetBlobRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
-    string path = 2 [(buf.validate.field).required = true];
-    string commit = 3 [(buf.validate.field).required = true];
+  string namespace = 1 [(buf.validate.field).required = true];
+  string path = 2 [(buf.validate.field).required = true];
+  string commit = 3 [(buf.validate.field).required = true];
 }
 
 message GetBlobResponse {
-    File file = 1;
+  File file = 1;
 }
 
 message ListBlobsRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
-    string commit = 2 [(buf.validate.field).required = true];
+  string namespace = 1 [(buf.validate.field).required = true];
+  string commit = 2 [(buf.validate.field).required = true];
 }
 
 message ListBlobsResponse {
-    repeated File files = 1;
+  repeated File files = 1;
 }
 
 message ResolveConflictsRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
-    string source_branch = 2 [(buf.validate.field).required = true];
-    string target_branch = 3 [(buf.validate.field).required = true];
-    repeated File files = 4 [(buf.validate.field).required = true];
-    string message = 5 [(buf.validate.field).required = true];
-    CommitAuthor author = 6 [(buf.validate.field).required = true];
+  string namespace = 1 [(buf.validate.field).required = true];
+  string source_branch = 2 [(buf.validate.field).required = true];
+  string target_branch = 3 [(buf.validate.field).required = true];
+  repeated File files = 4 [(buf.validate.field).required = true];
+  string message = 5 [(buf.validate.field).required = true];
+  CommitAuthor author = 6 [(buf.validate.field).required = true];
 }
 
 message ResolveConflictsResponse {
-    optional string commit = 1;
-    repeated ConflictDiff conflicts = 2;
+  optional string commit = 1;
+  repeated ConflictDiff conflicts = 2;
 }
 
 message MaintenanceRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
+  string namespace = 1 [(buf.validate.field).required = true];
 }
 
 message MaintenanceResponse {}
 
 message GraphStatusRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
-    string source_branch = 2 [(buf.validate.field).required = true];
-    string target_branch = 3 [(buf.validate.field).required = true];
+  string namespace = 1 [(buf.validate.field).required = true];
+  string source_branch = 2 [(buf.validate.field).required = true];
+  string target_branch = 3 [(buf.validate.field).required = true];
 }
 
 message GraphStatusResponse {
-    string common_ancestor_commit = 1;
-    int32 commits_ahead = 2;
-    int32 commits_behind = 3;
+  string common_ancestor_commit = 1;
+  int32 commits_ahead = 2;
+  int32 commits_behind = 3;
 }
 
 message BlameRequest {
-    string namespace = 1 [(buf.validate.field).required = true];
-    string path = 2 [(buf.validate.field).required = true];
-    string reference = 3 [(buf.validate.field).required = true];
+  string namespace = 1 [(buf.validate.field).required = true];
+  string path = 2 [(buf.validate.field).required = true];
+  string reference = 3 [(buf.validate.field).required = true];
 }
 
 message BlameResponse {
-    message Hunk {
-        message Metadata {
-            CommitAuthor author = 1;
-            google.protobuf.Timestamp time = 2;
-            string summary = 3;
-        }
-
-        string commit = 1;
-        int32 start_line = 2;
-        int32 end_line = 3;
-        Metadata metadata = 4;
+  message Hunk {
+    message Metadata {
+      CommitAuthor author = 1;
+      google.protobuf.Timestamp time = 2;
+      string summary = 3;
     }
 
-    repeated Hunk hunks = 1;
+    string commit = 1;
+    int32 start_line = 2;
+    int32 end_line = 3;
+    Metadata metadata = 4;
+  }
+
+  repeated Hunk hunks = 1;
 }
 
 message CommitAuthor {
-    string name = 1 [(buf.validate.field).required = true];
-    string email = 2 [(buf.validate.field).required = true];
+  string name = 1 [(buf.validate.field).required = true];
+  string email = 2 [(buf.validate.field).required = true];
 }
 
 message Log {
-    string message = 1;
-    CommitAuthor author = 2;
-    string commit = 3;
-    google.protobuf.Timestamp time = 4;
+  string message = 1;
+  CommitAuthor author = 2;
+  string commit = 3;
+  google.protobuf.Timestamp time = 4;
 }
 
 message Repository {
-    string namespace = 1;
-    string head_commit = 2;
+  string namespace = 1;
+  string head_commit = 2;
 }
 
 message Branch {
-    string name = 1;
+  string name = 1;
 }
 
 message Diff {
-    repeated DiffFile files = 1;
+  repeated DiffFile files = 1;
 }
 
 message DiffFile {
-    enum Status {
-        STATUS_UNSPECIFIED = 0;
-        STATUS_UNMODIFIED = 1;
-        STATUS_ADDED = 2;
-        STATUS_DELETED = 3;
-        STATUS_MODIFIED = 4;
-        STATUS_RENAMED = 5;
-        STATUS_COPIED = 6;
-        STATUS_IGNORED = 7;
-        STATUS_UNTRACKED = 8;
-        STATUS_TYPECHANGE = 9;
-        STATUS_UNREADABLE = 10;
-        STATUS_CONFLICTED = 11;
-    }
+  enum Status {
+    STATUS_UNSPECIFIED = 0;
+    STATUS_UNMODIFIED = 1;
+    STATUS_ADDED = 2;
+    STATUS_DELETED = 3;
+    STATUS_MODIFIED = 4;
+    STATUS_RENAMED = 5;
+    STATUS_COPIED = 6;
+    STATUS_IGNORED = 7;
+    STATUS_UNTRACKED = 8;
+    STATUS_TYPECHANGE = 9;
+    STATUS_UNREADABLE = 10;
+    STATUS_CONFLICTED = 11;
+  }
 
-    Status status = 1;
-    optional string old_path = 2;
-    optional string new_path = 3;
-    repeated DiffPatch patches = 4;
+  Status status = 1;
+  optional string old_path = 2;
+  optional string new_path = 3;
+  repeated DiffPatch patches = 4;
 }
 
 message DiffPatch {
-    message Add {
-        string path = 1;
-        string value = 2;
-    }
+  message Add {
+    string path = 1;
+    string value = 2;
+  }
 
-    message Remove {
-        string path = 1;
-    }
+  message Remove {
+    string path = 1;
+  }
 
-    message Replace {
-        string path = 1;
-        string value = 2;
-    }
+  message Replace {
+    string path = 1;
+    string value = 2;
+  }
 
-    message Move {
-        string from = 1;
-        string path = 2;
-    }
+  message Move {
+    string from = 1;
+    string path = 2;
+  }
 
-    message Copy {
-        string from = 1;
-        string path = 2;
-    }
+  message Copy {
+    string from = 1;
+    string path = 2;
+  }
 
-    message Test {
-        string path = 1;
-        string value = 2;
-    }
+  message Test {
+    string path = 1;
+    string value = 2;
+  }
 
-    oneof operation {
-        Add add = 1;
-        Remove remove = 2;
-        Replace replace = 3;
-        Move move = 4;
-        Copy copy = 5;
-        Test test = 6;
-    }
+  oneof operation {
+    Add add = 1;
+    Remove remove = 2;
+    Replace replace = 3;
+    Move move = 4;
+    Copy copy = 5;
+    Test test = 6;
+  }
 }
 
 message ConflictDiff {
-    string path = 1;
-    bytes contents = 2;
-    repeated DiffPatch ours = 3;
-    repeated DiffPatch theirs = 4;
+  string path = 1;
+  bytes contents = 2;
+  repeated DiffPatch ours = 3;
+  repeated DiffPatch theirs = 4;
 }
 
 message File {
-    string path = 1;
-    bytes contents = 2;
+  string path = 1;
+  bytes contents = 2;
 }
 
 message Tag {
-    string name = 1;
-    string commit = 2;
-    google.protobuf.Timestamp time = 3;
-    CommitAuthor author = 4;
+  string name = 1;
+  string commit = 2;
+  google.protobuf.Timestamp time = 3;
+  CommitAuthor author = 4;
 }

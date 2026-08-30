@@ -3749,7 +3749,7 @@ var File_gitproxy_v1_gitproxy_proto protoreflect.FileDescriptor
 
 const file_gitproxy_v1_gitproxy_proto_rawDesc = "" +
 	"\n" +
-	"\x1agitproxy/v1/gitproxy.proto\x12\vgitproxy.v1\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x1bbuf/validate/validate.proto\"\x19\n" +
+	"\x1agitproxy/v1/gitproxy.proto\x12\vgitproxy.v1\x1a\x1bbuf/validate/validate.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x19\n" +
 	"\x17ListRepositoriesRequest\"W\n" +
 	"\x18ListRepositoriesResponse\x12;\n" +
 	"\frepositories\x18\x01 \x03(\v2\x17.gitproxy.v1.RepositoryR\frepositories\"<\n" +
