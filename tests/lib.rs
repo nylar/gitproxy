@@ -1,19 +1,22 @@
 use std::{
+    iter::zip,
     net::SocketAddr,
     path::{Path, PathBuf},
 };
 
 use buffa::MessageField;
+use buffa_types::Timestamp;
 use connectrpc::client::{ClientConfig, HttpClient};
 use gitproxy::{
     config::Config,
     connect::gitproxy::v1::GitProxyServiceClient,
     proto::gitproxy::v1::{
-        CommitAuthor, CommitRequest, ConflictDiff, CreateBranchRequest, CreateRepositoryRequest,
-        CreateTagRequest, DeleteBranchRequest, DeleteRepositoryRequest, DeleteTagRequest,
-        DiffPatch, File, GetBlobRequest, GetBranchRequest, ListBlobsRequest, ListBranchesRequest,
-        ListRepositoriesRequest, ListTagsRequest, LogRequest, MergeRequest,
+        BlameRequest, CommitAuthor, CommitRequest, ConflictDiff, CreateBranchRequest,
+        CreateRepositoryRequest, CreateTagRequest, DeleteBranchRequest, DeleteRepositoryRequest,
+        DeleteTagRequest, DiffPatch, File, GetBlobRequest, GetBranchRequest, ListBlobsRequest,
+        ListBranchesRequest, ListRepositoriesRequest, ListTagsRequest, LogRequest, MergeRequest,
         ResolveConflictsRequest, RevertRequest,
+        blame_response::{Hunk, hunk::Metadata as HunkMetadata},
         commit_request::{Files, Metadata, Payload},
         diff_patch::{Operation, Replace},
     },
@@ -735,6 +738,151 @@ async fn test_blobs() {
         .unwrap();
 
     assert_eq!(resp.view().files.len(), 3);
+}
+
+#[tokio::test]
+async fn test_blame() {
+    let root_dir = tempfile::tempdir().unwrap();
+    let addr = start_server(root_dir.path()).await;
+    let client = make_client(&addr);
+
+    client
+        .create_repository(CreateRepositoryRequest {
+            namespace: NAMESPACE.to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let requests = commit_request(
+        NAMESPACE,
+        "main",
+        "test",
+        "test@example.com",
+        "First",
+        vec![(
+            Path::new("my_file.txt").to_path_buf(),
+            "a\nb\nc\nd\ne\nf\n".as_bytes().to_vec(),
+        )],
+    );
+
+    let resp = client.commit(requests).await.unwrap();
+
+    let first_commit = resp.view().commit.to_owned();
+
+    let requests = commit_request(
+        NAMESPACE,
+        "main",
+        "test",
+        "test@example.com",
+        "Second",
+        vec![(
+            Path::new("my_file.txt").to_path_buf(),
+            "a\nb\nc\nn\ne\nf\n".as_bytes().to_vec(),
+        )],
+    );
+
+    let resp = client.commit(requests).await.unwrap();
+
+    let second_commit = resp.view().commit.to_owned();
+
+    let requests = commit_request(
+        NAMESPACE,
+        "main",
+        "test",
+        "test@example.com",
+        "Third",
+        vec![(
+            Path::new("my_file.txt").to_path_buf(),
+            "a\nb\nc\nn\nx\ny\n".as_bytes().to_vec(),
+        )],
+    );
+
+    let resp = client.commit(requests).await.unwrap();
+
+    let third_commit = resp.view().commit.to_owned();
+
+    let resp = client
+        .blame(BlameRequest {
+            namespace: NAMESPACE.to_owned(),
+            path: "my_file.txt".to_owned(),
+            reference: "main".to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
+    let expected = vec![
+        Hunk {
+            commit: first_commit,
+            start_line: 1,
+            end_line: 3,
+            metadata: MessageField::some(HunkMetadata {
+                author: MessageField::some(CommitAuthor {
+                    name: "test".to_owned(),
+                    email: "test@example.com".to_owned(),
+                    ..Default::default()
+                }),
+                time: MessageField::some(Timestamp::now()),
+                summary: "First".to_owned(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        },
+        Hunk {
+            commit: second_commit,
+            start_line: 4,
+            end_line: 4,
+            metadata: MessageField::some(HunkMetadata {
+                author: MessageField::some(CommitAuthor {
+                    name: "test".to_owned(),
+                    email: "test@example.com".to_owned(),
+                    ..Default::default()
+                }),
+                time: MessageField::some(Timestamp::now()),
+                summary: "Second".to_owned(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        },
+        Hunk {
+            commit: third_commit,
+            start_line: 5,
+            end_line: 6,
+            metadata: MessageField::some(HunkMetadata {
+                author: MessageField::some(CommitAuthor {
+                    name: "test".to_owned(),
+                    email: "test@example.com".to_owned(),
+                    ..Default::default()
+                }),
+                time: MessageField::some(Timestamp::now()),
+                summary: "Third".to_owned(),
+                ..Default::default()
+            }),
+            ..Default::default()
+        },
+    ];
+
+    let actual = resp.into_owned().hunks;
+
+    dbg!(&actual);
+
+    assert_eq!(expected.len(), actual.len());
+
+    for (expected_hunk, actual_hunk) in zip(expected, actual) {
+        assert_eq!(expected_hunk.commit, actual_hunk.commit);
+        assert_eq!(expected_hunk.start_line, actual_hunk.start_line);
+        assert_eq!(expected_hunk.end_line, actual_hunk.end_line);
+        assert_eq!(expected_hunk.metadata.summary, actual_hunk.metadata.summary);
+        assert_eq!(
+            expected_hunk.metadata.author.name,
+            actual_hunk.metadata.author.name
+        );
+        assert_eq!(
+            expected_hunk.metadata.author.email,
+            actual_hunk.metadata.author.email
+        );
+    }
 }
 
 async fn start_server(root_dir: &Path) -> SocketAddr {

@@ -620,7 +620,7 @@ impl Repository {
             let mut blame_hunk = BlameHunk {
                 commit: hunk.final_commit_id().to_string(),
                 start_line: hunk.final_start_line() as i32,
-                end_line: (hunk.lines_in_hunk() - 1) as i32,
+                end_line: (hunk.final_start_line() + hunk.lines_in_hunk() - 1) as i32,
                 metadata: None,
             };
 
