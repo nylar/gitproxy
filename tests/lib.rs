@@ -256,6 +256,11 @@ async fn test_branch_merges_successfully() {
             namespace: NAMESPACE.to_owned(),
             source_branch: branch.to_owned(),
             target_branch: "main".to_owned(),
+            author: MessageField::some(CommitAuthor {
+                name: "test".to_owned(),
+                email: "test@example.com".to_owned(),
+                ..Default::default()
+            }),
             ..Default::default()
         })
         .await
@@ -361,6 +366,11 @@ async fn test_branch_merges_yields_conflicts() {
             namespace: NAMESPACE.to_owned(),
             source_branch: branch.to_owned(),
             target_branch: "main".to_owned(),
+            author: MessageField::some(CommitAuthor {
+                name: "test".to_owned(),
+                email: "test@example.com".to_owned(),
+                ..Default::default()
+            }),
             ..Default::default()
         })
         .await
@@ -425,6 +435,11 @@ async fn test_branch_merges_yields_conflicts() {
             namespace: NAMESPACE.to_owned(),
             source_branch: branch.to_owned(),
             target_branch: "main".to_owned(),
+            author: MessageField::some(CommitAuthor {
+                name: "test".to_owned(),
+                email: "test@example.com".to_owned(),
+                ..Default::default()
+            }),
             ..Default::default()
         })
         .await
@@ -477,6 +492,11 @@ async fn test_merge_reverts_successfully() {
             namespace: NAMESPACE.to_owned(),
             source_branch: branch.to_owned(),
             target_branch: "main".to_owned(),
+            author: MessageField::some(CommitAuthor {
+                name: "test".to_owned(),
+                email: "test@example.com".to_owned(),
+                ..Default::default()
+            }),
             ..Default::default()
         })
         .await

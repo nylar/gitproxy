@@ -401,7 +401,15 @@ impl GitProxyService for Server {
         let service = self.write_service(request.namespace).await;
 
         let merge = spawn_blocking(move || {
-            service.merge(req.source_branch, req.target_branch, req.dry_run)
+            service.merge(
+                req.source_branch,
+                req.target_branch,
+                req.dry_run,
+                Author {
+                    name: req.author.name.to_owned(),
+                    email: req.author.email.to_owned(),
+                },
+            )
         })
         .await
         .map_err(Error::TokioTask)??;

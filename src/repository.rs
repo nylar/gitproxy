@@ -246,7 +246,13 @@ impl Repository {
         Ok(oid)
     }
 
-    pub fn merge(&self, source_branch: &str, target_branch: &str, dry_run: bool) -> Result<Merge> {
+    pub fn merge(
+        &self,
+        source_branch: &str,
+        target_branch: &str,
+        dry_run: bool,
+        author: &Author,
+    ) -> Result<Merge> {
         let source_commit = self
             .repo
             .find_branch(source_branch, git2::BranchType::Local)?
@@ -287,7 +293,7 @@ impl Repository {
         let squashed_tree_commit = idx.write_tree_to(&self.repo)?;
         let tree = self.repo.find_tree(squashed_tree_commit)?;
 
-        let sig = Signature::now(&self.default_author.name, &self.default_author.email)?;
+        let sig = Signature::now(&author.name, &author.email)?;
         let merge_commit = self.repo.commit(
             Some(&format!("refs/heads/{}", target_branch)),
             &sig,

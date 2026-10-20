@@ -3677,6 +3677,12 @@ pub struct MergeRequest {
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_false"
     )]
     pub dry_run: bool,
+    /// Field 5: `author`
+    #[serde(
+        rename = "author",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_unset_message_field"
+    )]
+    pub author: ::buffa::MessageField<CommitAuthor>,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
@@ -3688,6 +3694,7 @@ impl ::core::fmt::Debug for MergeRequest {
             .field("source_branch", &self.source_branch)
             .field("target_branch", &self.target_branch)
             .field("dry_run", &self.dry_run)
+            .field("author", &self.author)
             .finish()
     }
 }
@@ -3712,7 +3719,7 @@ impl ::buffa::Message for MergeRequest {
     /// messages to fit within 2 GiB (2,147,483,647 bytes), so a
     /// compliant message will never overflow this type.
     #[allow(clippy::let_and_return)]
-    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         let mut size = 0u32;
@@ -3730,12 +3737,20 @@ impl ::buffa::Message for MergeRequest {
         if self.dry_run {
             size += 1u32 + ::buffa::types::BOOL_ENCODED_LEN as u32;
         }
+        if self.author.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.author.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                    + inner_size;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u32;
         size
     }
     fn write_to(
         &self,
-        _cache: &mut ::buffa::SizeCache,
+        __cache: &mut ::buffa::SizeCache,
         buf: &mut impl ::buffa::bytes::BufMut,
     ) {
         #[allow(unused_imports)]
@@ -3751,6 +3766,10 @@ impl ::buffa::Message for MergeRequest {
         }
         if self.dry_run {
             ::buffa::types::put_bool_field(4u32, self.dry_run, buf);
+        }
+        if self.author.is_set() {
+            ::buffa::types::put_len_delimited_header(5u32, __cache.consume_next(), buf);
+            self.author.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -3793,6 +3812,17 @@ impl ::buffa::Message for MergeRequest {
                 )?;
                 self.dry_run = ::buffa::types::decode_bool(buf)?;
             }
+            5u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::Message::merge_length_delimited(
+                    self.author.get_or_insert_default(),
+                    buf,
+                    ctx,
+                )?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -3805,6 +3835,7 @@ impl ::buffa::Message for MergeRequest {
         self.source_branch.clear();
         self.target_branch.clear();
         self.dry_run = false;
+        self.author = ::buffa::MessageField::none();
         self.__buffa_unknown_fields.clear();
     }
 }

@@ -196,9 +196,10 @@ impl WriteService {
         source_branch: String,
         target_branch: String,
         dry_run: bool,
+        author: Author,
     ) -> Result<Merge> {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let merge = repo.merge(&source_branch, &target_branch, dry_run)?;
+        let merge = repo.merge(&source_branch, &target_branch, dry_run, &author)?;
 
         // Only clear out old branch if we are able to successfully merge
         if let Merge::Ok(Some(_)) = merge {

@@ -7143,6 +7143,10 @@ pub struct MergeRequestView<'a> {
     pub target_branch: &'a str,
     /// Field 4: `dry_run`
     pub dry_run: bool,
+    /// Field 5: `author`
+    pub author: ::buffa::MessageFieldView<
+        super::super::__buffa::view::CommitAuthorView<'a>,
+    >,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for MergeRequestView<'a> {
@@ -7200,6 +7204,27 @@ impl<'a> ::buffa::MessageView<'a> for MergeRequestView<'a> {
                 )?;
                 view.dry_run = ::buffa::types::decode_bool(&mut cur)?;
             }
+            5u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                let __sub_ctx = ctx.descend()?;
+                let sub = ::buffa::types::borrow_bytes(&mut cur)?;
+                match view.author.as_mut() {
+                    Some(existing) => {
+                        ::buffa::MessageView::merge_into_view(existing, sub, __sub_ctx)?
+                    }
+                    None => {
+                        view.author = ::buffa::MessageFieldView::set(
+                            <super::super::__buffa::view::CommitAuthorView as ::buffa::MessageView>::decode_view_ctx(
+                                sub,
+                                __sub_ctx,
+                            )?,
+                        );
+                    }
+                }
+            }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
                 let span_len = before_tag.len() - cur.len();
@@ -7226,6 +7251,14 @@ impl<'a> ::buffa::MessageView<'a> for MergeRequestView<'a> {
             source_branch: self.source_branch.to_string(),
             target_branch: self.target_branch.to_string(),
             dry_run: self.dry_run,
+            author: match self.author.as_option() {
+                Some(v) => {
+                    ::buffa::MessageField::<
+                        super::super::CommitAuthor,
+                    >::some(v.to_owned_from_source(__buffa_src)?)
+                }
+                None => ::buffa::MessageField::none(),
+            },
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
@@ -7233,7 +7266,7 @@ impl<'a> ::buffa::MessageView<'a> for MergeRequestView<'a> {
 }
 impl<'a> ::buffa::ViewEncode<'a> for MergeRequestView<'a> {
     #[allow(clippy::needless_borrow, clippy::let_and_return)]
-    fn compute_size(&self, _cache: &mut ::buffa::SizeCache) -> u32 {
+    fn compute_size(&self, __cache: &mut ::buffa::SizeCache) -> u32 {
         #[allow(unused_imports)]
         use ::buffa::Enumeration as _;
         let mut size = 0u32;
@@ -7251,13 +7284,21 @@ impl<'a> ::buffa::ViewEncode<'a> for MergeRequestView<'a> {
         if self.dry_run {
             size += 1u32 + ::buffa::types::BOOL_ENCODED_LEN as u32;
         }
+        if self.author.is_set() {
+            let __slot = __cache.reserve();
+            let inner_size = self.author.compute_size(__cache);
+            __cache.set(__slot, inner_size);
+            size
+                += 1u32 + ::buffa::encoding::varint_len(inner_size as u64) as u32
+                    + inner_size;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u32;
         size
     }
     #[allow(clippy::needless_borrow)]
     fn write_to(
         &self,
-        _cache: &mut ::buffa::SizeCache,
+        __cache: &mut ::buffa::SizeCache,
         buf: &mut impl ::buffa::bytes::BufMut,
     ) {
         #[allow(unused_imports)]
@@ -7273,6 +7314,10 @@ impl<'a> ::buffa::ViewEncode<'a> for MergeRequestView<'a> {
         }
         if self.dry_run {
             ::buffa::types::put_bool_field(4u32, self.dry_run, buf);
+        }
+        if self.author.is_set() {
+            ::buffa::types::put_len_delimited_header(5u32, __cache.consume_next(), buf);
+            self.author.write_to(__cache, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -7306,6 +7351,11 @@ impl<'__a> ::serde::Serialize for MergeRequestView<'__a> {
         }
         if self.dry_run {
             __map.serialize_entry("dryRun", &self.dry_run)?;
+        }
+        {
+            if let ::core::option::Option::Some(__v) = self.author.as_option() {
+                __map.serialize_entry("author", __v)?;
+            }
         }
         __map.end()
     }
@@ -7415,6 +7465,13 @@ impl MergeRequestOwnedView {
     #[must_use]
     pub fn dry_run(&self) -> bool {
         self.0.reborrow().dry_run
+    }
+    /// Field 5: `author`
+    #[must_use]
+    pub fn author(
+        &self,
+    ) -> &::buffa::MessageFieldView<super::super::__buffa::view::CommitAuthorView<'_>> {
+        &self.0.reborrow().author
     }
 }
 impl ::core::convert::From<::buffa::OwnedView<MergeRequestView<'static>>>

@@ -149,6 +149,7 @@ message MergeRequest {
   string source_branch = 2 [(buf.validate.field).required = true];
   string target_branch = 3 [(buf.validate.field).required = true];
   bool dry_run = 4 [(buf.validate.field).required = true];
+  CommitAuthor author = 5 [(buf.validate.field).required = true];
 }
 
 message MergeResponse {

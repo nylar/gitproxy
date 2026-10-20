@@ -113,6 +113,11 @@ async fn main() {
             namespace: NAMESPACE.to_owned(),
             source_branch: branch1.to_owned(),
             target_branch: "main".to_owned(),
+            author: MessageField::some(CommitAuthor {
+                name: "Bob".to_owned(),
+                email: "bob@example.com".to_owned(),
+                ..Default::default()
+            }),
             ..Default::default()
         })
         .await
@@ -169,6 +174,11 @@ async fn main() {
             namespace: NAMESPACE.to_owned(),
             source_branch: branch2.to_owned(),
             target_branch: "main".to_owned(),
+            author: MessageField::some(CommitAuthor {
+                name: "Bob".to_owned(),
+                email: "bob@example.com".to_owned(),
+                ..Default::default()
+            }),
             ..Default::default()
         })
         .await

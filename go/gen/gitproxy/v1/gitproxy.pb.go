@@ -1337,6 +1337,7 @@ type MergeRequest struct {
 	SourceBranch  string                 `protobuf:"bytes,2,opt,name=source_branch,json=sourceBranch,proto3" json:"source_branch,omitempty"`
 	TargetBranch  string                 `protobuf:"bytes,3,opt,name=target_branch,json=targetBranch,proto3" json:"target_branch,omitempty"`
 	DryRun        bool                   `protobuf:"varint,4,opt,name=dry_run,json=dryRun,proto3" json:"dry_run,omitempty"`
+	Author        *CommitAuthor          `protobuf:"bytes,5,opt,name=author,proto3" json:"author,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1397,6 +1398,13 @@ func (x *MergeRequest) GetDryRun() bool {
 		return x.DryRun
 	}
 	return false
+}
+
+func (x *MergeRequest) GetAuthor() *CommitAuthor {
+	if x != nil {
+		return x.Author
+	}
+	return nil
 }
 
 type MergeResponse struct {
@@ -3815,12 +3823,13 @@ const file_gitproxy_v1_gitproxy_proto_rawDesc = "" +
 	"\x05files\x18\x01 \x03(\v2\x11.gitproxy.v1.FileB\x06\xbaH\x03\xc8\x01\x01R\x05filesB\t\n" +
 	"\apayload\"(\n" +
 	"\x0eCommitResponse\x12\x16\n" +
-	"\x06commit\x18\x01 \x01(\tR\x06commit\"\xaf\x01\n" +
+	"\x06commit\x18\x01 \x01(\tR\x06commit\"\xea\x01\n" +
 	"\fMergeRequest\x12$\n" +
 	"\tnamespace\x18\x01 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\tnamespace\x12+\n" +
 	"\rsource_branch\x18\x02 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\fsourceBranch\x12+\n" +
 	"\rtarget_branch\x18\x03 \x01(\tB\x06\xbaH\x03\xc8\x01\x01R\ftargetBranch\x12\x1f\n" +
-	"\adry_run\x18\x04 \x01(\bB\x06\xbaH\x03\xc8\x01\x01R\x06dryRun\"p\n" +
+	"\adry_run\x18\x04 \x01(\bB\x06\xbaH\x03\xc8\x01\x01R\x06dryRun\x129\n" +
+	"\x06author\x18\x05 \x01(\v2\x19.gitproxy.v1.CommitAuthorB\x06\xbaH\x03\xc8\x01\x01R\x06author\"p\n" +
 	"\rMergeResponse\x12\x1b\n" +
 	"\x06commit\x18\x01 \x01(\tH\x00R\x06commit\x88\x01\x01\x127\n" +
 	"\tconflicts\x18\x02 \x03(\v2\x19.gitproxy.v1.ConflictDiffR\tconflictsB\t\n" +
@@ -4113,89 +4122,90 @@ var file_gitproxy_v1_gitproxy_proto_depIdxs = []int32{
 	58, // 8: gitproxy.v1.CreateTagResponse.tag:type_name -> gitproxy.v1.Tag
 	59, // 9: gitproxy.v1.CommitRequest.metadata:type_name -> gitproxy.v1.CommitRequest.Metadata
 	60, // 10: gitproxy.v1.CommitRequest.files:type_name -> gitproxy.v1.CommitRequest.Files
-	56, // 11: gitproxy.v1.MergeResponse.conflicts:type_name -> gitproxy.v1.ConflictDiff
-	0,  // 12: gitproxy.v1.RevertRequest.strategy:type_name -> gitproxy.v1.RevertRequest.Strategy
-	56, // 13: gitproxy.v1.RevertResponse.conflicts:type_name -> gitproxy.v1.ConflictDiff
-	1,  // 14: gitproxy.v1.LogRequest.order:type_name -> gitproxy.v1.LogRequest.Order
-	50, // 15: gitproxy.v1.LogResponse.logs:type_name -> gitproxy.v1.Log
-	53, // 16: gitproxy.v1.DiffResponse.diff:type_name -> gitproxy.v1.Diff
-	57, // 17: gitproxy.v1.GetBlobResponse.file:type_name -> gitproxy.v1.File
-	57, // 18: gitproxy.v1.ListBlobsResponse.files:type_name -> gitproxy.v1.File
-	57, // 19: gitproxy.v1.ResolveConflictsRequest.files:type_name -> gitproxy.v1.File
-	49, // 20: gitproxy.v1.ResolveConflictsRequest.author:type_name -> gitproxy.v1.CommitAuthor
-	56, // 21: gitproxy.v1.ResolveConflictsResponse.conflicts:type_name -> gitproxy.v1.ConflictDiff
-	61, // 22: gitproxy.v1.BlameResponse.hunks:type_name -> gitproxy.v1.BlameResponse.Hunk
-	49, // 23: gitproxy.v1.Log.author:type_name -> gitproxy.v1.CommitAuthor
-	69, // 24: gitproxy.v1.Log.time:type_name -> google.protobuf.Timestamp
-	54, // 25: gitproxy.v1.Diff.files:type_name -> gitproxy.v1.DiffFile
-	2,  // 26: gitproxy.v1.DiffFile.status:type_name -> gitproxy.v1.DiffFile.Status
-	55, // 27: gitproxy.v1.DiffFile.patches:type_name -> gitproxy.v1.DiffPatch
-	63, // 28: gitproxy.v1.DiffPatch.add:type_name -> gitproxy.v1.DiffPatch.Add
-	64, // 29: gitproxy.v1.DiffPatch.remove:type_name -> gitproxy.v1.DiffPatch.Remove
-	65, // 30: gitproxy.v1.DiffPatch.replace:type_name -> gitproxy.v1.DiffPatch.Replace
-	66, // 31: gitproxy.v1.DiffPatch.move:type_name -> gitproxy.v1.DiffPatch.Move
-	67, // 32: gitproxy.v1.DiffPatch.copy:type_name -> gitproxy.v1.DiffPatch.Copy
-	68, // 33: gitproxy.v1.DiffPatch.test:type_name -> gitproxy.v1.DiffPatch.Test
-	55, // 34: gitproxy.v1.ConflictDiff.ours:type_name -> gitproxy.v1.DiffPatch
-	55, // 35: gitproxy.v1.ConflictDiff.theirs:type_name -> gitproxy.v1.DiffPatch
-	69, // 36: gitproxy.v1.Tag.time:type_name -> google.protobuf.Timestamp
-	49, // 37: gitproxy.v1.Tag.author:type_name -> gitproxy.v1.CommitAuthor
-	49, // 38: gitproxy.v1.CommitRequest.Metadata.author:type_name -> gitproxy.v1.CommitAuthor
-	57, // 39: gitproxy.v1.CommitRequest.Files.files:type_name -> gitproxy.v1.File
-	62, // 40: gitproxy.v1.BlameResponse.Hunk.metadata:type_name -> gitproxy.v1.BlameResponse.Hunk.Metadata
-	49, // 41: gitproxy.v1.BlameResponse.Hunk.Metadata.author:type_name -> gitproxy.v1.CommitAuthor
-	69, // 42: gitproxy.v1.BlameResponse.Hunk.Metadata.time:type_name -> google.protobuf.Timestamp
-	3,  // 43: gitproxy.v1.GitProxyService.ListRepositories:input_type -> gitproxy.v1.ListRepositoriesRequest
-	5,  // 44: gitproxy.v1.GitProxyService.GetRepository:input_type -> gitproxy.v1.GetRepositoryRequest
-	7,  // 45: gitproxy.v1.GitProxyService.CreateRepository:input_type -> gitproxy.v1.CreateRepositoryRequest
-	9,  // 46: gitproxy.v1.GitProxyService.DeleteRepository:input_type -> gitproxy.v1.DeleteRepositoryRequest
-	11, // 47: gitproxy.v1.GitProxyService.ListBranches:input_type -> gitproxy.v1.ListBranchesRequest
-	13, // 48: gitproxy.v1.GitProxyService.GetBranch:input_type -> gitproxy.v1.GetBranchRequest
-	15, // 49: gitproxy.v1.GitProxyService.CreateBranch:input_type -> gitproxy.v1.CreateBranchRequest
-	17, // 50: gitproxy.v1.GitProxyService.DeleteBranch:input_type -> gitproxy.v1.DeleteBranchRequest
-	19, // 51: gitproxy.v1.GitProxyService.ListTags:input_type -> gitproxy.v1.ListTagsRequest
-	21, // 52: gitproxy.v1.GitProxyService.CreateTag:input_type -> gitproxy.v1.CreateTagRequest
-	23, // 53: gitproxy.v1.GitProxyService.DeleteTag:input_type -> gitproxy.v1.DeleteTagRequest
-	25, // 54: gitproxy.v1.GitProxyService.Commit:input_type -> gitproxy.v1.CommitRequest
-	27, // 55: gitproxy.v1.GitProxyService.Merge:input_type -> gitproxy.v1.MergeRequest
-	31, // 56: gitproxy.v1.GitProxyService.Log:input_type -> gitproxy.v1.LogRequest
-	29, // 57: gitproxy.v1.GitProxyService.Revert:input_type -> gitproxy.v1.RevertRequest
-	33, // 58: gitproxy.v1.GitProxyService.Diff:input_type -> gitproxy.v1.DiffRequest
-	35, // 59: gitproxy.v1.GitProxyService.Status:input_type -> gitproxy.v1.StatusRequest
-	37, // 60: gitproxy.v1.GitProxyService.GetBlob:input_type -> gitproxy.v1.GetBlobRequest
-	39, // 61: gitproxy.v1.GitProxyService.ListBlobs:input_type -> gitproxy.v1.ListBlobsRequest
-	41, // 62: gitproxy.v1.GitProxyService.ResolveConflicts:input_type -> gitproxy.v1.ResolveConflictsRequest
-	43, // 63: gitproxy.v1.GitProxyService.Maintenance:input_type -> gitproxy.v1.MaintenanceRequest
-	45, // 64: gitproxy.v1.GitProxyService.GraphStatus:input_type -> gitproxy.v1.GraphStatusRequest
-	47, // 65: gitproxy.v1.GitProxyService.Blame:input_type -> gitproxy.v1.BlameRequest
-	4,  // 66: gitproxy.v1.GitProxyService.ListRepositories:output_type -> gitproxy.v1.ListRepositoriesResponse
-	6,  // 67: gitproxy.v1.GitProxyService.GetRepository:output_type -> gitproxy.v1.GetRepositoryResponse
-	8,  // 68: gitproxy.v1.GitProxyService.CreateRepository:output_type -> gitproxy.v1.CreateRepositoryResponse
-	10, // 69: gitproxy.v1.GitProxyService.DeleteRepository:output_type -> gitproxy.v1.DeleteRepositoryResponse
-	12, // 70: gitproxy.v1.GitProxyService.ListBranches:output_type -> gitproxy.v1.ListBranchesResponse
-	14, // 71: gitproxy.v1.GitProxyService.GetBranch:output_type -> gitproxy.v1.GetBranchResponse
-	16, // 72: gitproxy.v1.GitProxyService.CreateBranch:output_type -> gitproxy.v1.CreateBranchResponse
-	18, // 73: gitproxy.v1.GitProxyService.DeleteBranch:output_type -> gitproxy.v1.DeleteBranchResponse
-	20, // 74: gitproxy.v1.GitProxyService.ListTags:output_type -> gitproxy.v1.ListTagsResponse
-	22, // 75: gitproxy.v1.GitProxyService.CreateTag:output_type -> gitproxy.v1.CreateTagResponse
-	24, // 76: gitproxy.v1.GitProxyService.DeleteTag:output_type -> gitproxy.v1.DeleteTagResponse
-	26, // 77: gitproxy.v1.GitProxyService.Commit:output_type -> gitproxy.v1.CommitResponse
-	28, // 78: gitproxy.v1.GitProxyService.Merge:output_type -> gitproxy.v1.MergeResponse
-	32, // 79: gitproxy.v1.GitProxyService.Log:output_type -> gitproxy.v1.LogResponse
-	30, // 80: gitproxy.v1.GitProxyService.Revert:output_type -> gitproxy.v1.RevertResponse
-	34, // 81: gitproxy.v1.GitProxyService.Diff:output_type -> gitproxy.v1.DiffResponse
-	36, // 82: gitproxy.v1.GitProxyService.Status:output_type -> gitproxy.v1.StatusResponse
-	38, // 83: gitproxy.v1.GitProxyService.GetBlob:output_type -> gitproxy.v1.GetBlobResponse
-	40, // 84: gitproxy.v1.GitProxyService.ListBlobs:output_type -> gitproxy.v1.ListBlobsResponse
-	42, // 85: gitproxy.v1.GitProxyService.ResolveConflicts:output_type -> gitproxy.v1.ResolveConflictsResponse
-	44, // 86: gitproxy.v1.GitProxyService.Maintenance:output_type -> gitproxy.v1.MaintenanceResponse
-	46, // 87: gitproxy.v1.GitProxyService.GraphStatus:output_type -> gitproxy.v1.GraphStatusResponse
-	48, // 88: gitproxy.v1.GitProxyService.Blame:output_type -> gitproxy.v1.BlameResponse
-	66, // [66:89] is the sub-list for method output_type
-	43, // [43:66] is the sub-list for method input_type
-	43, // [43:43] is the sub-list for extension type_name
-	43, // [43:43] is the sub-list for extension extendee
-	0,  // [0:43] is the sub-list for field type_name
+	49, // 11: gitproxy.v1.MergeRequest.author:type_name -> gitproxy.v1.CommitAuthor
+	56, // 12: gitproxy.v1.MergeResponse.conflicts:type_name -> gitproxy.v1.ConflictDiff
+	0,  // 13: gitproxy.v1.RevertRequest.strategy:type_name -> gitproxy.v1.RevertRequest.Strategy
+	56, // 14: gitproxy.v1.RevertResponse.conflicts:type_name -> gitproxy.v1.ConflictDiff
+	1,  // 15: gitproxy.v1.LogRequest.order:type_name -> gitproxy.v1.LogRequest.Order
+	50, // 16: gitproxy.v1.LogResponse.logs:type_name -> gitproxy.v1.Log
+	53, // 17: gitproxy.v1.DiffResponse.diff:type_name -> gitproxy.v1.Diff
+	57, // 18: gitproxy.v1.GetBlobResponse.file:type_name -> gitproxy.v1.File
+	57, // 19: gitproxy.v1.ListBlobsResponse.files:type_name -> gitproxy.v1.File
+	57, // 20: gitproxy.v1.ResolveConflictsRequest.files:type_name -> gitproxy.v1.File
+	49, // 21: gitproxy.v1.ResolveConflictsRequest.author:type_name -> gitproxy.v1.CommitAuthor
+	56, // 22: gitproxy.v1.ResolveConflictsResponse.conflicts:type_name -> gitproxy.v1.ConflictDiff
+	61, // 23: gitproxy.v1.BlameResponse.hunks:type_name -> gitproxy.v1.BlameResponse.Hunk
+	49, // 24: gitproxy.v1.Log.author:type_name -> gitproxy.v1.CommitAuthor
+	69, // 25: gitproxy.v1.Log.time:type_name -> google.protobuf.Timestamp
+	54, // 26: gitproxy.v1.Diff.files:type_name -> gitproxy.v1.DiffFile
+	2,  // 27: gitproxy.v1.DiffFile.status:type_name -> gitproxy.v1.DiffFile.Status
+	55, // 28: gitproxy.v1.DiffFile.patches:type_name -> gitproxy.v1.DiffPatch
+	63, // 29: gitproxy.v1.DiffPatch.add:type_name -> gitproxy.v1.DiffPatch.Add
+	64, // 30: gitproxy.v1.DiffPatch.remove:type_name -> gitproxy.v1.DiffPatch.Remove
+	65, // 31: gitproxy.v1.DiffPatch.replace:type_name -> gitproxy.v1.DiffPatch.Replace
+	66, // 32: gitproxy.v1.DiffPatch.move:type_name -> gitproxy.v1.DiffPatch.Move
+	67, // 33: gitproxy.v1.DiffPatch.copy:type_name -> gitproxy.v1.DiffPatch.Copy
+	68, // 34: gitproxy.v1.DiffPatch.test:type_name -> gitproxy.v1.DiffPatch.Test
+	55, // 35: gitproxy.v1.ConflictDiff.ours:type_name -> gitproxy.v1.DiffPatch
+	55, // 36: gitproxy.v1.ConflictDiff.theirs:type_name -> gitproxy.v1.DiffPatch
+	69, // 37: gitproxy.v1.Tag.time:type_name -> google.protobuf.Timestamp
+	49, // 38: gitproxy.v1.Tag.author:type_name -> gitproxy.v1.CommitAuthor
+	49, // 39: gitproxy.v1.CommitRequest.Metadata.author:type_name -> gitproxy.v1.CommitAuthor
+	57, // 40: gitproxy.v1.CommitRequest.Files.files:type_name -> gitproxy.v1.File
+	62, // 41: gitproxy.v1.BlameResponse.Hunk.metadata:type_name -> gitproxy.v1.BlameResponse.Hunk.Metadata
+	49, // 42: gitproxy.v1.BlameResponse.Hunk.Metadata.author:type_name -> gitproxy.v1.CommitAuthor
+	69, // 43: gitproxy.v1.BlameResponse.Hunk.Metadata.time:type_name -> google.protobuf.Timestamp
+	3,  // 44: gitproxy.v1.GitProxyService.ListRepositories:input_type -> gitproxy.v1.ListRepositoriesRequest
+	5,  // 45: gitproxy.v1.GitProxyService.GetRepository:input_type -> gitproxy.v1.GetRepositoryRequest
+	7,  // 46: gitproxy.v1.GitProxyService.CreateRepository:input_type -> gitproxy.v1.CreateRepositoryRequest
+	9,  // 47: gitproxy.v1.GitProxyService.DeleteRepository:input_type -> gitproxy.v1.DeleteRepositoryRequest
+	11, // 48: gitproxy.v1.GitProxyService.ListBranches:input_type -> gitproxy.v1.ListBranchesRequest
+	13, // 49: gitproxy.v1.GitProxyService.GetBranch:input_type -> gitproxy.v1.GetBranchRequest
+	15, // 50: gitproxy.v1.GitProxyService.CreateBranch:input_type -> gitproxy.v1.CreateBranchRequest
+	17, // 51: gitproxy.v1.GitProxyService.DeleteBranch:input_type -> gitproxy.v1.DeleteBranchRequest
+	19, // 52: gitproxy.v1.GitProxyService.ListTags:input_type -> gitproxy.v1.ListTagsRequest
+	21, // 53: gitproxy.v1.GitProxyService.CreateTag:input_type -> gitproxy.v1.CreateTagRequest
+	23, // 54: gitproxy.v1.GitProxyService.DeleteTag:input_type -> gitproxy.v1.DeleteTagRequest
+	25, // 55: gitproxy.v1.GitProxyService.Commit:input_type -> gitproxy.v1.CommitRequest
+	27, // 56: gitproxy.v1.GitProxyService.Merge:input_type -> gitproxy.v1.MergeRequest
+	31, // 57: gitproxy.v1.GitProxyService.Log:input_type -> gitproxy.v1.LogRequest
+	29, // 58: gitproxy.v1.GitProxyService.Revert:input_type -> gitproxy.v1.RevertRequest
+	33, // 59: gitproxy.v1.GitProxyService.Diff:input_type -> gitproxy.v1.DiffRequest
+	35, // 60: gitproxy.v1.GitProxyService.Status:input_type -> gitproxy.v1.StatusRequest
+	37, // 61: gitproxy.v1.GitProxyService.GetBlob:input_type -> gitproxy.v1.GetBlobRequest
+	39, // 62: gitproxy.v1.GitProxyService.ListBlobs:input_type -> gitproxy.v1.ListBlobsRequest
+	41, // 63: gitproxy.v1.GitProxyService.ResolveConflicts:input_type -> gitproxy.v1.ResolveConflictsRequest
+	43, // 64: gitproxy.v1.GitProxyService.Maintenance:input_type -> gitproxy.v1.MaintenanceRequest
+	45, // 65: gitproxy.v1.GitProxyService.GraphStatus:input_type -> gitproxy.v1.GraphStatusRequest
+	47, // 66: gitproxy.v1.GitProxyService.Blame:input_type -> gitproxy.v1.BlameRequest
+	4,  // 67: gitproxy.v1.GitProxyService.ListRepositories:output_type -> gitproxy.v1.ListRepositoriesResponse
+	6,  // 68: gitproxy.v1.GitProxyService.GetRepository:output_type -> gitproxy.v1.GetRepositoryResponse
+	8,  // 69: gitproxy.v1.GitProxyService.CreateRepository:output_type -> gitproxy.v1.CreateRepositoryResponse
+	10, // 70: gitproxy.v1.GitProxyService.DeleteRepository:output_type -> gitproxy.v1.DeleteRepositoryResponse
+	12, // 71: gitproxy.v1.GitProxyService.ListBranches:output_type -> gitproxy.v1.ListBranchesResponse
+	14, // 72: gitproxy.v1.GitProxyService.GetBranch:output_type -> gitproxy.v1.GetBranchResponse
+	16, // 73: gitproxy.v1.GitProxyService.CreateBranch:output_type -> gitproxy.v1.CreateBranchResponse
+	18, // 74: gitproxy.v1.GitProxyService.DeleteBranch:output_type -> gitproxy.v1.DeleteBranchResponse
+	20, // 75: gitproxy.v1.GitProxyService.ListTags:output_type -> gitproxy.v1.ListTagsResponse
+	22, // 76: gitproxy.v1.GitProxyService.CreateTag:output_type -> gitproxy.v1.CreateTagResponse
+	24, // 77: gitproxy.v1.GitProxyService.DeleteTag:output_type -> gitproxy.v1.DeleteTagResponse
+	26, // 78: gitproxy.v1.GitProxyService.Commit:output_type -> gitproxy.v1.CommitResponse
+	28, // 79: gitproxy.v1.GitProxyService.Merge:output_type -> gitproxy.v1.MergeResponse
+	32, // 80: gitproxy.v1.GitProxyService.Log:output_type -> gitproxy.v1.LogResponse
+	30, // 81: gitproxy.v1.GitProxyService.Revert:output_type -> gitproxy.v1.RevertResponse
+	34, // 82: gitproxy.v1.GitProxyService.Diff:output_type -> gitproxy.v1.DiffResponse
+	36, // 83: gitproxy.v1.GitProxyService.Status:output_type -> gitproxy.v1.StatusResponse
+	38, // 84: gitproxy.v1.GitProxyService.GetBlob:output_type -> gitproxy.v1.GetBlobResponse
+	40, // 85: gitproxy.v1.GitProxyService.ListBlobs:output_type -> gitproxy.v1.ListBlobsResponse
+	42, // 86: gitproxy.v1.GitProxyService.ResolveConflicts:output_type -> gitproxy.v1.ResolveConflictsResponse
+	44, // 87: gitproxy.v1.GitProxyService.Maintenance:output_type -> gitproxy.v1.MaintenanceResponse
+	46, // 88: gitproxy.v1.GitProxyService.GraphStatus:output_type -> gitproxy.v1.GraphStatusResponse
+	48, // 89: gitproxy.v1.GitProxyService.Blame:output_type -> gitproxy.v1.BlameResponse
+	67, // [67:90] is the sub-list for method output_type
+	44, // [44:67] is the sub-list for method input_type
+	44, // [44:44] is the sub-list for extension type_name
+	44, // [44:44] is the sub-list for extension extendee
+	0,  // [0:44] is the sub-list for field type_name
 }
 
 func init() { file_gitproxy_v1_gitproxy_proto_init() }
