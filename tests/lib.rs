@@ -6,10 +6,7 @@ use std::{
 
 use buffa::MessageField;
 use buffa_types::Timestamp;
-use connectrpc::{
-    ConnectError,
-    client::{ClientConfig, HttpClient},
-};
+use connectrpc::client::{ClientConfig, HttpClient};
 use gitproxy::{
     config::Config,
     connect::gitproxy::v1::GitProxyServiceClient,
