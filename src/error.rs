@@ -27,6 +27,8 @@ pub enum Error {
     Jiff(#[from] jiff::Error),
     #[error("Validation error {0}")]
     Validation(#[from] ValidationError),
+    #[error("Repository not found {0}")]
+    RepositoryNotFound(String),
 }
 
 impl From<Error> for ConnectError {
@@ -44,6 +46,7 @@ impl From<Error> for ConnectError {
             Error::BuffaDecode(error) => ConnectError::internal(error.to_string()),
             Error::Jiff(error) => ConnectError::internal(error.to_string()),
             Error::Validation(error) => ConnectError::invalid_argument(error.to_string()),
+            Error::RepositoryNotFound(error) => ConnectError::not_found(error.to_string()),
         }
     }
 }

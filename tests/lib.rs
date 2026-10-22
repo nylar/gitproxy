@@ -6,7 +6,10 @@ use std::{
 
 use buffa::MessageField;
 use buffa_types::Timestamp;
-use connectrpc::client::{ClientConfig, HttpClient};
+use connectrpc::{
+    ConnectError,
+    client::{ClientConfig, HttpClient},
+};
 use gitproxy::{
     config::Config,
     connect::gitproxy::v1::GitProxyServiceClient,
@@ -92,6 +95,22 @@ async fn test_delete_repository_empty_namespace() {
     client
         .delete_repository(DeleteRepositoryRequest {
             namespace: "".to_owned(),
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+}
+
+#[tokio::test]
+#[should_panic(expected = "invalid")]
+async fn test_delete_repository_invalid_namespace() {
+    let root_dir = tempfile::tempdir().unwrap();
+    let addr = start_server(root_dir.path()).await;
+    let client = make_client(&addr);
+
+    client
+        .delete_repository(DeleteRepositoryRequest {
+            namespace: "Repository not found invalid".to_owned(),
             ..Default::default()
         })
         .await
