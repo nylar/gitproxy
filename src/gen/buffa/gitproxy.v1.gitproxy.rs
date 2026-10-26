@@ -8466,13 +8466,23 @@ pub struct Branch {
         skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
     )]
     pub name: ::buffa::alloc::string::String,
+    /// Field 2: `commit`
+    #[serde(
+        rename = "commit",
+        with = "::buffa::json_helpers::proto_string",
+        skip_serializing_if = "::buffa::json_helpers::skip_if::is_empty_str"
+    )]
+    pub commit: ::buffa::alloc::string::String,
     #[serde(skip)]
     #[doc(hidden)]
     pub __buffa_unknown_fields: ::buffa::UnknownFields,
 }
 impl ::core::fmt::Debug for Branch {
     fn fmt(&self, f: &mut ::core::fmt::Formatter<'_>) -> ::core::fmt::Result {
-        f.debug_struct("Branch").field("name", &self.name).finish()
+        f.debug_struct("Branch")
+            .field("name", &self.name)
+            .field("commit", &self.commit)
+            .finish()
     }
 }
 impl Branch {
@@ -8503,6 +8513,9 @@ impl ::buffa::Message for Branch {
         if !self.name.is_empty() {
             size += 1u32 + ::buffa::types::string_encoded_len(&self.name) as u32;
         }
+        if !self.commit.is_empty() {
+            size += 1u32 + ::buffa::types::string_encoded_len(&self.commit) as u32;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u32;
         size
     }
@@ -8515,6 +8528,9 @@ impl ::buffa::Message for Branch {
         use ::buffa::Enumeration as _;
         if !self.name.is_empty() {
             ::buffa::types::put_string_field(1u32, &self.name, buf);
+        }
+        if !self.commit.is_empty() {
+            ::buffa::types::put_string_field(2u32, &self.commit, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -8536,6 +8552,13 @@ impl ::buffa::Message for Branch {
                 )?;
                 ::buffa::types::merge_string(&mut self.name, buf)?;
             }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                ::buffa::types::merge_string(&mut self.commit, buf)?;
+            }
             _ => {
                 self.__buffa_unknown_fields
                     .push(::buffa::encoding::decode_unknown_field(tag, buf, ctx)?);
@@ -8545,6 +8568,7 @@ impl ::buffa::Message for Branch {
     }
     fn clear(&mut self) {
         self.name.clear();
+        self.commit.clear();
         self.__buffa_unknown_fields.clear();
     }
 }

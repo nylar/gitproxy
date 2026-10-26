@@ -151,6 +151,7 @@ async fn test_branches() {
         .unwrap();
 
     assert_eq!(resp.view().branch.name, branch);
+    assert_ne!(resp.view().branch.commit, "");
 
     let resp = client
         .list_branches(ListBranchesRequest {
@@ -160,7 +161,7 @@ async fn test_branches() {
         .await
         .unwrap();
 
-    assert_eq!(resp.view().branches.len(), 1);
+    assert_eq!(resp.view().branches.len(), 2); // main + my-branch
 
     client
         .delete_branch(DeleteBranchRequest {

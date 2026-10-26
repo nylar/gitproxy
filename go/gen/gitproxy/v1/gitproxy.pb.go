@@ -2722,6 +2722,7 @@ func (x *Repository) GetHeadCommit() string {
 type Branch struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Commit        string                 `protobuf:"bytes,2,opt,name=commit,proto3" json:"commit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2759,6 +2760,13 @@ func (*Branch) Descriptor() ([]byte, []int) {
 func (x *Branch) GetName() string {
 	if x != nil {
 		return x.Name
+	}
+	return ""
+}
+
+func (x *Branch) GetCommit() string {
+	if x != nil {
+		return x.Commit
 	}
 	return ""
 }
@@ -3935,9 +3943,10 @@ const file_gitproxy_v1_gitproxy_proto_rawDesc = "" +
 	"Repository\x12\x1c\n" +
 	"\tnamespace\x18\x01 \x01(\tR\tnamespace\x12\x1f\n" +
 	"\vhead_commit\x18\x02 \x01(\tR\n" +
-	"headCommit\"\x1c\n" +
+	"headCommit\"4\n" +
 	"\x06Branch\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\"3\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x16\n" +
+	"\x06commit\x18\x02 \x01(\tR\x06commit\"3\n" +
 	"\x04Diff\x12+\n" +
 	"\x05files\x18\x01 \x03(\v2\x15.gitproxy.v1.DiffFileR\x05files\"\xd7\x03\n" +
 	"\bDiffFile\x124\n" +

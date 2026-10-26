@@ -220,14 +220,6 @@ impl GitProxyService for Server {
             .await
             .map_err(Error::TokioTask)??;
 
-        let branches = branches
-            .iter()
-            .map(|b| Branch {
-                name: b.to_owned(),
-                ..Default::default()
-            })
-            .collect();
-
         Response::ok(ListBranchesResponse {
             branches,
             ..Default::default()
@@ -239,24 +231,15 @@ impl GitProxyService for Server {
         _ctx: RequestContext,
         request: ServiceRequest<'_, GetBranchRequest>,
     ) -> ServiceResult<GetBranchResponse> {
+        let req = request.to_owned_message();
         let service = self.read_service(request.namespace).await?;
 
-        let branches = spawn_blocking(move || service.list_branches())
+        let branch = spawn_blocking(move || service.get_branch(req.branch))
             .await
             .map_err(Error::TokioTask)??;
 
-        if !branches.iter().any(|b| b == request.branch) {
-            return Err(ConnectError::not_found(format!(
-                "{} was not found",
-                request.branch
-            )));
-        }
-
         Response::ok(GetBranchResponse {
-            branch: MessageField::some(Branch {
-                name: request.branch.to_owned(),
-                ..Default::default()
-            }),
+            branch: MessageField::some(branch),
             ..Default::default()
         })
     }

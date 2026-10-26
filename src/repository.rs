@@ -81,8 +81,7 @@ impl Repository {
             .repo
             .branches(Some(git2::BranchType::Local))?
             .flatten()
-            .map(|(branch, _)| branch.name().unwrap().unwrap().to_owned())
-            .filter(|w| w != DEFAULT_PRIMARY_BRANCH))
+            .map(|(branch, _)| branch.name().unwrap().unwrap().to_owned()))
     }
 
     fn init_repo(repo: &GitRepository, author: &Author) -> Result<()> {

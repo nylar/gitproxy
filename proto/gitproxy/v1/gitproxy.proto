@@ -306,6 +306,7 @@ message Repository {
 
 message Branch {
   string name = 1;
+  string commit = 2;
 }
 
 message Diff {

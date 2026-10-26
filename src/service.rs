@@ -10,7 +10,7 @@ use tokio::sync::{OwnedRwLockReadGuard, OwnedRwLockWriteGuard, mpsc::Receiver};
 
 use crate::{
     error::{Error, Result},
-    proto::gitproxy::v1::{self, CommitAuthor, File, commit_request::Metadata},
+    proto::gitproxy::v1::{self, Branch, CommitAuthor, File, commit_request::Metadata},
     repository::{
         Author, BlameHunk, ConflictDiff, GraphStatus, LogEntry, LogOrder, Merge, PatchDiff,
         Repository, Strategy, Tag,
@@ -38,10 +38,31 @@ impl ReadService {
         Ok(head)
     }
 
-    pub fn list_branches(&self) -> Result<Vec<String>> {
+    pub fn list_branches(&self) -> Result<Vec<Branch>> {
         let repo = Repository::open(&self.repo_dir, &self.author)?;
-        let branches = repo.list_branches()?;
-        Ok(branches.collect())
+        let mut branches = Vec::new();
+
+        for branch in repo.list_branches()? {
+            let commit = repo.branch_commit(&branch)?;
+            branches.push(Branch {
+                name: branch,
+                commit: commit.id().to_string(),
+                ..Default::default()
+            });
+        }
+
+        Ok(branches)
+    }
+
+    pub fn get_branch(&self, branch: String) -> Result<Branch> {
+        let repo = Repository::open(&self.repo_dir, &self.author)?;
+        let commit = repo.branch_commit(&branch)?;
+
+        Ok(Branch {
+            name: branch.to_owned(),
+            commit: commit.id().to_string(),
+            ..Default::default()
+        })
     }
 
     pub fn list_tags(&self) -> Result<Vec<v1::Tag>> {

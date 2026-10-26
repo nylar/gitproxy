@@ -15234,6 +15234,8 @@ impl ::serde::Serialize for RepositoryOwnedView {
 pub struct BranchView<'a> {
     /// Field 1: `name`
     pub name: &'a str,
+    /// Field 2: `commit`
+    pub commit: &'a str,
     pub __buffa_unknown_fields: ::buffa::UnknownFieldsView<'a>,
 }
 impl<'a> ::buffa::MessageView<'a> for BranchView<'a> {
@@ -15270,6 +15272,13 @@ impl<'a> ::buffa::MessageView<'a> for BranchView<'a> {
                 )?;
                 view.name = ::buffa::types::borrow_str(&mut cur)?;
             }
+            2u32 => {
+                ::buffa::encoding::check_wire_type(
+                    tag,
+                    ::buffa::encoding::WireType::LengthDelimited,
+                )?;
+                view.commit = ::buffa::types::borrow_str(&mut cur)?;
+            }
             _ => {
                 ::buffa::encoding::skip_field_depth(tag, &mut cur, ctx.depth())?;
                 let span_len = before_tag.len() - cur.len();
@@ -15293,6 +15302,7 @@ impl<'a> ::buffa::MessageView<'a> for BranchView<'a> {
         let _ = __buffa_src;
         ::core::result::Result::Ok(super::super::Branch {
             name: self.name.to_string(),
+            commit: self.commit.to_string(),
             __buffa_unknown_fields: self.__buffa_unknown_fields.to_owned()?.into(),
             ..::core::default::Default::default()
         })
@@ -15307,6 +15317,9 @@ impl<'a> ::buffa::ViewEncode<'a> for BranchView<'a> {
         if !self.name.is_empty() {
             size += 1u32 + ::buffa::types::string_encoded_len(&self.name) as u32;
         }
+        if !self.commit.is_empty() {
+            size += 1u32 + ::buffa::types::string_encoded_len(&self.commit) as u32;
+        }
         size += self.__buffa_unknown_fields.encoded_len() as u32;
         size
     }
@@ -15320,6 +15333,9 @@ impl<'a> ::buffa::ViewEncode<'a> for BranchView<'a> {
         use ::buffa::Enumeration as _;
         if !self.name.is_empty() {
             ::buffa::types::put_string_field(1u32, &self.name, buf);
+        }
+        if !self.commit.is_empty() {
+            ::buffa::types::put_string_field(2u32, &self.commit, buf);
         }
         self.__buffa_unknown_fields.write_to(buf);
     }
@@ -15344,6 +15360,9 @@ impl<'__a> ::serde::Serialize for BranchView<'__a> {
         let mut __map = __s.serialize_map(::core::option::Option::None)?;
         if !::buffa::json_helpers::skip_if::is_empty_str(self.name) {
             __map.serialize_entry("name", self.name)?;
+        }
+        if !::buffa::json_helpers::skip_if::is_empty_str(self.commit) {
+            __map.serialize_entry("commit", self.commit)?;
         }
         __map.end()
     }
@@ -15434,6 +15453,11 @@ impl BranchOwnedView {
     #[must_use]
     pub fn name(&self) -> &'_ str {
         self.0.reborrow().name
+    }
+    /// Field 2: `commit`
+    #[must_use]
+    pub fn commit(&self) -> &'_ str {
+        self.0.reborrow().commit
     }
 }
 impl ::core::convert::From<::buffa::OwnedView<BranchView<'static>>> for BranchOwnedView {
